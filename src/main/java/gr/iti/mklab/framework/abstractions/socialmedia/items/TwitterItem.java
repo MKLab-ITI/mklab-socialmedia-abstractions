@@ -28,6 +28,7 @@ import twitter4j.UserMentionEntity;
 
 /**
  * Class that holds the information of a twitter status
+ * 
  * @author manosetro
  * @email  manosetro@iti.gr
  */
@@ -41,7 +42,9 @@ public class TwitterItem extends Item {
     
 	public TwitterItem(Status status) {
 		
-		if (status == null) return;
+		if (status == null) {
+			return;
+		}
 		
 		//Id
 		id = Source.Twitter+"#"+status.getId();
@@ -61,12 +64,10 @@ public class TwitterItem extends Item {
 		//Store/Update on the basis that it is an original tweet or a retweet
 		Status retweetStatus = status.getRetweetedStatus();
 		if(retweetStatus != null) {
-			
 			original = false;
 			
 			reference = Source.Twitter + "#" + retweetStatus.getId();
-			//super.referencedUser = retweetStatus.getUser().getScreenName();
-			super.referencedUserId = Source.Twitter + "#" + retweetStatus.getUser().getId();
+			referencedUserId = Source.Twitter + "#" + retweetStatus.getUser().getId();
 		}
 		else {
 			original = true;
@@ -129,7 +130,7 @@ public class TwitterItem extends Item {
 		
 		//WebPages inside the tweet
 		URLEntity[] urlEntities = status.getURLEntities();
-		Set<URL> urls = new HashSet<URL>();
+		Set<String> urls = new HashSet<String>();
 		webPages = new ArrayList<WebPage>();
 		
 		if (urlEntities != null) {
@@ -147,8 +148,7 @@ public class TwitterItem extends Item {
 					continue;
 				
 				try {
-					URL url = new URL(urlStr);
-					urls.add(url);
+					urls.add(urlStr);
 					
 					WebPage webPage = new WebPage(urlStr, id);
 					webPage.setSource(source);
@@ -161,7 +161,8 @@ public class TwitterItem extends Item {
 				
 			}
 		}
-		links = urls.toArray(new URL[urls.size()]);
+		
+		links = urls.toArray(new String[urls.size()]);
 			
 		//MediaItems inside the tweet
 		MediaEntity[] mediaEntities = status.getMediaEntities();
@@ -225,7 +226,7 @@ public class TwitterItem extends Item {
 				if(size != null) {
 					mediaItem.setSize(size.getWidth(), size.getHeight());
 				}
-
+				
 				mediaItems.add(mediaItem);
 				mediaIds.add(mediaId);
 			}

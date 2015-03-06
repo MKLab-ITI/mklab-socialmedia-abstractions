@@ -24,9 +24,7 @@ import gr.iti.mklab.framework.common.domain.feeds.LocationFeed;
  */
 public abstract class SocialMediaRetriever implements Retriever {
 	
-	protected RateLimitsMonitor rateLimitsMonitor;
-
-	public SocialMediaRetriever(Credentials credentials, RateLimitsMonitor rateLimitsMonitor) {
+	public SocialMediaRetriever(Credentials credentials) {
 		
 	}
 	
@@ -106,28 +104,23 @@ public abstract class SocialMediaRetriever implements Retriever {
 	
 	@Override
 	public List<Item> retrieve (Feed feed, Integer maxRequests, Integer maxResults) throws Exception {
-	
-		switch(feed.getFeedtype()) {
-			case ACCOUNT:
-				AccountFeed userFeed = (AccountFeed) feed;				
-				return retrieveAccountFeed(userFeed, maxRequests, maxResults);
-			
-			case KEYWORDS:
-				KeywordsFeed keyFeed = (KeywordsFeed) feed;
-				return retrieveKeywordsFeed(keyFeed, maxRequests, maxResults);
-				
-			case LOCATION:
-				LocationFeed locationFeed = (LocationFeed) feed;
-				return retrieveLocationFeed(locationFeed, maxRequests, maxResults);
-			
-			case GROUP:
-				GroupFeed listFeed = (GroupFeed) feed;
-				return retrieveGroupFeed(listFeed, maxRequests, maxResults);
-				
-			default:
-				break;
+		if(AccountFeed.class.isInstance(feed)) {
+			AccountFeed userFeed = (AccountFeed) feed;				
+			return retrieveAccountFeed(userFeed, maxRequests, maxResults);
 		}
-	
+		if(KeywordsFeed.class.isInstance(feed)) {
+			KeywordsFeed keyFeed = (KeywordsFeed) feed;				
+			return retrieveKeywordsFeed(keyFeed, maxRequests, maxResults);
+		}
+		if(LocationFeed.class.isInstance(feed)) {
+			LocationFeed locationFeed = (LocationFeed) feed;
+			return retrieveLocationFeed(locationFeed, maxRequests, maxResults);
+		}
+		if(GroupFeed.class.isInstance(feed)) {
+			GroupFeed listFeed = (GroupFeed) feed;
+			return retrieveGroupFeed(listFeed, maxRequests, maxResults);
+		}
+
 		return new ArrayList<Item>();
 	}
 	

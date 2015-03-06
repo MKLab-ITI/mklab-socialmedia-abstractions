@@ -32,21 +32,20 @@ import gr.iti.mklab.framework.abstractions.socialmedia.users.InstagramStreamUser
 import gr.iti.mklab.framework.common.domain.Item;
 import gr.iti.mklab.framework.common.domain.Location;
 import gr.iti.mklab.framework.common.domain.MediaItem;
-import gr.iti.mklab.framework.common.domain.Account;
 import gr.iti.mklab.framework.common.domain.StreamUser;
 import gr.iti.mklab.framework.common.domain.feeds.AccountFeed;
 import gr.iti.mklab.framework.common.domain.feeds.GroupFeed;
 import gr.iti.mklab.framework.common.domain.feeds.KeywordsFeed;
 import gr.iti.mklab.framework.common.domain.feeds.LocationFeed;
 import gr.iti.mklab.framework.common.util.DateUtil;
-import gr.iti.mklab.framework.retrievers.RateLimitsMonitor;
 import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
 
 /**
  * Class responsible for retrieving Instagram content based on keywords or instagram users or locations
- * The retrieval process takes place through Instagram API
- * @author ailiakop
- * @email  ailiakop@iti.gr
+ * The retrieval process takes place through Instagram API.
+ * 
+ * @author manosetro
+ * @email  manosetro@iti.gr
  */
 public class InstagramRetriever extends SocialMediaRetriever {
 	
@@ -60,8 +59,9 @@ public class InstagramRetriever extends SocialMediaRetriever {
 
 	private InstagramOembed instagramOembed;
 	
-	public InstagramRetriever(Credentials credentials, RateLimitsMonitor rateLimitsMonitor) {
-		super(credentials, rateLimitsMonitor);
+	public InstagramRetriever(Credentials credentials) {
+		
+		super(credentials);
 		
 		Token accessToken = new Token(credentials.getAccessToken(), credentials.getAccessTokenSecret()); 
 		this.instagram = new Instagram(credentials.getKey());
@@ -74,14 +74,12 @@ public class InstagramRetriever extends SocialMediaRetriever {
 		
 		List<Item> items = new ArrayList<Item>();
 		
-		Date lastItemDate = feed.getDateToRetrieve();
+		Date lastItemDate = feed.getSinceDate();
 		String label = feed.getLabel();
 		
 		int numberOfRequests = 0;
-	
-		Account source = feed.getAccount();
-		String uName = source.getName();
-		
+
+		String uName = feed.getUsername();
 		if(uName == null) {
 			logger.error("#Instagram : No source feed");
 			return items;
@@ -124,9 +122,11 @@ public class InstagramRetriever extends SocialMediaRetriever {
     					}
 						
 						if(mfeed != null && mfeed.getId() != null) {
-							InstagramItem instagramItem = new InstagramItem(mfeed);
-							instagramItem.setList(label);
-								
+							Item instagramItem = new InstagramItem(mfeed);
+							if(label != null) {
+								instagramItem.addLabel(label);
+							}
+							
 							items.add(instagramItem);
 						}
 					}
@@ -141,7 +141,7 @@ public class InstagramRetriever extends SocialMediaRetriever {
 		
 		// The next request will retrieve only items of the last day
 		Date dateToRetrieve = new Date(System.currentTimeMillis() - (24*3600*1000));
-		feed.setDateToRetrieve(dateToRetrieve);
+		feed.setSinceDate(dateToRetrieve);
 		
 		if(loggingEnabled) {
 			logger.info("#Instagram : Handler fetched " + items.size() + " photos from " + uName + 
@@ -155,7 +155,7 @@ public class InstagramRetriever extends SocialMediaRetriever {
 	public List<Item> retrieveKeywordsFeed(KeywordsFeed feed, Integer maxRequests, Integer maxResults) {
 		List<Item> items = new ArrayList<Item>();
 		
-		Date lastItemDate = feed.getDateToRetrieve();
+		Date lastItemDate = feed.getSinceDate();
 		String label = feed.getLabel();
 		
 		boolean isFinished = false;
@@ -219,19 +219,19 @@ public class InstagramRetriever extends SocialMediaRetriever {
 					break;
 				}
 				
-				if(mfeed != null && mfeed.getId() != null){
-					InstagramItem instagramItem;
+				if(mfeed != null && mfeed.getId() != null) {
 					try {
-						instagramItem = new InstagramItem(mfeed);
-						instagramItem.setList(label);
+						Item instagramItem = new InstagramItem(mfeed);
+						if(label != null) {
+							instagramItem.addLabel(label);
+						}
+						items.add(instagramItem);
 						
 					} catch (MalformedURLException e) {
 						logger.error("Instagram retriever exception: " + e.getMessage());
 						return items;
 					}
-					
-					items.add(instagramItem);
-					
+
 				}
 			}
 				
@@ -258,9 +258,10 @@ public class InstagramRetriever extends SocialMediaRetriever {
 								}
 								
 								if(mfeed != null && mfeed.getId() != null){
-									InstagramItem instagramItem = new InstagramItem(mfeed);
-									instagramItem.setList(label);
-									
+									Item instagramItem = new InstagramItem(mfeed);
+									if(label != null) {
+										instagramItem.addLabel(label);
+									}
 									items.add(instagramItem);
 								}
 	
@@ -288,7 +289,7 @@ public class InstagramRetriever extends SocialMediaRetriever {
 		
 		// The next request will retrieve only items of the last day
 		Date dateToRetrieve = new Date(System.currentTimeMillis() - (24*3600*1000));
-		feed.setDateToRetrieve(dateToRetrieve);
+		feed.setSinceDate(dateToRetrieve);
 		
 		return items;
 	}
@@ -297,7 +298,7 @@ public class InstagramRetriever extends SocialMediaRetriever {
 	public List<Item> retrieveLocationFeed(LocationFeed feed, Integer maxRequests, Integer maxResults) {
 		List<Item> items = new ArrayList<Item>();
 		
-		Date lastItemDate = feed.getDateToRetrieve();
+		Date lastItemDate = feed.getSinceDate();
 		Date currentDate = new Date(System.currentTimeMillis());
 		DateUtil dateUtil = new DateUtil();
 		
@@ -383,7 +384,7 @@ public class InstagramRetriever extends SocialMediaRetriever {
 		
 		// The next request will retrieve only items of the last day
 		Date dateToRetrieve = new Date(System.currentTimeMillis() - (24*3600*1000));
-		feed.setDateToRetrieve(dateToRetrieve);
+		feed.setSinceDate(dateToRetrieve);
 		
     	return items;
     }

@@ -25,11 +25,11 @@ import gr.iti.mklab.framework.common.domain.feeds.Feed;
 import gr.iti.mklab.framework.common.domain.feeds.GroupFeed;
 import gr.iti.mklab.framework.common.domain.feeds.KeywordsFeed;
 import gr.iti.mklab.framework.common.domain.feeds.LocationFeed;
-import gr.iti.mklab.framework.retrievers.RateLimitsMonitor;
 import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
 
 /**
- * The retriever that implements the Vimeo simplified retriever 
+ * The retriever that implements the Vimeo simplified retriever
+ * 
  * @author manosetro
  * @email  manosetro@iti.gr
  */
@@ -41,8 +41,9 @@ public class VimeoRetriever extends SocialMediaRetriever {
 	private HttpRequestFactory requestFactory;
 	private String requestPrefix = "http://vimeo.com/api/v2/video/";
 	
-	public VimeoRetriever(Credentials credentials, RateLimitsMonitor rateLimitsMonitor) {
-		super(credentials, rateLimitsMonitor);
+	public VimeoRetriever(Credentials credentials) {
+		
+		super(credentials);
 		
 		requestFactory = HTTP_TRANSPORT.createRequestFactory(
 				new HttpRequestInitializer() {

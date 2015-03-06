@@ -8,6 +8,7 @@ import gr.iti.mklab.framework.common.domain.StreamUser;
 
 /**
  * Class that holds the information of a twitter user
+ * 
  * @author manosetro
  * @email  manosetro@iti.gr
  */
@@ -49,8 +50,9 @@ public class TwitterStreamUser extends StreamUser {
 		//Creation date of user's profile
 		Date date = user.getCreatedAt();
 		if(date != null) {
-			createdAt = date.toString();
+			createdAt = new Date(date.getTime());
 		}
+		
 		//Location
 		location = user.getLocation();
 		//Followers of the user

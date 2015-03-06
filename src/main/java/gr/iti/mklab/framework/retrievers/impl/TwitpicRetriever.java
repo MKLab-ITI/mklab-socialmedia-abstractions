@@ -25,11 +25,11 @@ import gr.iti.mklab.framework.common.domain.feeds.Feed;
 import gr.iti.mklab.framework.common.domain.feeds.GroupFeed;
 import gr.iti.mklab.framework.common.domain.feeds.KeywordsFeed;
 import gr.iti.mklab.framework.common.domain.feeds.LocationFeed;
-import gr.iti.mklab.framework.retrievers.RateLimitsMonitor;
 import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
 
 /**
  * The retriever that implements the Twitpic simplified retriever
+ * 
  * @author manosetro
  * @email  manosetro@iti.gr
  */
@@ -42,9 +42,9 @@ public class TwitpicRetriever extends SocialMediaRetriever {
 	
 	private HttpRequestFactory requestFactory;
 
-	public TwitpicRetriever(Credentials credentials, RateLimitsMonitor rateLimitsMonitor) {
+	public TwitpicRetriever(Credentials credentials) {
 		
-		super(credentials, rateLimitsMonitor);
+		super(credentials);
 		
 		requestFactory = HTTP_TRANSPORT.createRequestFactory(
 				new HttpRequestInitializer() {

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 import twitter4j.GeoLocation;
@@ -24,32 +25,31 @@ import gr.iti.mklab.framework.abstractions.socialmedia.users.TwitterStreamUser;
 import gr.iti.mklab.framework.common.domain.Item;
 import gr.iti.mklab.framework.common.domain.Location;
 import gr.iti.mklab.framework.common.domain.MediaItem;
-import gr.iti.mklab.framework.common.domain.Account;
 import gr.iti.mklab.framework.common.domain.StreamUser;
 import gr.iti.mklab.framework.common.domain.feeds.AccountFeed;
 import gr.iti.mklab.framework.common.domain.feeds.GroupFeed;
 import gr.iti.mklab.framework.common.domain.feeds.KeywordsFeed;
 import gr.iti.mklab.framework.common.domain.feeds.LocationFeed;
-import gr.iti.mklab.framework.retrievers.RateLimitsMonitor;
 import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
 
 /**
  * Class responsible for retrieving Twitter content based on keywords, twitter users or locations
  * The retrieval process takes place through Twitter API (twitter4j)
+ * 
  * @author Manos Schinas
  * @email  manosetro@iti.gr
  */
 public class TwitterRetriever extends SocialMediaRetriever {
 	
 	private Logger  logger = Logger.getLogger(TwitterRetriever.class);
-	private boolean loggingEnabled = false;
+	private boolean loggingEnabled = true;
 	
 	private Twitter twitter = null;
 	private TwitterFactory tf = null;
 	
-	public TwitterRetriever(Credentials credentials, RateLimitsMonitor rateLimitsMonitor) {
+	public TwitterRetriever(Credentials credentials) {
 		
-		super(credentials, rateLimitsMonitor);
+		super(credentials);
 		
 		ConfigurationBuilder cb = new ConfigurationBuilder();
 		cb.setJSONStoreEnabled(false)
@@ -67,23 +67,21 @@ public class TwitterRetriever extends SocialMediaRetriever {
 	@Override
 	public List<Item> retrieveAccountFeed(AccountFeed feed, Integer maxRequests, Integer maxResults) {
 		
+		logger.info(feed.getClass() + " " + maxRequests + " " + maxResults);	
+		
 		List<Item> items = new ArrayList<Item>();
 		
 		int count = 200;
 		
 		Integer numberOfRequests = 0;
 		
-		Account source = feed.getAccount();
-		if(source == null)
-			return items;
-		
-		Date sinceDate = feed.getDateToRetrieve();
+		Date sinceDate = feed.getSinceDate();
 		Date newSinceDate = sinceDate;
 		
 		String label = feed.getLabel();
 		
-		String userId = source.getId();
-		String screenName = source.getName();
+		//String userId = feed.getId();
+		String screenName = feed.getUsername();
 		
 		int page = 1;
 		Paging paging = new Paging(page, count);
@@ -91,12 +89,14 @@ public class TwitterRetriever extends SocialMediaRetriever {
 		while(true) {
 			try {
 				ResponseList<Status> response = null;
-				if(userId != null) {
-					response = twitter.getUserTimeline(Integer.parseInt(userId), paging);
-				}
-				else if(screenName != null) {
-					if(loggingEnabled)
+				//if(userId != null) {
+				//	response = twitter.getUserTimeline(Integer.parseInt(userId), paging);
+				//}
+				if(screenName != null) {
+					if(loggingEnabled) {
 						logger.info("Retrieve timeline for " + screenName + ". Page: " + paging);
+					}
+					
 					response = twitter.getUserTimeline(screenName, paging);
 				}
 				else {
@@ -118,8 +118,10 @@ public class TwitterRetriever extends SocialMediaRetriever {
 							}
 						}
 						
-						TwitterItem twitterItem = new TwitterItem(status);
-						twitterItem.setList(label);
+						Item twitterItem = new TwitterItem(status);
+						if(label != null) {
+							twitterItem.addLabel(label);
+						}
 						
 						items.add(twitterItem);
 					}
@@ -127,17 +129,17 @@ public class TwitterRetriever extends SocialMediaRetriever {
 				
 				if(items.size() > maxResults) {
 					if(loggingEnabled)
-						if(loggingEnabled)logger.info("totalRetrievedItems: " + items.size() + " > " + maxResults);
+						logger.info("totalRetrievedItems: " + items.size() + " > " + maxResults);
 					break;
 				}
 				if(numberOfRequests >= maxRequests) {
 					if(loggingEnabled)	
-						if(loggingEnabled)logger.info("numberOfRequests: " + numberOfRequests + " > " + maxRequests);
+						logger.info("numberOfRequests: " + numberOfRequests + " > " + maxRequests);
 					break;
 				}
 				if(sinceDateReached) {
 					if(loggingEnabled)
-						if(loggingEnabled)logger.info("Since date reached: " + sinceDate);
+						logger.info("Since date reached: " + sinceDate);
 					break;
 				}
 				
@@ -147,7 +149,7 @@ public class TwitterRetriever extends SocialMediaRetriever {
 				break;
 			}
 		}
-		feed.setDateToRetrieve(newSinceDate);
+		feed.setSinceDate(newSinceDate);
 		return items;
 		
 	}
@@ -155,13 +157,14 @@ public class TwitterRetriever extends SocialMediaRetriever {
 	@Override
 	public List<Item> retrieveKeywordsFeed(KeywordsFeed feed, Integer maxRequests, Integer maxResults) {
 			
+		logger.info(feed.getClass() + " " + maxRequests + " " + maxResults);	
 		
 		List<Item> items = new ArrayList<Item>();
 		
 		int count = 100;
 		int numberOfRequests = 0;
 
-		Date sinceDate = feed.getDateToRetrieve();
+		Date sinceDate = feed.getSinceDate();
 		Date newSinceDate = sinceDate;
 		
 		String label = feed.getLabel();
@@ -172,30 +175,24 @@ public class TwitterRetriever extends SocialMediaRetriever {
 			return items;
 		}
 		
+		String textQuery = StringUtils.join(keywords, " OR ");
 		
-		String tags = "";
-		for(String key : keywords){
-			String [] words = key.split(" ");
-			for(String word : words)
-				if(!tags.contains(word) && word.length()>1)
-					tags += word.toLowerCase()+" ";
-		}
-		
-		if(tags.equals("")) 
+		if(textQuery.equals("")) 
 			return items;
 		
 		//Set the query
-		if(loggingEnabled)
-			logger.info("Query String: " + tags);
-		Query query = new Query(tags);
+		logger.info("Query String: " + textQuery + " with label=" + label);
+	
+		Query query = new Query(textQuery);
 	
 		query.count(count);
 		query.setResultType(Query.RECENT); //do not set last item date-causes problems!
 
 		boolean sinceDateReached = false;
 		try {
-			if(loggingEnabled)
+			if(loggingEnabled) {
 				logger.info("Request for " + query);
+			}
 			
 			QueryResult response = twitter.search(query);
 			while(response != null) {
@@ -209,8 +206,9 @@ public class TwitterRetriever extends SocialMediaRetriever {
 					break;
 				}
 				
-				if(loggingEnabled)
+				if(loggingEnabled) {
 					logger.info(statuses.size() + " statuses retrieved.");	
+				}
 				
 				for(Status status : statuses) {
 					if(status != null) {
@@ -226,8 +224,10 @@ public class TwitterRetriever extends SocialMediaRetriever {
 							}
 						}
 						
-						TwitterItem twitterItem = new TwitterItem(status);
-						twitterItem.setList(label);
+						Item twitterItem = new TwitterItem(status);
+						if(label != null) {
+							twitterItem.addLabel(label);
+						}
 						
 						items.add(twitterItem);
 					}
@@ -262,7 +262,7 @@ public class TwitterRetriever extends SocialMediaRetriever {
 			logger.error(e.getMessage());
 		}	
 	
-		feed.setDateToRetrieve(newSinceDate);
+		feed.setSinceDate(newSinceDate);
 		return items;
 	}
 	
@@ -274,7 +274,9 @@ public class TwitterRetriever extends SocialMediaRetriever {
 		int count = 100;
 		
 		Integer numberOfRequests = 0;
-		Date sinceDate = feed.getDateToRetrieve();
+		Date sinceDate = feed.getSinceDate();
+		
+		String label = feed.getLabel();
 		
 		Location location = feed.getLocation();
 		if(location == null)
@@ -297,7 +299,6 @@ public class TwitterRetriever extends SocialMediaRetriever {
 				numberOfRequests++;
 				QueryResult response = twitter.search(query);
 				
-				
 				List<Status> statuses = response.getTweets();
 				for(Status status : statuses) {
 					if(status != null) {
@@ -310,8 +311,10 @@ public class TwitterRetriever extends SocialMediaRetriever {
 							}
 						}
 						
-						TwitterItem twitterItem = new TwitterItem(status);
-						
+						Item twitterItem = new TwitterItem(status);
+						if(label != null) {
+							twitterItem.addLabel(label);
+						}
 						items.add(twitterItem);
 					}
 				}
@@ -369,8 +372,10 @@ public class TwitterRetriever extends SocialMediaRetriever {
 				ResponseList<Status> response = twitter.getUserListStatuses(ownerScreenName, slug, paging);
 				for(Status status : response) {
 					if(status != null) {
-						TwitterItem twitterItem = new TwitterItem(status);
-						twitterItem.setList(label);
+						Item twitterItem = new TwitterItem(status);
+						if(label != null) {
+							twitterItem.addLabel(label);
+						}
 						
 						items.add(twitterItem);
 					}
@@ -420,7 +425,7 @@ public class TwitterRetriever extends SocialMediaRetriever {
 		credentials.setAccessToken("2547837110-IcVqpQiE764M6FPoYZ9oxwK6QhJGwwaTjX0syZm");
 		credentials.setAccessTokenSecret("wxQuDS6JODxBsZeIv8pHD4jYcVY3Ypsva6vbT7qjejpGA");
 		
-		TwitterRetriever retriever = new TwitterRetriever(credentials, new RateLimitsMonitor(1, 60000L));
+		TwitterRetriever retriever = new TwitterRetriever(credentials);
 	
 		AccountFeed feed = new AccountFeed(null, null, null);
 		

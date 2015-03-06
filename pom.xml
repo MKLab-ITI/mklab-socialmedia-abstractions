@@ -3,7 +3,7 @@
   	<modelVersion>4.0.0</modelVersion>
   	<groupId>gr.iti.mklab</groupId>
   	<artifactId>mklab-socialmedia-abstractions</artifactId>
-  	<version>0.1-SNAPSHOT</version>
+  	<version>0.2-SNAPSHOT</version>
   	<packaging>jar</packaging>
   	
 	<name>mklab-socialmedia-abstractions</name>
@@ -47,7 +47,7 @@
     	<dependency>
     		<groupId>gr.iti.mklab</groupId>
     		<artifactId>mklab-framework-common</artifactId>
-    		<version>0.1-SNAPSHOT</version>
+    		<version>0.2-SNAPSHOT</version>
     	</dependency>
     	
     	<!-- Google -->

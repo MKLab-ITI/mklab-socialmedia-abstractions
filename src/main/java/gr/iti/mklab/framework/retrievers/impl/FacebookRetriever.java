@@ -15,11 +15,9 @@ import com.restfb.Parameter;
 import com.restfb.exception.FacebookNetworkException;
 import com.restfb.exception.FacebookResponseStatusException;
 import com.restfb.types.CategorizedFacebookType;
-import com.restfb.types.Comment;
 import com.restfb.types.Page;
 import com.restfb.types.Photo;
 import com.restfb.types.Post;
-import com.restfb.types.Post.Comments;
 import com.restfb.types.User;
 
 import gr.iti.mklab.framework.Credentials;
@@ -27,20 +25,19 @@ import gr.iti.mklab.framework.abstractions.socialmedia.items.FacebookItem;
 import gr.iti.mklab.framework.abstractions.socialmedia.users.FacebookStreamUser;
 import gr.iti.mklab.framework.common.domain.Item;
 import gr.iti.mklab.framework.common.domain.MediaItem;
-import gr.iti.mklab.framework.common.domain.Account;
 import gr.iti.mklab.framework.common.domain.StreamUser;
 import gr.iti.mklab.framework.common.domain.feeds.AccountFeed;
 import gr.iti.mklab.framework.common.domain.feeds.GroupFeed;
 import gr.iti.mklab.framework.common.domain.feeds.KeywordsFeed;
 import gr.iti.mklab.framework.common.domain.feeds.LocationFeed;
-import gr.iti.mklab.framework.retrievers.RateLimitsMonitor;
 import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
 
 /**
  * Class responsible for retrieving facebook content based on keywords or facebook users/facebook pages
  * The retrieval process takes place through facebook graph API.
- * @author ailiakop
- * @email  ailiakop@iti.gr
+ * 
+ * @author manosetro
+ * @email  manosetro@iti.gr
  * 
  */
 public class FacebookRetriever extends SocialMediaRetriever {
@@ -49,9 +46,8 @@ public class FacebookRetriever extends SocialMediaRetriever {
 	
 	private Logger  logger = Logger.getLogger(FacebookRetriever.class);
 	
-	public FacebookRetriever(Credentials credentials, RateLimitsMonitor rateLimitsMonitor) {
-		super(credentials, rateLimitsMonitor);
-		
+	public FacebookRetriever(Credentials credentials) {
+		super(credentials);
 		facebookClient = new DefaultFacebookClient(credentials.getAccessToken());
 	}
 
@@ -62,19 +58,17 @@ public class FacebookRetriever extends SocialMediaRetriever {
 
 		Integer totalRequests = 0;
 		
-		Date lastItemDate = feed.getDateToRetrieve();
+		Date lastItemDate = feed.getSinceDate();
 		String label = feed.getLabel();
 		
 		boolean isFinished = false;
 		
-		Account source = feed.getAccount();
-		
-		String userName = source.getName();
+		String userName = feed.getUsername();
 		if(userName == null) {
 			logger.error("#Facebook : No source feed");
 			return items;
 		}
-		String userFeed = source.getName()+"/feed";
+		String userFeed = userName+"/feed";
 		
 		Connection<Post> connection;
 		User page;
@@ -88,29 +82,19 @@ public class FacebookRetriever extends SocialMediaRetriever {
 		
 		FacebookStreamUser facebookUser = new FacebookStreamUser(page);
 		for(List<Post> connectionPage : connection) {
-			
-			rateLimitsMonitor.check();
-			
+		
 			totalRequests++;
 			for(Post post : connectionPage) {	
 				
 				Date publicationDate = post.getCreatedTime();
 				
 				if(publicationDate.after(lastItemDate) && post!=null && post.getId() != null) {
-					FacebookItem facebookUpdate = new FacebookItem(post, facebookUser);
-					facebookUpdate.setList(label);
-					
+					Item facebookUpdate = new FacebookItem(post, facebookUser);
+					if(label != null) {
+						facebookUpdate.addLabel(label);
+					}
 					items.add(facebookUpdate);
 					
-				    Comments comments = post.getComments();
-				    if(comments != null) {
-				    	for(Comment comment : comments.getData()) {
-			    			FacebookItem facebookComment = new FacebookItem(comment, post, null);
-			    			facebookComment.setList(label);
-			    			
-			    			items.add(facebookComment);
-			    		} 
-				    }
 				 }
 				
 				if(publicationDate.before(lastItemDate) || items.size()>maxResults || totalRequests>maxRequests){
@@ -134,7 +118,7 @@ public class FacebookRetriever extends SocialMediaRetriever {
 		
 		List<Item> items = new ArrayList<Item>();
 		
-		Date lastItemDate = feed.getDateToRetrieve();
+		Date lastItemDate = feed.getSinceDate();
 		String label = feed.getLabel();
 		
 		boolean isFinished = false;
@@ -185,14 +169,18 @@ public class FacebookRetriever extends SocialMediaRetriever {
 							CategorizedFacebookType cUser = post.getFrom();
 							if(cUser != null) {
 								User user = facebookClient.fetchObject(cUser.getId(), User.class);
-								FacebookStreamUser facebookUser = new FacebookStreamUser(user);
+								StreamUser facebookUser = new FacebookStreamUser(user);
 								
 								fbItem = new FacebookItem(post, facebookUser);
-								fbItem.setList(label);
+								if(label != null) {
+									fbItem.addLabel(label);
+								}
 							}
 							else {
 								fbItem = new FacebookItem(post);
-								fbItem.setList(label);
+								if(label != null) {
+									fbItem.addLabel(label);
+								}
 							}
 							
 							items.add(fbItem);

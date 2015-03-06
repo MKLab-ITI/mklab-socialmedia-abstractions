@@ -21,6 +21,7 @@ import gr.iti.mklab.framework.common.domain.Item;
 import gr.iti.mklab.framework.common.domain.Location;
 import gr.iti.mklab.framework.common.domain.MediaItem;
 import gr.iti.mklab.framework.common.domain.Source;
+import gr.iti.mklab.framework.common.domain.StreamUser;
 import gr.iti.mklab.framework.common.domain.WebPage;
 
 /**
@@ -345,7 +346,7 @@ public class FacebookItem extends Item {
 	}
     
 	
-	public FacebookItem(Post post, FacebookStreamUser user) {
+	public FacebookItem(Post post, StreamUser user) {
 		
 		this(post);
 		

@@ -311,16 +311,16 @@ public class GooglePlusItem extends Item {
 			}
 		}
 
-		List<URL> urls = new ArrayList<URL>();
+		List<String> urls = new ArrayList<String>();
 		for(WebPage wp : webPages) {
 			try {
-				urls.add(new URL(wp.getUrl()));
+				urls.add(wp.getUrl());
 			}
 			catch(Exception e) {
 				continue;
 			}
 		}
-		links = urls.toArray(new URL[urls.size()]);
+		links = urls.toArray(new String[urls.size()]);
 		
 	}
 	

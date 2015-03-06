@@ -31,20 +31,19 @@ import gr.iti.mklab.framework.abstractions.socialmedia.items.GooglePlusItem;
 import gr.iti.mklab.framework.abstractions.socialmedia.users.GooglePlusStreamUser;
 import gr.iti.mklab.framework.common.domain.Item;
 import gr.iti.mklab.framework.common.domain.MediaItem;
-import gr.iti.mklab.framework.common.domain.Account;
 import gr.iti.mklab.framework.common.domain.StreamUser;
 import gr.iti.mklab.framework.common.domain.feeds.AccountFeed;
 import gr.iti.mklab.framework.common.domain.feeds.GroupFeed;
 import gr.iti.mklab.framework.common.domain.feeds.KeywordsFeed;
 import gr.iti.mklab.framework.common.domain.feeds.LocationFeed;
-import gr.iti.mklab.framework.retrievers.RateLimitsMonitor;
 import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
 
 /**
  * Class responsible for retrieving Google+ content based on keywords or google+ users
  * The retrieval process takes place through Google API
- * @author ailiakop
- * @email  ailiakop@iti.gr
+ * 
+ * @author manosetro
+ * @email  manosetro@iti.gr
  */
 public class GooglePlusRetriever extends SocialMediaRetriever {
 	
@@ -57,8 +56,8 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 	private String userPrefix = "https://plus.google.com/+";
 	private String GooglePlusKey;
 
-	public GooglePlusRetriever(Credentials credentials, RateLimitsMonitor rateLimitsMonitor) {
-		super(credentials, rateLimitsMonitor);
+	public GooglePlusRetriever(Credentials credentials) {
+		super(credentials);
 		
 		GooglePlusKey = credentials.getKey();
 		GoogleCredential credential = new GoogleCredential();
@@ -75,17 +74,16 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 		
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
 		
-		Date lastItemDate = feed.getDateToRetrieve();
+		Date lastItemDate = feed.getSinceDate();
 		String label = feed.getLabel();
 		
 		int numberOfRequests = 0;
 		
 		boolean isFinished = false;
 		
-		Account source = feed.getAccount();
-		String uName = source.getName();
-		String userID = source.getId();
 		
+		String userID = feed.getId();
+		String uName = feed.getUsername();
 		if(uName == null && userID == null) {
 			logger.info("#GooglePlus : No source feed");
 			return items;
@@ -149,8 +147,10 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 					
 					if(publicationDate.after(lastItemDate) && activity != null && activity.getId() != null
 							&& items.size() < maxResults) {
-						GooglePlusItem googlePlusItem = new GooglePlusItem(activity);
-						googlePlusItem.setList(label);
+						Item googlePlusItem = new GooglePlusItem(activity);
+						if(label != null) {
+							googlePlusItem.addLabel(label);
+						}
 						
 						if(streamUser != null) {
 							googlePlusItem.setStreamUser(streamUser);
@@ -184,7 +184,7 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 
 		// The next request will retrieve only items of the last day
 		Date dateToRetrieve = new Date(System.currentTimeMillis() - (24*3600*1000));
-		feed.setDateToRetrieve(dateToRetrieve);
+		feed.setSinceDate(dateToRetrieve);
 		
 		return items;
 	}
@@ -194,7 +194,7 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 		List<Item> items = new ArrayList<Item>();
 		
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
-		Date lastItemDate = feed.getDateToRetrieve();
+		Date lastItemDate = feed.getSinceDate();
 		String label = feed.getLabel();
 		
 		int totalRequests = 0;
@@ -257,8 +257,10 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 					}
 					
 					if(publicationDate.after(lastItemDate) && activity != null && activity.getId() != null) {
-						GooglePlusItem googlePlusItem = new GooglePlusItem(activity);
-						googlePlusItem.setList(label);
+						Item googlePlusItem = new GooglePlusItem(activity);
+						if(label != null) {
+							googlePlusItem.addLabel(label);
+						}
 						
 						String userID = googlePlusItem.getStreamUser().getUserid();
 						StreamUser streamUser = null;
@@ -305,7 +307,7 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 		
 		// The next request will retrieve only items of the last day
 		Date dateToRetrieve = new Date(System.currentTimeMillis() - (24*3600*1000));
-		feed.setDateToRetrieve(dateToRetrieve);
+		feed.setSinceDate(dateToRetrieve);
 		
 		return items;
 		
@@ -353,15 +355,12 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 	
 	public static void main(String...args) {
 		String uid = "102155862500050097100";
-		
-		Account source = new Account();
-		source.setId(uid);
-		AccountFeed feed = new AccountFeed(source, new Date(System.currentTimeMillis()-24*3600000), "1");
+		AccountFeed feed = new AccountFeed(uid, null, new Date(System.currentTimeMillis()-24*3600000));
 		
 		Credentials credentials = new Credentials();
 		credentials.setKey("AIzaSyB-knYzMRW6tUzobP-V1hTWYAXEps1Wngk");
 		
-		GooglePlusRetriever retriever = new GooglePlusRetriever(credentials, new RateLimitsMonitor(10, 10000l));
+		GooglePlusRetriever retriever = new GooglePlusRetriever(credentials);
 		
 		List<Item> items = retriever.retrieveAccountFeed(feed, 1, 1000);
 		for(Item item : items) {

@@ -17,7 +17,7 @@ import com.sun.syndication.io.XmlReader;
 import gr.iti.mklab.framework.abstractions.socialmedia.items.RSSItem;
 import gr.iti.mklab.framework.common.domain.Item;
 import gr.iti.mklab.framework.common.domain.feeds.Feed;
-import gr.iti.mklab.framework.common.domain.feeds.URLFeed;
+import gr.iti.mklab.framework.common.domain.feeds.RssFeed;
 import gr.iti.mklab.framework.retrievers.Retriever;
 
 /**
@@ -42,7 +42,7 @@ public class RssRetriever implements Retriever {
 		
 		List<Item> items = new ArrayList<Item>();
 		
-		URLFeed ufeed = (URLFeed) feed;
+		RssFeed ufeed = (RssFeed) feed;
 		System.out.println("["+new Date()+"] Retrieving RSS Feed: " + ufeed.getURL());
 		
 		Integer totalRetrievedItems = 0;
@@ -75,7 +75,9 @@ public class RssRetriever implements Retriever {
 						RSSItem rssItem = new RSSItem(rss);
 								
 						String label = feed.getLabel();
-						rssItem.setList(label);
+						if(label != null) {
+							rssItem.addLabel(label);
+						}
 						
 						items.add(rssItem);	
 						totalRetrievedItems++;
@@ -109,7 +111,7 @@ public class RssRetriever implements Retriever {
 	public static void main(String...args) throws Exception {
 		RssRetriever retriever = new RssRetriever();
 		
-		Feed feed = new URLFeed("http://ecowatch.com/feed/", new Date(System.currentTimeMillis()-3600000), "ecowatch");
+		Feed feed = new RssFeed("ecowatch", "http://ecowatch.com/feed/", new Date(System.currentTimeMillis()-3600000));
 		
 		retriever.retrieve(feed);
 	}

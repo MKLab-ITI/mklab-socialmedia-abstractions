@@ -25,21 +25,20 @@ import gr.iti.mklab.framework.abstractions.socialmedia.items.FlickrItem;
 import gr.iti.mklab.framework.abstractions.socialmedia.users.FlickrStreamUser;
 import gr.iti.mklab.framework.common.domain.Item;
 import gr.iti.mklab.framework.common.domain.MediaItem;
-import gr.iti.mklab.framework.common.domain.Account;
 import gr.iti.mklab.framework.common.domain.StreamUser;
 import gr.iti.mklab.framework.common.domain.feeds.AccountFeed;
 import gr.iti.mklab.framework.common.domain.feeds.Feed;
 import gr.iti.mklab.framework.common.domain.feeds.GroupFeed;
 import gr.iti.mklab.framework.common.domain.feeds.KeywordsFeed;
 import gr.iti.mklab.framework.common.domain.feeds.LocationFeed;
-import gr.iti.mklab.framework.retrievers.RateLimitsMonitor;
 import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
 
 /**
  * Class responsible for retrieving Flickr content based on keywords,users or location coordinates
  * The retrieval process takes place through Flickr API.
- * @author ailiakop
- * @email  ailiakop@iti.gr
+ * 
+ * @author manosetro
+ * @email  manosetro@iti.gr
  */
 public class FlickrRetriever extends SocialMediaRetriever {
 
@@ -55,8 +54,8 @@ public class FlickrRetriever extends SocialMediaRetriever {
 	private HashMap<String, StreamUser> userMap;
 	
 
-	public FlickrRetriever(Credentials credentials, RateLimitsMonitor rateLimitsMonitor) {
-		super(credentials, rateLimitsMonitor);
+	public FlickrRetriever(Credentials credentials) {
+		super(credentials);
 		
 		this.flickrKey = credentials.getKey();
 		this.flickrSecret = credentials.getSecret();
@@ -73,18 +72,14 @@ public class FlickrRetriever extends SocialMediaRetriever {
 		
 		List<Item> items = new ArrayList<Item>();
 		
-		Date dateToRetrieve = feed.getDateToRetrieve();
+		Date dateToRetrieve = feed.getSinceDate();
 		String label = feed.getLabel();
 		
 		int page=1, pages=1; //pagination
 		int numberOfRequests = 0;
 		int numberOfResults = 0;
 		
-		//Here we search the user by the userId given (NSID) - 
-		// however we can get NSID via flickrAPI given user's username
-		Account source = feed.getAccount();
-		String userID = source.getId();
-		
+		String userID = feed.getId();
 		if(userID == null) {
 			logger.info("#Flickr : No source feed");
 			return items;
@@ -126,7 +121,9 @@ public class FlickrRetriever extends SocialMediaRetriever {
 				}
 
 				FlickrItem flickrItem = new FlickrItem(photo, streamUser);
-				flickrItem.setList(label);
+				if(label != null) {
+					flickrItem.addLabel(label);
+				}
 				
 				items.add(flickrItem);
 			}
@@ -138,7 +135,7 @@ public class FlickrRetriever extends SocialMediaRetriever {
 		
 		// The next request will retrieve only items of the last day
 		dateToRetrieve = new Date(System.currentTimeMillis() - (24*3600*1000));
-		feed.setDateToRetrieve(dateToRetrieve);
+		feed.setSinceDate(dateToRetrieve);
 		
 		return items;
 	}
@@ -148,7 +145,7 @@ public class FlickrRetriever extends SocialMediaRetriever {
 		
 		List<Item> items = new ArrayList<Item>();
 		
-		Date dateToRetrieve = feed.getDateToRetrieve();
+		Date dateToRetrieve = feed.getSinceDate();
 		String label = feed.getLabel();
 		
 		int page=1, pages=1;
@@ -217,8 +214,10 @@ public class FlickrRetriever extends SocialMediaRetriever {
 					userMap.put(userid, streamUser);
 				}
 
-				FlickrItem flickrItem = new FlickrItem(photo, streamUser);
-				flickrItem.setList(label);
+				Item flickrItem = new FlickrItem(photo, streamUser);
+				if(label != null) {
+					flickrItem.addLabel(label);
+				}
 				
 				items.add(flickrItem);
 			}
@@ -229,7 +228,7 @@ public class FlickrRetriever extends SocialMediaRetriever {
 //				" [ " + lastItemDate + " - " + new Date(System.currentTimeMillis()) + " ]");
 		
 		dateToRetrieve = new Date(System.currentTimeMillis() - (24*3600*1000));
-		feed.setDateToRetrieve(dateToRetrieve);
+		feed.setSinceDate(dateToRetrieve);
 		
 		return items;
 	}
@@ -239,7 +238,7 @@ public class FlickrRetriever extends SocialMediaRetriever {
 		
 		List<Item> items = new ArrayList<Item>();
 		
-		Date dateToRetrieve = feed.getDateToRetrieve();
+		Date dateToRetrieve = feed.getSinceDate();
 		String label = feed.getLabel();
 		
 		Double[][] bbox = feed.getLocation().getbbox();
@@ -286,8 +285,10 @@ public class FlickrRetriever extends SocialMediaRetriever {
 					userMap.put(userid, streamUser);
 				}
 
-				FlickrItem flickrItem = new FlickrItem(photo, streamUser);
-				flickrItem.setList(label);
+				Item flickrItem = new FlickrItem(photo, streamUser);
+				if(label != null) {
+					flickrItem.addLabel(label);
+				}
 				
 				items.add(flickrItem);
 			}
@@ -339,9 +340,9 @@ public class FlickrRetriever extends SocialMediaRetriever {
 		credentials.setKey(flickrKey);
 		credentials.setSecret(flickrSecret);
 		
-		FlickrRetriever retriever = new FlickrRetriever(credentials, new RateLimitsMonitor(10, 10000l));
+		FlickrRetriever retriever = new FlickrRetriever(credentials);
 		
-		Feed feed = new KeywordsFeed("\"uk\" amazing", new Date(System.currentTimeMillis()-14400000), "1");
+		Feed feed = new KeywordsFeed( "1", "\"uk\" amazing", new Date(System.currentTimeMillis()-14400000));
 		
 		List<Item> items = retriever.retrieve(feed, 1, 1000);
 		System.out.println(items.size());

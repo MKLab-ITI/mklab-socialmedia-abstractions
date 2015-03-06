@@ -30,20 +30,19 @@ import gr.iti.mklab.framework.abstractions.socialmedia.items.YoutubeItem;
 import gr.iti.mklab.framework.abstractions.socialmedia.users.YoutubeStreamUser;
 import gr.iti.mklab.framework.common.domain.Item;
 import gr.iti.mklab.framework.common.domain.MediaItem;
-import gr.iti.mklab.framework.common.domain.Account;
 import gr.iti.mklab.framework.common.domain.StreamUser;
 import gr.iti.mklab.framework.common.domain.feeds.AccountFeed;
 import gr.iti.mklab.framework.common.domain.feeds.GroupFeed;
 import gr.iti.mklab.framework.common.domain.feeds.KeywordsFeed;
 import gr.iti.mklab.framework.common.domain.feeds.LocationFeed;
-import gr.iti.mklab.framework.retrievers.RateLimitsMonitor;
 import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
 
 /**
  * Class responsible for retrieving YouTube content based on keywords and YouTube users 
- * The retrieval process takes place through Google API 
- * @author ailiakop
- * @email  ailiakop@iti.gr
+ * The retrieval process takes place through Google API.
+ * 
+ * @author manosetro
+ * @email  manosetro@iti.gr
  */
 public class YoutubeRetriever extends SocialMediaRetriever {
 
@@ -56,8 +55,9 @@ public class YoutubeRetriever extends SocialMediaRetriever {
 	
 	private YouTubeService service;
 	
-	public YoutubeRetriever(Credentials credentials, RateLimitsMonitor rateLimitsMonitor) {			
-		super(credentials, rateLimitsMonitor);	
+	public YoutubeRetriever(Credentials credentials) {		
+		
+		super(credentials);	
 		
 		this.service = new YouTubeService(credentials.getClientId(), credentials.getKey());
 	}
@@ -68,13 +68,12 @@ public class YoutubeRetriever extends SocialMediaRetriever {
 		
 		List<Item> items = new ArrayList<Item>();
 		
-		Date lastItemDate = feed.getDateToRetrieve();
+		Date lastItemDate = feed.getSinceDate();
 		String label = feed.getLabel();
 		
 		boolean isFinished = false;
 		
-		Account source = feed.getAccount();
-		String uName = source.getName();
+		String uName = feed.getUsername();
 		
 		int numberOfRequests = 0;
 		
@@ -109,8 +108,10 @@ public class YoutubeRetriever extends SocialMediaRetriever {
 					Date publicationDate = publishedDateTime.toDate();
 					
 					if(publicationDate.after(lastItemDate) && (video != null && video.getId() != null)) {
-						YoutubeItem ytItem = new YoutubeItem(video);
-						ytItem.setList(label);
+						Item ytItem = new YoutubeItem(video);
+						if(label != null) {
+							ytItem.addLabel(label);
+						}
 						
 						if(streamUser != null) {
 							ytItem.setUserId(streamUser.getId());
@@ -153,7 +154,7 @@ public class YoutubeRetriever extends SocialMediaRetriever {
 		
 		List<Item> items = new ArrayList<Item>();
 		
-		Date lastItemDate = feed.getDateToRetrieve();
+		Date lastItemDate = feed.getSinceDate();
 		String label = feed.getLabel();
 		
 		int startIndex = 1;
@@ -214,8 +215,10 @@ public class YoutubeRetriever extends SocialMediaRetriever {
 					Date publicationDate = publishedDateTime.toDate();
 					
 					if(publicationDate.after(lastItemDate) && (video != null && video.getId() != null)){
-						YoutubeItem ytItem = new YoutubeItem(video);
-						ytItem.setList(label);
+						Item ytItem = new YoutubeItem(video);
+						if(label != null) {
+							ytItem.addLabel(label);
+						}
 						
 						StreamUser tempStreamUser = ytItem.getStreamUser();
 						if(tempStreamUser != null) {
@@ -254,7 +257,7 @@ public class YoutubeRetriever extends SocialMediaRetriever {
 		}
 		
 		Date dateToRetrieve = new Date(System.currentTimeMillis() - (24*3600*1000));
-		feed.setDateToRetrieve(dateToRetrieve);
+		feed.setSinceDate(dateToRetrieve);
 		
 		return items;
 	}

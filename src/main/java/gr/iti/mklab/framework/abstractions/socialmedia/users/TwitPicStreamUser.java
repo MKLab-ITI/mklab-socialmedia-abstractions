@@ -21,7 +21,7 @@ public class TwitPicStreamUser extends StreamUser {
 		items = user.photo_count;
 		location = user.location;
 
-		createdAt = user.timestamp;
+		//createdAt = user.timestamp;
 		profileImage = user.avatar_url;
 
 	}

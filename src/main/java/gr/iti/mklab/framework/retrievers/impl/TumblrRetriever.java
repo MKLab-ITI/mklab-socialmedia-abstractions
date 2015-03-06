@@ -23,20 +23,19 @@ import gr.iti.mklab.framework.abstractions.socialmedia.items.TumblrItem;
 import gr.iti.mklab.framework.abstractions.socialmedia.users.TumblrStreamUser;
 import gr.iti.mklab.framework.common.domain.Item;
 import gr.iti.mklab.framework.common.domain.MediaItem;
-import gr.iti.mklab.framework.common.domain.Account;
 import gr.iti.mklab.framework.common.domain.StreamUser;
 import gr.iti.mklab.framework.common.domain.feeds.AccountFeed;
 import gr.iti.mklab.framework.common.domain.feeds.GroupFeed;
 import gr.iti.mklab.framework.common.domain.feeds.KeywordsFeed;
 import gr.iti.mklab.framework.common.domain.feeds.LocationFeed;
-import gr.iti.mklab.framework.retrievers.RateLimitsMonitor;
 import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
 
 /**
  * Class responsible for retrieving Tumblr content based on keywords or tumblr users
- * The retrieval process takes place through Tumblr API (Jumblr)
- * @author ailiakop
- * @email  ailiakop@iti.gr
+ * The retrieval process takes place through Tumblr API (Jumblr).
+ * 
+ * @author manosetro
+ * @email  manosetro@iti.gr
  */
 public class TumblrRetriever extends SocialMediaRetriever {
 	
@@ -44,9 +43,9 @@ public class TumblrRetriever extends SocialMediaRetriever {
 	
 	private JumblrClient client;
 	
-	public TumblrRetriever(Credentials credentials, RateLimitsMonitor rateLimitsMonitor) {
+	public TumblrRetriever(Credentials credentials) {
 		
-		super(credentials, rateLimitsMonitor);
+		super(credentials);
 		
 		client = new JumblrClient(credentials.getKey(), credentials.getSecret());
 	}
@@ -57,14 +56,13 @@ public class TumblrRetriever extends SocialMediaRetriever {
 		List<Item> items = new ArrayList<Item>();
 		
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
-		Date lastItemDate = feed.getDateToRetrieve();
+		Date lastItemDate = feed.getSinceDate();
 		
 		int numberOfRequests = 0;
 		
 		boolean isFinished = false;
-		
-		Account source = feed.getAccount();
-		String uName = source.getName();
+
+		String uName = feed.getUsername();
 		
 		if(uName == null){
 			logger.info("#Tumblr : No source feed");
@@ -146,7 +144,7 @@ public class TumblrRetriever extends SocialMediaRetriever {
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
 		Date currentDate = new Date(System.currentTimeMillis());
 		Date indexDate = currentDate;
-		Date lastItemDate = feed.getDateToRetrieve();
+		Date lastItemDate = feed.getSinceDate();
 		DateUtil dateUtil = new DateUtil();
 		
 		int numberOfRequests=0;

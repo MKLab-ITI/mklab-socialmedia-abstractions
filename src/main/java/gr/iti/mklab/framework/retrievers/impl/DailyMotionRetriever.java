@@ -24,7 +24,6 @@ import gr.iti.mklab.framework.common.domain.feeds.AccountFeed;
 import gr.iti.mklab.framework.common.domain.feeds.GroupFeed;
 import gr.iti.mklab.framework.common.domain.feeds.KeywordsFeed;
 import gr.iti.mklab.framework.common.domain.feeds.LocationFeed;
-import gr.iti.mklab.framework.retrievers.RateLimitsMonitor;
 import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
 
 /**
@@ -40,8 +39,8 @@ public class DailyMotionRetriever extends SocialMediaRetriever {
 	private HttpRequestFactory requestFactory;
 	private String requestPrefix = "https://api.dailymotion.com/video/";
 	
-	public DailyMotionRetriever(Credentials credentials, RateLimitsMonitor rateLimitsMonitor) {
-		super(credentials, rateLimitsMonitor);
+	public DailyMotionRetriever(Credentials credentials) {
+		super(credentials);
 		
 		requestFactory = HTTP_TRANSPORT.createRequestFactory(
 				new HttpRequestInitializer() {
