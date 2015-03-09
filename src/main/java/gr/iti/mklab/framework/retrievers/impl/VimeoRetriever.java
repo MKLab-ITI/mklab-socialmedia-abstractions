@@ -112,32 +112,27 @@ public class VimeoRetriever extends SocialMediaRetriever {
 	}
 
 	@Override
-	public List<Item> retrieve(Feed feed, Integer maxRequests,
-			Integer maxResults) {
+	public List<Item> retrieve(Feed feed, Integer requests) {
 		return null;
 	}
 
 	@Override
-	public List<Item> retrieveKeywordsFeed(KeywordsFeed feed,
-			Integer maxRequests, Integer maxResults) throws Exception {
+	public List<Item> retrieveKeywordsFeed(KeywordsFeed feed, Integer requests) throws Exception {
 		return null;
 	}
 
 	@Override
-	public List<Item> retrieveAccountFeed(AccountFeed feed, Integer maxRequests,
-			Integer maxResults) throws Exception {
+	public List<Item> retrieveAccountFeed(AccountFeed feed, Integer requests) throws Exception {
 		return null;
 	}
 
 	@Override
-	public List<Item> retrieveLocationFeed(LocationFeed feed,
-			Integer maxRequests, Integer maxResults) throws Exception {
+	public List<Item> retrieveLocationFeed(LocationFeed feed, Integer requests) throws Exception {
 		return null;
 	}
 
 	@Override
-	public List<Item> retrieveGroupFeed(GroupFeed feed, Integer maxRequests,
-			Integer maxResults) {
+	public List<Item> retrieveGroupFeed(GroupFeed feed, Integer requests) {
 		return null;
 	}
 

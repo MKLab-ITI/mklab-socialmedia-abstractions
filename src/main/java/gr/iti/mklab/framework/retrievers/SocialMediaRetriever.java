@@ -14,10 +14,8 @@ import gr.iti.mklab.framework.common.domain.feeds.KeywordsFeed;
 import gr.iti.mklab.framework.common.domain.feeds.LocationFeed;
 
 /**
- * The interface for retrieving from social media - Currently the
- * social networks supprorted by the platform are the following:
- * YouTube, Google+,Twitter, Facebook, Flickr, Instagram, Topsy, 
- * Tumblr, Vimeo, DailyMotion, Twitpic
+ * The interface for retrieving from social media - Currently the social networks supprorted by the platform are the following:
+ * YouTube, Google+,Twitter, Facebook, Flickr, Instagram, Topsy, Tumblr, Vimeo, DailyMotion, Twitpic
  * 
  * @author Manos Schinas
  * @email  manosetro@iti.gr
@@ -31,41 +29,44 @@ public abstract class SocialMediaRetriever implements Retriever {
 	/**
 	 * Retrieves a keywords feed that contains certain keywords
 	 * in order to retrieve relevant content
+	 * 
 	 * @param feed
-	 * @return
+	 * @return List<Item>
 	 * @throws Exception
 	 */
 	public List<Item> retrieveKeywordsFeed(KeywordsFeed feed) throws Exception {
-		return retrieveKeywordsFeed(feed, null, null);
+		return retrieveKeywordsFeed(feed, 1);
 	}
 	
-	public abstract List<Item> retrieveKeywordsFeed(KeywordsFeed feed, Integer maxRequests, Integer maxResults) throws Exception;
+	public abstract List<Item> retrieveKeywordsFeed(KeywordsFeed feed, Integer requests) throws Exception;
 	
 	/**
 	 * Retrieves a user feed that contains the user/users in 
 	 * order to retrieve content posted by them
+	 * 
 	 * @param feed
-	 * @return
+	 * @return List<Item>
 	 * @throws Exception
 	 */
 	public List<Item> retrieveAccountFeed(AccountFeed feed) throws Exception {
-		return retrieveAccountFeed(feed, null, null);
+		return retrieveAccountFeed(feed, 1);
 	}
 	
-	public abstract List<Item> retrieveAccountFeed(AccountFeed feed, Integer maxRequests, Integer maxResults) throws Exception;
+	public abstract List<Item> retrieveAccountFeed(AccountFeed feed, Integer requests) throws Exception;
 	
 	/**
 	 * Retrieves a location feed that contains the coordinates of the location
 	 * that the retrieved content must come from.
+	 * 
 	 * @param feed
-	 * @return
+	 * @return List<Item>
 	 * @throws Exception
 	 */
 	public List<Item> retrieveLocationFeed(LocationFeed feed) throws Exception {
-		return retrieveLocationFeed(feed, null, null);
+		return retrieveLocationFeed(feed, 1);
 	}
 	
-	public abstract List<Item> retrieveLocationFeed(LocationFeed feed, Integer maxRequests, Integer maxResults) throws Exception;
+	public abstract List<Item> retrieveLocationFeed(LocationFeed feed, Integer requests) throws Exception;
 
 	/**
 	 * Retrieves a list feed that contains the owner of a list an a slug 
@@ -75,11 +76,10 @@ public abstract class SocialMediaRetriever implements Retriever {
 	 * @throws Exception
 	 */
 	public List<Item> retrieveGroupFeed(GroupFeed feed) {
-		return retrieveGroupFeed(feed, null, null);
+		return retrieveGroupFeed(feed, 1);
 	}
 	
-	public abstract List<Item> retrieveGroupFeed(GroupFeed feed, Integer maxRequests, Integer maxResults);
-	
+	public abstract List<Item> retrieveGroupFeed(GroupFeed feed, Integer maxRequests);
 	
 	/**
 	 * Retrieves the info for a specific user on the basis
@@ -90,8 +90,8 @@ public abstract class SocialMediaRetriever implements Retriever {
 	public abstract StreamUser getStreamUser(String uid);
 	
 	/**
-	 * Retrieves the info for a specific media object on the basis
-	 * of its id in the social network
+	 * Retrieves the info for a specific media object on the basis of its id in the social network
+	 * 
 	 * @param id
 	 * @return a MediaItem instance
 	 */
@@ -99,28 +99,27 @@ public abstract class SocialMediaRetriever implements Retriever {
 	
 	@Override
 	public List<Item> retrieve(Feed feed) throws Exception {
-		return retrieve(feed, null, null);
+		return retrieve(feed, 1);
 	}
 	
 	@Override
-	public List<Item> retrieve (Feed feed, Integer maxRequests, Integer maxResults) throws Exception {
+	public List<Item> retrieve (Feed feed, Integer requests) throws Exception {
 		if(AccountFeed.class.isInstance(feed)) {
 			AccountFeed userFeed = (AccountFeed) feed;				
-			return retrieveAccountFeed(userFeed, maxRequests, maxResults);
+			return retrieveAccountFeed(userFeed, requests);
 		}
 		if(KeywordsFeed.class.isInstance(feed)) {
 			KeywordsFeed keyFeed = (KeywordsFeed) feed;				
-			return retrieveKeywordsFeed(keyFeed, maxRequests, maxResults);
+			return retrieveKeywordsFeed(keyFeed, requests);
 		}
 		if(LocationFeed.class.isInstance(feed)) {
 			LocationFeed locationFeed = (LocationFeed) feed;
-			return retrieveLocationFeed(locationFeed, maxRequests, maxResults);
+			return retrieveLocationFeed(locationFeed, requests);
 		}
 		if(GroupFeed.class.isInstance(feed)) {
 			GroupFeed listFeed = (GroupFeed) feed;
-			return retrieveGroupFeed(listFeed, maxRequests, maxResults);
+			return retrieveGroupFeed(listFeed, requests);
 		}
-
 		return new ArrayList<Item>();
 	}
 	

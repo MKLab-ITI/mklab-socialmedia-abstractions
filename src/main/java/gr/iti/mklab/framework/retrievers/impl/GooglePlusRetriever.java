@@ -68,7 +68,7 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 	}
 
 	@Override
-	public List<Item> retrieveAccountFeed(AccountFeed feed, Integer maxRequests, Integer maxResults) {
+	public List<Item> retrieveAccountFeed(AccountFeed feed, Integer maxRequests) {
 		
 		List<Item> items = new ArrayList<Item>();
 		
@@ -145,8 +145,7 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 						return items;
 					}
 					
-					if(publicationDate.after(lastItemDate) && activity != null && activity.getId() != null
-							&& items.size() < maxResults) {
+					if(publicationDate.after(lastItemDate) && activity != null && activity.getId() != null) {
 						Item googlePlusItem = new GooglePlusItem(activity);
 						if(label != null) {
 							googlePlusItem.addLabel(label);
@@ -190,7 +189,7 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 	}
 	
 	@Override
-	public List<Item> retrieveKeywordsFeed(KeywordsFeed feed, Integer maxRequests, Integer maxResults) {
+	public List<Item> retrieveKeywordsFeed(KeywordsFeed feed, Integer maxRequests) {
 		List<Item> items = new ArrayList<Item>();
 		
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
@@ -277,10 +276,6 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 						items.add(googlePlusItem);
 						
 					}
-					if(items.size() > maxResults){
-						isFinished = true;
-						break;
-					}
 		
 				}
 		
@@ -313,12 +308,12 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 		
 	}
 	@Override
-	public List<Item> retrieveLocationFeed(LocationFeed feed, Integer maxRequests, Integer maxResults){
+	public List<Item> retrieveLocationFeed(LocationFeed feed, Integer maxRequests) {
 		return new ArrayList<Item>();
     }
 	
 	@Override
-	public List<Item> retrieveGroupFeed(GroupFeed feed, Integer maxRequests, Integer maxResults) {
+	public List<Item> retrieveGroupFeed(GroupFeed feed, Integer maxRequests) {
 		return new ArrayList<Item>();
 	}
 	
@@ -362,7 +357,7 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 		
 		GooglePlusRetriever retriever = new GooglePlusRetriever(credentials);
 		
-		List<Item> items = retriever.retrieveAccountFeed(feed, 1, 1000);
+		List<Item> items = retriever.retrieveAccountFeed(feed, 1);
 		for(Item item : items) {
 			System.out.println(item);
 		}

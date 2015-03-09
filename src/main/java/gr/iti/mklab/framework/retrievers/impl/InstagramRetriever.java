@@ -70,7 +70,7 @@ public class InstagramRetriever extends SocialMediaRetriever {
 	}
 	
 	@Override
-	public List<Item> retrieveAccountFeed(AccountFeed feed, Integer maxRequests, Integer maxResults) {
+	public List<Item> retrieveAccountFeed(AccountFeed feed, Integer maxRequests) {
 		
 		List<Item> items = new ArrayList<Item>();
 		
@@ -116,8 +116,7 @@ public class InstagramRetriever extends SocialMediaRetriever {
 						int createdTime = Integer.parseInt(mfeed.getCreatedTime());
 						Date publicationDate = new Date((long) createdTime * 1000);
 						
-						if(lastItemDate.after(publicationDate) || items.size()>maxResults 
-								|| numberOfRequests>maxRequests) {
+						if(lastItemDate.after(publicationDate) || numberOfRequests>maxRequests) {
 							break;
     					}
 						
@@ -152,7 +151,7 @@ public class InstagramRetriever extends SocialMediaRetriever {
 	}
 	
 	@Override
-	public List<Item> retrieveKeywordsFeed(KeywordsFeed feed, Integer maxRequests, Integer maxResults) {
+	public List<Item> retrieveKeywordsFeed(KeywordsFeed feed, Integer maxRequests) {
 		List<Item> items = new ArrayList<Item>();
 		
 		Date lastItemDate = feed.getSinceDate();
@@ -206,12 +205,7 @@ public class InstagramRetriever extends SocialMediaRetriever {
 					isFinished = true;
 					break;
 				}
-				if(items.size() > maxResults) {
-					if(loggingEnabled)
-						logger.info("totalRetrievedItems: " + lastItemDate + " > " + maxResults);
-					isFinished = true;
-					break;
-				}
+				
 				if(numberOfRequests > maxRequests) {
 					if(loggingEnabled)
 						logger.info("numberOfRequests: " + numberOfRequests + " > " + maxRequests);
@@ -251,8 +245,7 @@ public class InstagramRetriever extends SocialMediaRetriever {
 							for(MediaFeedData mfeed : tagFeed.getData()) {
 								int createdTime = Integer.parseInt(mfeed.getCreatedTime());
 								Date publicationDate = new Date((long) createdTime * 1000);
-								if(publicationDate.before(lastItemDate) || items.size()>maxResults
-										|| numberOfRequests>maxRequests){
+								if(publicationDate.before(lastItemDate) || numberOfRequests>maxRequests){
 									isFinished = true;
 									break;
 								}
@@ -295,7 +288,7 @@ public class InstagramRetriever extends SocialMediaRetriever {
 	}
 	
 	@Override
-	public List<Item> retrieveLocationFeed(LocationFeed feed, Integer maxRequests, Integer maxResults) {
+	public List<Item> retrieveLocationFeed(LocationFeed feed, Integer maxRequests) {
 		List<Item> items = new ArrayList<Item>();
 		
 		Date lastItemDate = feed.getSinceDate();
@@ -346,8 +339,7 @@ public class InstagramRetriever extends SocialMediaRetriever {
                 		for(MediaFeedData mfeed : mediaFeed.getData()){
         					int createdTime = Integer.parseInt(mfeed.getCreatedTime());
         					Date publicationDate = new Date((long) createdTime * 1000);
-        					if(lastItemDate.after(publicationDate) || items.size()>maxResults 
-        							|| numberOfRequests>maxRequests){
+        					if(lastItemDate.after(publicationDate) || numberOfRequests>maxRequests) {
         						isFinished = true;
 								break;
         					}
@@ -390,7 +382,7 @@ public class InstagramRetriever extends SocialMediaRetriever {
     }
 	
 	@Override
-	public List<Item> retrieveGroupFeed(GroupFeed feed, Integer maxRequests, Integer maxResults) {
+	public List<Item> retrieveGroupFeed(GroupFeed feed, Integer maxRequests) {
 		return new ArrayList<Item>();
 	}
 	

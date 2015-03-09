@@ -110,32 +110,27 @@ public class TwitpicRetriever extends SocialMediaRetriever {
 	}
 
 	@Override
-	public List<Item> retrieve(Feed feed, Integer maxRequests,
-			Integer maxResults) {
+	public List<Item> retrieve(Feed feed, Integer maxRequests) {
 		return null;
 	}
 
 	@Override
-	public List<Item> retrieveKeywordsFeed(KeywordsFeed feed,
-			Integer maxRequests, Integer maxResults) throws Exception {
+	public List<Item> retrieveKeywordsFeed(KeywordsFeed feed, Integer maxRequests) throws Exception {
 		return null;
 	}
 
 	@Override
-	public List<Item> retrieveAccountFeed(AccountFeed feed, Integer maxRequests,
-			Integer maxResults) throws Exception {
+	public List<Item> retrieveAccountFeed(AccountFeed feed, Integer maxRequests) throws Exception {
 		return null;
 	}
 
 	@Override
-	public List<Item> retrieveLocationFeed(LocationFeed feed,
-			Integer maxRequests, Integer maxResults) throws Exception {
+	public List<Item> retrieveLocationFeed(LocationFeed feed, Integer maxRequests) throws Exception {
 		return null;
 	}
 
 	@Override
-	public List<Item> retrieveGroupFeed(GroupFeed feed, Integer maxRequests,
-			Integer maxResults) {
+	public List<Item> retrieveGroupFeed(GroupFeed feed, Integer maxRequests) {
 		return null;
 	}
 

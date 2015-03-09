@@ -68,7 +68,7 @@ public class FlickrRetriever extends SocialMediaRetriever {
 	}
 	
 	@Override
-	public List<Item> retrieveAccountFeed(AccountFeed feed, Integer maxResults, Integer maxRequests) {
+	public List<Item> retrieveAccountFeed(AccountFeed feed, Integer maxRequests) {
 		
 		List<Item> items = new ArrayList<Item>();
 		
@@ -77,7 +77,6 @@ public class FlickrRetriever extends SocialMediaRetriever {
 		
 		int page=1, pages=1; //pagination
 		int numberOfRequests = 0;
-		int numberOfResults = 0;
 		
 		String userID = feed.getId();
 		if(userID == null) {
@@ -94,7 +93,7 @@ public class FlickrRetriever extends SocialMediaRetriever {
 		extras.remove(Extras.MACHINE_TAGS);
 		params.setExtras(extras);
 		
-		while(page<=pages && numberOfRequests<=maxRequests && numberOfResults<=maxResults) {
+		while(page<=pages && numberOfRequests<=maxRequests) {
 			
 			PhotoList<Photo> photos;
 			try {
@@ -105,7 +104,6 @@ public class FlickrRetriever extends SocialMediaRetriever {
 			}
 			
 			pages = photos.getPages();
-			numberOfResults += photos.size();
 
 			if(photos.isEmpty()) {
 				break;
@@ -141,7 +139,7 @@ public class FlickrRetriever extends SocialMediaRetriever {
 	}
 	
 	@Override
-	public List<Item> retrieveKeywordsFeed(KeywordsFeed feed, Integer maxResults, Integer maxRequests) {
+	public List<Item> retrieveKeywordsFeed(KeywordsFeed feed, Integer maxRequests) {
 		
 		List<Item> items = new ArrayList<Item>();
 		
@@ -151,7 +149,6 @@ public class FlickrRetriever extends SocialMediaRetriever {
 		int page=1, pages=1;
 		
 		int numberOfRequests = 0;
-		int numberOfResults = 0;
 		
 		List<String> keywords = feed.getKeywords();
 		
@@ -187,8 +184,8 @@ public class FlickrRetriever extends SocialMediaRetriever {
 		extras.remove(Extras.MACHINE_TAGS);
 		params.setExtras(extras);
 		
-		while(page<=pages && numberOfRequests<=maxRequests && numberOfResults<=maxResults ) {
-			
+		while(page<=pages && numberOfRequests<maxRequests ) {
+			logger.info("Request: " + numberOfRequests + " Page: " + page);
 			PhotoList<Photo> photos;
 			try {
 				numberOfRequests++;
@@ -199,7 +196,6 @@ public class FlickrRetriever extends SocialMediaRetriever {
 			}
 			
 			pages = photos.getPages();
-			numberOfResults += photos.size();
 
 			if(photos.isEmpty()) {
 				break;
@@ -234,7 +230,7 @@ public class FlickrRetriever extends SocialMediaRetriever {
 	}
 	
 	@Override
-	public List<Item> retrieveLocationFeed(LocationFeed feed, Integer maxResults, Integer maxRequests){
+	public List<Item> retrieveLocationFeed(LocationFeed feed, Integer maxRequests) {
 		
 		List<Item> items = new ArrayList<Item>();
 		
@@ -248,7 +244,6 @@ public class FlickrRetriever extends SocialMediaRetriever {
 		
 		int page=1, pages=1;
 		int numberOfRequests = 0;
-		int numberOfResults = 0;
 		
 		PhotosInterface photosInteface = flickr.getPhotosInterface();
 		SearchParameters params = new SearchParameters();
@@ -259,7 +254,7 @@ public class FlickrRetriever extends SocialMediaRetriever {
 		extras.remove(Extras.MACHINE_TAGS);
 		params.setExtras(extras);
 		
-		while(page<=pages && numberOfRequests<=maxRequests && numberOfResults<=maxResults ) {
+		while(page<=pages && numberOfRequests<=maxRequests ) {
 			
 			PhotoList<Photo> photos;
 			try {
@@ -269,7 +264,6 @@ public class FlickrRetriever extends SocialMediaRetriever {
 			}
 			
 			pages = photos.getPages();
-			numberOfResults += photos.size();
 
 			if(photos.isEmpty()) {
 				break;
@@ -301,12 +295,12 @@ public class FlickrRetriever extends SocialMediaRetriever {
     }
 	
 	@Override
-	public List<Item> retrieveGroupFeed(GroupFeed feed, Integer maxRequests, Integer maxResults) {
+	public List<Item> retrieveGroupFeed(GroupFeed feed, Integer maxRequests) {
 		return null;
 	}
 	
 	@Override
-	public void stop(){
+	public void stop() {
 		if(flickr != null)
 			flickr = null;
 	}
@@ -342,9 +336,9 @@ public class FlickrRetriever extends SocialMediaRetriever {
 		
 		FlickrRetriever retriever = new FlickrRetriever(credentials);
 		
-		Feed feed = new KeywordsFeed( "1", "\"uk\" amazing", new Date(System.currentTimeMillis()-14400000));
+		Feed feed = new KeywordsFeed( "1", "barcelona", new Date(System.currentTimeMillis()-5*24*3600000));
 		
-		List<Item> items = retriever.retrieve(feed, 1, 1000);
+		List<Item> items = retriever.retrieve(feed, 1);
 		System.out.println(items.size());
 	}
 	

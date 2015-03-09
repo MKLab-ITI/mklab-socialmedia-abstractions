@@ -52,7 +52,7 @@ public class FacebookRetriever extends SocialMediaRetriever {
 	}
 
 	@Override
-	public List<Item> retrieveAccountFeed(AccountFeed feed, Integer maxRequests, Integer maxResults) {
+	public List<Item> retrieveAccountFeed(AccountFeed feed, Integer maxRequests) {
 		
 		List<Item> items = new ArrayList<Item>();
 
@@ -97,7 +97,7 @@ public class FacebookRetriever extends SocialMediaRetriever {
 					
 				 }
 				
-				if(publicationDate.before(lastItemDate) || items.size()>maxResults || totalRequests>maxRequests){
+				if(publicationDate.before(lastItemDate) || totalRequests>maxRequests){
 					isFinished = true;
 					break;
 				}
@@ -114,7 +114,7 @@ public class FacebookRetriever extends SocialMediaRetriever {
 	}
 	
 	@Override
-	public List<Item> retrieveKeywordsFeed(KeywordsFeed feed, Integer maxRequests, Integer maxResults) {
+	public List<Item> retrieveKeywordsFeed(KeywordsFeed feed, Integer maxRequests) {
 		
 		List<Item> items = new ArrayList<Item>();
 		
@@ -191,7 +191,7 @@ public class FacebookRetriever extends SocialMediaRetriever {
 						break;
 					}
 					
-					if(publicationDate.before(lastItemDate) || items.size()>maxResults){
+					if(publicationDate.before(lastItemDate)){
 						isFinished = true;
 						break;
 					}
@@ -212,19 +212,19 @@ public class FacebookRetriever extends SocialMediaRetriever {
 		return items;
 	}
 	
-	
-	public List<Item> retrieveLocationFeed(LocationFeed feed, Integer maxRequests, Integer maxResults) {
+	@Override
+	public List<Item> retrieveLocationFeed(LocationFeed feed, Integer maxRequests) {
 		return new ArrayList<Item>();
 	}
 	
 	@Override
-	public List<Item> retrieveGroupFeed(GroupFeed feed, Integer maxRequests, Integer maxResults) {
+	public List<Item> retrieveGroupFeed(GroupFeed feed, Integer maxRequests) {
 		return new ArrayList<Item>();
 	}
 	
 	
 	@Override
-	public void stop(){
+	public void stop() {
 		if(facebookClient != null)
 			facebookClient = null;
 	}
@@ -283,5 +283,5 @@ public class FacebookRetriever extends SocialMediaRetriever {
 			return null;
 		}
 	}
-
+	
 }

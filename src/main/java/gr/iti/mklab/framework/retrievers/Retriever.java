@@ -16,7 +16,7 @@ public interface Retriever {
 	 */
 	public List<Item> retrieve(Feed feed) throws Exception;
 	
-	public List<Item> retrieve(Feed feed, Integer maxRequests, Integer maxResults) throws Exception;
+	public List<Item> retrieve(Feed feed, Integer requests) throws Exception;
 	
 	/**
 	 * Stops the retriever

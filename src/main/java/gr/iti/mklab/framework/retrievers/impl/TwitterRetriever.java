@@ -34,7 +34,7 @@ import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
 
 /**
  * Class responsible for retrieving Twitter content based on keywords, twitter users or locations
- * The retrieval process takes place through Twitter API (twitter4j)
+ * The retrieval process takes place through Twitter API (twitter4j).
  * 
  * @author Manos Schinas
  * @email  manosetro@iti.gr
@@ -48,7 +48,6 @@ public class TwitterRetriever extends SocialMediaRetriever {
 	private TwitterFactory tf = null;
 	
 	public TwitterRetriever(Credentials credentials) {
-		
 		super(credentials);
 		
 		ConfigurationBuilder cb = new ConfigurationBuilder();
@@ -59,15 +58,12 @@ public class TwitterRetriever extends SocialMediaRetriever {
 			.setOAuthAccessTokenSecret(credentials.getAccessTokenSecret());
 		Configuration conf = cb.build();
 		
-		this.tf = new TwitterFactory(conf);
+		tf = new TwitterFactory(conf);
 		twitter = tf.getInstance();
-	
 	}
 	
 	@Override
-	public List<Item> retrieveAccountFeed(AccountFeed feed, Integer maxRequests, Integer maxResults) {
-		
-		logger.info(feed.getClass() + " " + maxRequests + " " + maxResults);	
+	public List<Item> retrieveAccountFeed(AccountFeed feed, Integer requests) {
 		
 		List<Item> items = new ArrayList<Item>();
 		
@@ -127,14 +123,9 @@ public class TwitterRetriever extends SocialMediaRetriever {
 					}
 				}
 				
-				if(items.size() > maxResults) {
-					if(loggingEnabled)
-						logger.info("totalRetrievedItems: " + items.size() + " > " + maxResults);
-					break;
-				}
-				if(numberOfRequests >= maxRequests) {
+				if(numberOfRequests >= requests) {
 					if(loggingEnabled)	
-						logger.info("numberOfRequests: " + numberOfRequests + " > " + maxRequests);
+						logger.info("numberOfRequests: " + numberOfRequests + " > " + requests);
 					break;
 				}
 				if(sinceDateReached) {
@@ -155,10 +146,8 @@ public class TwitterRetriever extends SocialMediaRetriever {
 	}
 	
 	@Override
-	public List<Item> retrieveKeywordsFeed(KeywordsFeed feed, Integer maxRequests, Integer maxResults) {
-			
-		logger.info(feed.getClass() + " " + maxRequests + " " + maxResults);	
-		
+	public List<Item> retrieveKeywordsFeed(KeywordsFeed feed, Integer requests) {
+				
 		List<Item> items = new ArrayList<Item>();
 		
 		int count = 100;
@@ -233,14 +222,9 @@ public class TwitterRetriever extends SocialMediaRetriever {
 					}
 				}
 				
-				if(items.size() > maxResults) {
+				if(numberOfRequests >= requests) {
 					if(loggingEnabled)
-						logger.info("totalRetrievedItems: " + items.size() + " > " + maxResults);
-					break;
-				}
-				if(numberOfRequests >= maxRequests) {
-					if(loggingEnabled)
-						logger.info("numberOfRequests: " + numberOfRequests + " > " + maxRequests);
+						logger.info("numberOfRequests: " + numberOfRequests + " > " + requests);
 					break;
 				}
 				if(sinceDateReached) {
@@ -253,8 +237,10 @@ public class TwitterRetriever extends SocialMediaRetriever {
 				if(query == null)
 					break;
 				
-				if(loggingEnabled)
+				if(loggingEnabled) {
 					logger.info("Request for " + query);
+				}
+				
 				response = twitter.search(query);
 			}
 			
@@ -267,7 +253,7 @@ public class TwitterRetriever extends SocialMediaRetriever {
 	}
 	
 	@Override
-	public List<Item> retrieveLocationFeed(LocationFeed feed, Integer maxRequests, Integer maxResults) {
+	public List<Item> retrieveLocationFeed(LocationFeed feed, Integer requests) {
 		
 		List<Item> items = new ArrayList<Item>();
 		
@@ -298,7 +284,6 @@ public class TwitterRetriever extends SocialMediaRetriever {
 			try {
 				numberOfRequests++;
 				QueryResult response = twitter.search(query);
-				
 				List<Status> statuses = response.getTweets();
 				for(Status status : statuses) {
 					if(status != null) {
@@ -324,14 +309,10 @@ public class TwitterRetriever extends SocialMediaRetriever {
 						logger.info("There is not next query.");
 					break;
 				}
-				if(items.size() > maxResults) {
+				
+				if(numberOfRequests > requests) {
 					if(loggingEnabled)
-						logger.info("totalRetrievedItems: " + items.size() + " > " + maxResults);
-					break;
-				}
-				if(numberOfRequests > maxRequests) {
-					if(loggingEnabled)
-						logger.info("numberOfRequests: " + numberOfRequests + " > " + maxRequests);
+						logger.info("numberOfRequests: " + numberOfRequests + " > " + requests);
 					break;
 				}
 				if(sinceDateReached) {
@@ -353,7 +334,7 @@ public class TwitterRetriever extends SocialMediaRetriever {
 	}
 	
 	@Override
-	public List<Item> retrieveGroupFeed(GroupFeed feed, Integer maxRequests, Integer maxResults) {
+	public List<Item> retrieveGroupFeed(GroupFeed feed, Integer Requests) {
 		
 		List<Item> items = new ArrayList<Item>();
 		

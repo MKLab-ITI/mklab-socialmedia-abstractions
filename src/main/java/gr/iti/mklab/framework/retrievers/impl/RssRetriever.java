@@ -34,11 +34,11 @@ public class RssRetriever implements Retriever {
 	
 	@Override
 	public List<Item> retrieve(Feed feed) throws Exception {
-		return retrieve(feed, null, null);
+		return retrieve(feed, 1);
 	}
 		
 	@Override
-	public List<Item> retrieve(Feed feed, Integer maxRequests, Integer maxResults) throws Exception {
+	public List<Item> retrieve(Feed feed, Integer maxRequests) throws Exception {
 		
 		List<Item> items = new ArrayList<Item>();
 		

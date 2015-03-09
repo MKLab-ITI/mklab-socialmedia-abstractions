@@ -64,7 +64,7 @@ public class YoutubeRetriever extends SocialMediaRetriever {
 
 	
 	@Override
-	public List<Item> retrieveAccountFeed(AccountFeed feed, Integer maxResults, Integer maxRequests) {
+	public List<Item> retrieveAccountFeed(AccountFeed feed, Integer requests) {
 		
 		List<Item> items = new ArrayList<Item>();
 		
@@ -121,7 +121,7 @@ public class YoutubeRetriever extends SocialMediaRetriever {
 						items.add(ytItem);
 					}
 					
-					if(items.size() > maxResults || numberOfRequests > maxRequests) {
+					if(numberOfRequests > requests) {
 						isFinished = true;
 						break;
 					}
@@ -150,7 +150,7 @@ public class YoutubeRetriever extends SocialMediaRetriever {
 	}
 	
 	@Override
-	public List<Item> retrieveKeywordsFeed(KeywordsFeed feed, Integer maxRequests, Integer maxResults) throws Exception {
+	public List<Item> retrieveKeywordsFeed(KeywordsFeed feed, Integer requests) throws Exception {
 		
 		List<Item> items = new ArrayList<Item>();
 		
@@ -232,7 +232,7 @@ public class YoutubeRetriever extends SocialMediaRetriever {
 						items.add(ytItem);
 					}
 					
-					if(items.size() > maxResults || numberOfRequests >= maxRequests) {
+					if(numberOfRequests >= requests) {
 						isFinished = true;
 						break;
 					}
@@ -246,7 +246,7 @@ public class YoutubeRetriever extends SocialMediaRetriever {
 				return items;
 			}
 			
-			if(maxResults>currResults || isFinished)	
+			if(isFinished)	
 				break;
 		
 		}
@@ -263,12 +263,12 @@ public class YoutubeRetriever extends SocialMediaRetriever {
 	}
 	
 	@Override
-	public List<Item> retrieveLocationFeed(LocationFeed feed, Integer maxResults, Integer maxRequests) {
+	public List<Item> retrieveLocationFeed(LocationFeed feed, Integer requests) {
 		return new ArrayList<Item>();
     }
 	
 	@Override
-	public List<Item> retrieveGroupFeed(GroupFeed feed, Integer maxResults, Integer maxRequests) {
+	public List<Item> retrieveGroupFeed(GroupFeed feed, Integer requests) {
 		return new ArrayList<Item>();
 	}
 

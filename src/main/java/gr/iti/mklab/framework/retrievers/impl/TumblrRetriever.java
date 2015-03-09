@@ -44,15 +44,13 @@ public class TumblrRetriever extends SocialMediaRetriever {
 	private JumblrClient client;
 	
 	public TumblrRetriever(Credentials credentials) {
-		
 		super(credentials);
-		
 		client = new JumblrClient(credentials.getKey(), credentials.getSecret());
 	}
 
 	
 	@Override
-	public List<Item> retrieveAccountFeed(AccountFeed feed, Integer maxResults, Integer maxRequests){
+	public List<Item> retrieveAccountFeed(AccountFeed feed, Integer maxRequests) {
 		List<Item> items = new ArrayList<Item>();
 		
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
@@ -78,7 +76,7 @@ public class TumblrRetriever extends SocialMediaRetriever {
 		Integer limit = 20;
 		options.put("limit", limit.toString());
 	
-		while(true){
+		while(true) {
 			
 			options.put("offset", offset.toString());
 			
@@ -86,58 +84,36 @@ public class TumblrRetriever extends SocialMediaRetriever {
 			if(posts == null || posts.isEmpty())
 				break;
 			
-			numberOfRequests ++;
-			
-			for(Post post : posts){
-				
-				if(post.getType().equals("photo") || post.getType().equals("video") || post.getType().equals("link")){
-					
-					String retrievedDate = post.getDateGMT().replace(" GMT", "");
-					retrievedDate+=".0";
-					
-					Date publicationDate = null;
+			numberOfRequests++;
+			for(Post post : posts) {
+				if(post.getType().equals("photo") || post.getType().equals("video") || post.getType().equals("link")) {
+					String retrievedDate = post.getDateGMT().replace(" GMT", "") + ".0";
 					try {
-						publicationDate = (Date) formatter.parse(retrievedDate);
-						
-					} catch (ParseException e) {
+						Date publicationDate = (Date) formatter.parse(retrievedDate);	
+						if(publicationDate.after(lastItemDate) && post != null && post.getId() != null) {
+							Item tumblrItem = new TumblrItem(post,tumblrStreamUser);
+							items.add(tumblrItem);
+						}
+						else {
+							isFinished = true;
+						}
+					} catch (Exception e) {
 						return items;
 					}
-					
-					if(publicationDate.after(lastItemDate) && post != null && post.getId() != null){
-						
-						TumblrItem tumblrItem = null;
-						try {
-							tumblrItem = new TumblrItem(post,tumblrStreamUser);
-						} catch (MalformedURLException e) {
-							
-							return items;
-						}
-						
-						items.add(tumblrItem);
-						
-					}
-				
-				}
-				if(items.size()>maxResults || numberOfRequests>maxRequests){
-					isFinished = true;
-					break;
 				}
 			}
-			if(isFinished)
+			
+			if(isFinished || numberOfRequests > maxRequests)
 				break;
 			
-			offset+=limit;
+			offset += limit;
 		}
 
-		//logger.info("#Tumblr : Done retrieving for this session");
-//		logger.info("#Tumblr : Handler fetched " +totalRetrievedItems + " posts from " + uName + 
-//				" [ " + lastItemDate + " - " + new Date(System.currentTimeMillis()) + " ]");
-		
 		return items;
 	}
 	
 	@Override
-	public List<Item> retrieveKeywordsFeed(KeywordsFeed feed, Integer maxResults, Integer maxRequests) {
+	public List<Item> retrieveKeywordsFeed(KeywordsFeed feed, Integer maxRequests) {
 		
 		List<Item> items = new ArrayList<Item>();
 		
@@ -227,7 +203,7 @@ public class TumblrRetriever extends SocialMediaRetriever {
 				
 				}
 				
-				if(items.size()>maxResults || numberOfRequests>=maxRequests){
+				if(numberOfRequests>=maxRequests){
 					isFinished = true;
 					break;
 				}
@@ -245,12 +221,12 @@ public class TumblrRetriever extends SocialMediaRetriever {
 	}
 
 	@Override
-	public List<Item> retrieveLocationFeed(LocationFeed feed, Integer maxRequests, Integer maxResults) throws Exception {
+	public List<Item> retrieveLocationFeed(LocationFeed feed, Integer maxRequests) throws Exception {
 		return new ArrayList<Item>();
 	}
 	
 	@Override
-	public List<Item> retrieveGroupFeed(GroupFeed feed, Integer maxResults, Integer maxRequests) {
+	public List<Item> retrieveGroupFeed(GroupFeed feed, Integer maxRequests) {
 		return new ArrayList<Item>();
 	}
 	

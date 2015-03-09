@@ -28,6 +28,7 @@ import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
 
 /**
  * The retriever that implements the Daily Motion wrapper
+ * 
  * @author manosetro
  * @email  manosetro@iti.gr
  */
@@ -95,17 +96,17 @@ public class DailyMotionRetriever extends SocialMediaRetriever {
 	}
 
 	@Override
-	public List<Item> retrieveKeywordsFeed(KeywordsFeed feed, Integer maxRequests, Integer maxResults) throws Exception {
+	public List<Item> retrieveKeywordsFeed(KeywordsFeed feed, Integer maxRequests) throws Exception {
 		return new ArrayList<Item>();
 	}
 
 	@Override
-	public List<Item> retrieveAccountFeed(AccountFeed feed, Integer maxRequests, Integer maxResults) throws Exception {
+	public List<Item> retrieveAccountFeed(AccountFeed feed, Integer maxRequests) throws Exception {
 		return new ArrayList<Item>();
 	}
 
 	@Override
-	public List<Item> retrieveLocationFeed(LocationFeed feed, Integer maxRequests, Integer maxResults) throws Exception {
+	public List<Item> retrieveLocationFeed(LocationFeed feed, Integer maxRequests) throws Exception {
 		return new ArrayList<Item>();
 	}
 
@@ -115,7 +116,7 @@ public class DailyMotionRetriever extends SocialMediaRetriever {
 	}
 
 	@Override
-	public List<Item> retrieveGroupFeed(GroupFeed feed, Integer maxRequests, Integer maxResults) {
+	public List<Item> retrieveGroupFeed(GroupFeed feed, Integer maxRequests) {
 		return new ArrayList<Item>();
 	}
 }
