@@ -36,6 +36,7 @@ import gr.iti.mklab.framework.common.domain.feeds.AccountFeed;
 import gr.iti.mklab.framework.common.domain.feeds.GroupFeed;
 import gr.iti.mklab.framework.common.domain.feeds.KeywordsFeed;
 import gr.iti.mklab.framework.common.domain.feeds.LocationFeed;
+import gr.iti.mklab.framework.retrievers.Response;
 import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
 
 /**
@@ -68,8 +69,9 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 	}
 
 	@Override
-	public List<Item> retrieveAccountFeed(AccountFeed feed, Integer maxRequests) {
+	public Response retrieveAccountFeed(AccountFeed feed, Integer maxRequests) {
 		
+		Response resposne = new Response();
 		List<Item> items = new ArrayList<Item>();
 		
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
@@ -86,7 +88,7 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 		String uName = feed.getUsername();
 		if(uName == null && userID == null) {
 			logger.info("#GooglePlus : No source feed");
-			return items;
+			return resposne;
 		}
 				
 		//Retrieve userID from Google+
@@ -125,7 +127,7 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 			
 		} catch (Exception e) {
 			logger.error(e);
-			return items;
+			return resposne;
 		}
 		
 		while(pageOfActivities != null && !pageOfActivities.isEmpty()) {
@@ -142,7 +144,10 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 						
 					} catch (ParseException e) {
 						logger.error("#GooglePlus - ParseException: "+e);
-						return items;
+						
+						resposne.setItems(items);
+						resposne.setRequests(numberOfRequests);
+						return resposne;
 					}
 					
 					if(publicationDate.after(lastItemDate) && activity != null && activity.getId() != null) {
@@ -173,24 +178,28 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 				
 			} catch (IOException e) {
 				logger.error("#GooglePlus Exception : "+e);
-				return items;
+				resposne.setItems(items);
+				resposne.setRequests(numberOfRequests);
+				return resposne;
 			}
 			
 			if(isFinished){
 				break;
 			}
 		}
-
-		// The next request will retrieve only items of the last day
-		Date dateToRetrieve = new Date(System.currentTimeMillis() - (24*3600*1000));
-		feed.setSinceDate(dateToRetrieve);
 		
-		return items;
+		resposne.setItems(items);
+		resposne.setRequests(numberOfRequests);
+		return resposne;
 	}
 	
 	@Override
-	public List<Item> retrieveKeywordsFeed(KeywordsFeed feed, Integer maxRequests) {
+	public Response retrieveKeywordsFeed(KeywordsFeed feed, Integer maxRequests) {
+		
+		Response response = new Response();
 		List<Item> items = new ArrayList<Item>();
+		
+		int numberOfRequests = 0;
 		
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
 		Date lastItemDate = feed.getSinceDate();
@@ -204,7 +213,7 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 		
 		if(keywords == null || keywords.isEmpty()) {
 			logger.info("#GooglePlus : No keywords feed");
-			return items;
+			return response;
 		}
 		
 		String tags = "";
@@ -218,7 +227,7 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 		
 		
 		if(tags.equals(""))
-			return items;
+			return response;
 		
 		Plus.Activities.Search searchActivities;
 		ActivityFeed activityFeed;
@@ -231,13 +240,13 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 			pageOfActivities = activityFeed.getItems();
 			totalRequests++;
 		} catch (IOException e1) {
-			return items;
+			return response;
 		}
 		
 		Map<String, StreamUser> users = new HashMap<String, StreamUser>();
 		
 		while(pageOfActivities != null && !pageOfActivities.isEmpty()) {
-			
+			numberOfRequests++;
 			for (Activity activity : pageOfActivities) {
 				
 				if(activity.getObject().getAttachments() != null){
@@ -252,7 +261,10 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 						
 					} catch (ParseException e) {
 						logger.error("#GooglePlus - ParseException: " + e.getMessage());
-						return items;
+						
+						response.setItems(items);
+						response.setRequests(numberOfRequests);
+						return response;
 					}
 					
 					if(publicationDate.after(lastItemDate) && activity != null && activity.getId() != null) {
@@ -300,21 +312,19 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 //		logger.info("#GooglePlus : Handler fetched " + items.size() + " posts from " + tags + 
 //				" [ " + lastItemDate + " - " + new Date(System.currentTimeMillis()) + " ]");
 		
-		// The next request will retrieve only items of the last day
-		Date dateToRetrieve = new Date(System.currentTimeMillis() - (24*3600*1000));
-		feed.setSinceDate(dateToRetrieve);
-		
-		return items;
+		response.setItems(items);
+		response.setRequests(numberOfRequests);
+		return response;
 		
 	}
 	@Override
-	public List<Item> retrieveLocationFeed(LocationFeed feed, Integer maxRequests) {
-		return new ArrayList<Item>();
+	public Response retrieveLocationFeed(LocationFeed feed, Integer maxRequests) {
+		return new Response();
     }
 	
 	@Override
-	public List<Item> retrieveGroupFeed(GroupFeed feed, Integer maxRequests) {
-		return new ArrayList<Item>();
+	public Response retrieveGroupFeed(GroupFeed feed, Integer maxRequests) {
+		return new Response();
 	}
 	
 	@Override
@@ -350,15 +360,16 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 	
 	public static void main(String...args) {
 		String uid = "102155862500050097100";
-		AccountFeed feed = new AccountFeed(uid, null, new Date(System.currentTimeMillis()-24*3600000));
+		Date since = new Date(System.currentTimeMillis()-24*3600000);
+		AccountFeed feed = new AccountFeed(uid, null, since, "GooglePlus");
 		
 		Credentials credentials = new Credentials();
 		credentials.setKey("AIzaSyB-knYzMRW6tUzobP-V1hTWYAXEps1Wngk");
 		
 		GooglePlusRetriever retriever = new GooglePlusRetriever(credentials);
 		
-		List<Item> items = retriever.retrieveAccountFeed(feed, 1);
-		for(Item item : items) {
+		Response response = retriever.retrieveAccountFeed(feed, 1);
+		for(Item item : response.getItems()) {
 			System.out.println(item);
 		}
 	}

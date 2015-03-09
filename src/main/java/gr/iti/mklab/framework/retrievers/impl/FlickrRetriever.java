@@ -31,6 +31,7 @@ import gr.iti.mklab.framework.common.domain.feeds.Feed;
 import gr.iti.mklab.framework.common.domain.feeds.GroupFeed;
 import gr.iti.mklab.framework.common.domain.feeds.KeywordsFeed;
 import gr.iti.mklab.framework.common.domain.feeds.LocationFeed;
+import gr.iti.mklab.framework.retrievers.Response;
 import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
 
 /**
@@ -68,8 +69,9 @@ public class FlickrRetriever extends SocialMediaRetriever {
 	}
 	
 	@Override
-	public List<Item> retrieveAccountFeed(AccountFeed feed, Integer maxRequests) {
+	public Response retrieveAccountFeed(AccountFeed feed, Integer maxRequests) {
 		
+		Response response = new Response();
 		List<Item> items = new ArrayList<Item>();
 		
 		Date dateToRetrieve = feed.getSinceDate();
@@ -81,7 +83,7 @@ public class FlickrRetriever extends SocialMediaRetriever {
 		String userID = feed.getId();
 		if(userID == null) {
 			logger.info("#Flickr : No source feed");
-			return items;
+			return response;
 		}
 		
 		PhotosInterface photosInteface = flickr.getPhotosInterface();
@@ -131,16 +133,15 @@ public class FlickrRetriever extends SocialMediaRetriever {
 //		logger.info("#Flickr : Handler fetched " + items.size() + " photos from " + userID + 
 //				" [ " + lastItemDate + " - " + new Date(System.currentTimeMillis()) + " ]");
 		
-		// The next request will retrieve only items of the last day
-		dateToRetrieve = new Date(System.currentTimeMillis() - (24*3600*1000));
-		feed.setSinceDate(dateToRetrieve);
-		
-		return items;
+		response.setItems(items);
+		response.setRequests(numberOfRequests);
+		return response;
 	}
 	
 	@Override
-	public List<Item> retrieveKeywordsFeed(KeywordsFeed feed, Integer maxRequests) {
+	public Response retrieveKeywordsFeed(KeywordsFeed feed, Integer maxRequests) {
 		
+		Response response = new Response();
 		List<Item> items = new ArrayList<Item>();
 		
 		Date dateToRetrieve = feed.getSinceDate();
@@ -154,7 +155,7 @@ public class FlickrRetriever extends SocialMediaRetriever {
 		
 		if(keywords == null || keywords.isEmpty()) {
 			logger.error("#Flickr : Text is emtpy");
-			return items;
+			return response;
 		}
 		
 		List<String> tags = new ArrayList<String>();
@@ -172,7 +173,7 @@ public class FlickrRetriever extends SocialMediaRetriever {
 		
 		if(text.equals("")) {
 			logger.error("#Flickr : Text is emtpy");
-			return items;
+			return response;
 		}
 		
 		PhotosInterface photosInteface = flickr.getPhotosInterface();
@@ -219,19 +220,19 @@ public class FlickrRetriever extends SocialMediaRetriever {
 			}
 		}
 			
-//		logger.info("#Flickr : Done retrieving for this session");
-//		logger.info("#Flickr : Handler fetched " + items.size() + " photos from " + text + 
-//				" [ " + lastItemDate + " - " + new Date(System.currentTimeMillis()) + " ]");
+		//logger.info("#Flickr : Done retrieving for this session");
+		//logger.info("#Flickr : Handler fetched " + items.size() + " photos from " + text + 
+		//		" [ " + lastItemDate + " - " + new Date(System.currentTimeMillis()) + " ]");
 		
-		dateToRetrieve = new Date(System.currentTimeMillis() - (24*3600*1000));
-		feed.setSinceDate(dateToRetrieve);
-		
-		return items;
+		response.setItems(items);
+		response.setRequests(numberOfRequests);
+		return response;
 	}
 	
 	@Override
-	public List<Item> retrieveLocationFeed(LocationFeed feed, Integer maxRequests) {
+	public Response retrieveLocationFeed(LocationFeed feed, Integer maxRequests) {
 		
+		Response response = new Response(); 
 		List<Item> items = new ArrayList<Item>();
 		
 		Date dateToRetrieve = feed.getSinceDate();
@@ -240,7 +241,7 @@ public class FlickrRetriever extends SocialMediaRetriever {
 		Double[][] bbox = feed.getLocation().getbbox();
 		
 		if(bbox == null || bbox.length==0)
-			return items;
+			return response;
 		
 		int page=1, pages=1;
 		int numberOfRequests = 0;
@@ -291,12 +292,14 @@ public class FlickrRetriever extends SocialMediaRetriever {
 		logger.info("#Flickr : Handler fetched " + items.size() + " photos "+ 
 				" [ " + dateToRetrieve + " - " + new Date(System.currentTimeMillis()) + " ]");
 		
-		return items;
+		response.setItems(items);
+		response.setRequests(numberOfRequests);
+		return response;
     }
 	
 	@Override
-	public List<Item> retrieveGroupFeed(GroupFeed feed, Integer maxRequests) {
-		return null;
+	public Response retrieveGroupFeed(GroupFeed feed, Integer maxRequests) {
+		return new Response();
 	}
 	
 	@Override
@@ -336,10 +339,10 @@ public class FlickrRetriever extends SocialMediaRetriever {
 		
 		FlickrRetriever retriever = new FlickrRetriever(credentials);
 		
-		Feed feed = new KeywordsFeed( "1", "barcelona", new Date(System.currentTimeMillis()-5*24*3600000));
+		Feed feed = new KeywordsFeed( "1", "barcelona", new Date(System.currentTimeMillis()-5*24*3600000), "Flickr");
 		
-		List<Item> items = retriever.retrieve(feed, 1);
-		System.out.println(items.size());
+		Response response = retriever.retrieve(feed, 1);
+		System.out.println(response.getNumberOfItems());
 	}
 	
 }

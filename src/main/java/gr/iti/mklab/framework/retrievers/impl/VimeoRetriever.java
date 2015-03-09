@@ -1,8 +1,5 @@
 package gr.iti.mklab.framework.retrievers.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
@@ -17,7 +14,6 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import gr.iti.mklab.framework.Credentials;
 import gr.iti.mklab.framework.abstractions.socialmedia.mediaitems.VimeoMediaItem;
 import gr.iti.mklab.framework.abstractions.socialmedia.mediaitems.VimeoMediaItem.VimeoVideo;
-import gr.iti.mklab.framework.common.domain.Item;
 import gr.iti.mklab.framework.common.domain.MediaItem;
 import gr.iti.mklab.framework.common.domain.StreamUser;
 import gr.iti.mklab.framework.common.domain.feeds.AccountFeed;
@@ -25,6 +21,7 @@ import gr.iti.mklab.framework.common.domain.feeds.Feed;
 import gr.iti.mklab.framework.common.domain.feeds.GroupFeed;
 import gr.iti.mklab.framework.common.domain.feeds.KeywordsFeed;
 import gr.iti.mklab.framework.common.domain.feeds.LocationFeed;
+import gr.iti.mklab.framework.retrievers.Response;
 import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
 
 /**
@@ -76,8 +73,8 @@ public class VimeoRetriever extends SocialMediaRetriever {
 	}
 
 	@Override
-	public List<Item> retrieve(Feed feed) {
-		return new ArrayList<Item>();
+	public Response retrieve(Feed feed) {
+		return new Response();
 	}
 
 	@Override
@@ -86,18 +83,18 @@ public class VimeoRetriever extends SocialMediaRetriever {
 	}
 
 	@Override
-	public List<Item> retrieveKeywordsFeed(KeywordsFeed feed) throws Exception {
-		return new ArrayList<Item>();
+	public Response retrieveKeywordsFeed(KeywordsFeed feed) throws Exception {
+		return new Response();
 	}
 	
 	@Override
-	public List<Item> retrieveAccountFeed(AccountFeed feed) throws Exception {
-		return new ArrayList<Item>();
+	public Response retrieveAccountFeed(AccountFeed feed) throws Exception {
+		return new Response();
 	}
 
 	@Override
-	public List<Item> retrieveLocationFeed(LocationFeed feed) throws Exception {
-		return new ArrayList<Item>();
+	public Response retrieveLocationFeed(LocationFeed feed) throws Exception {
+		return new Response();
 	}
 
 	@Override
@@ -107,32 +104,32 @@ public class VimeoRetriever extends SocialMediaRetriever {
 	}
 
 	@Override
-	public List<Item> retrieveGroupFeed(GroupFeed feed) {
-		return new ArrayList<Item>();
+	public Response retrieveGroupFeed(GroupFeed feed) {
+		return new Response();
 	}
 
 	@Override
-	public List<Item> retrieve(Feed feed, Integer requests) {
+	public Response retrieve(Feed feed, Integer requests) {
 		return null;
 	}
 
 	@Override
-	public List<Item> retrieveKeywordsFeed(KeywordsFeed feed, Integer requests) throws Exception {
+	public Response retrieveKeywordsFeed(KeywordsFeed feed, Integer requests) throws Exception {
 		return null;
 	}
 
 	@Override
-	public List<Item> retrieveAccountFeed(AccountFeed feed, Integer requests) throws Exception {
+	public Response retrieveAccountFeed(AccountFeed feed, Integer requests) throws Exception {
 		return null;
 	}
 
 	@Override
-	public List<Item> retrieveLocationFeed(LocationFeed feed, Integer requests) throws Exception {
+	public Response retrieveLocationFeed(LocationFeed feed, Integer requests) throws Exception {
 		return null;
 	}
 
 	@Override
-	public List<Item> retrieveGroupFeed(GroupFeed feed, Integer requests) {
+	public Response retrieveGroupFeed(GroupFeed feed, Integer requests) {
 		return null;
 	}
 

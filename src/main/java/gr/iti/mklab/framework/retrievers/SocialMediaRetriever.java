@@ -1,10 +1,6 @@
 package gr.iti.mklab.framework.retrievers;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import gr.iti.mklab.framework.Credentials;
-import gr.iti.mklab.framework.common.domain.Item;
 import gr.iti.mklab.framework.common.domain.MediaItem;
 import gr.iti.mklab.framework.common.domain.StreamUser;
 import gr.iti.mklab.framework.common.domain.feeds.AccountFeed;
@@ -34,11 +30,11 @@ public abstract class SocialMediaRetriever implements Retriever {
 	 * @return List<Item>
 	 * @throws Exception
 	 */
-	public List<Item> retrieveKeywordsFeed(KeywordsFeed feed) throws Exception {
+	public Response retrieveKeywordsFeed(KeywordsFeed feed) throws Exception {
 		return retrieveKeywordsFeed(feed, 1);
 	}
 	
-	public abstract List<Item> retrieveKeywordsFeed(KeywordsFeed feed, Integer requests) throws Exception;
+	public abstract Response retrieveKeywordsFeed(KeywordsFeed feed, Integer requests) throws Exception;
 	
 	/**
 	 * Retrieves a user feed that contains the user/users in 
@@ -48,11 +44,11 @@ public abstract class SocialMediaRetriever implements Retriever {
 	 * @return List<Item>
 	 * @throws Exception
 	 */
-	public List<Item> retrieveAccountFeed(AccountFeed feed) throws Exception {
+	public Response retrieveAccountFeed(AccountFeed feed) throws Exception {
 		return retrieveAccountFeed(feed, 1);
 	}
 	
-	public abstract List<Item> retrieveAccountFeed(AccountFeed feed, Integer requests) throws Exception;
+	public abstract Response retrieveAccountFeed(AccountFeed feed, Integer requests) throws Exception;
 	
 	/**
 	 * Retrieves a location feed that contains the coordinates of the location
@@ -62,11 +58,11 @@ public abstract class SocialMediaRetriever implements Retriever {
 	 * @return List<Item>
 	 * @throws Exception
 	 */
-	public List<Item> retrieveLocationFeed(LocationFeed feed) throws Exception {
+	public Response retrieveLocationFeed(LocationFeed feed) throws Exception {
 		return retrieveLocationFeed(feed, 1);
 	}
 	
-	public abstract List<Item> retrieveLocationFeed(LocationFeed feed, Integer requests) throws Exception;
+	public abstract Response retrieveLocationFeed(LocationFeed feed, Integer requests) throws Exception;
 
 	/**
 	 * Retrieves a list feed that contains the owner of a list an a slug 
@@ -75,11 +71,11 @@ public abstract class SocialMediaRetriever implements Retriever {
 	 * @return
 	 * @throws Exception
 	 */
-	public List<Item> retrieveGroupFeed(GroupFeed feed) {
+	public Response retrieveGroupFeed(GroupFeed feed) {
 		return retrieveGroupFeed(feed, 1);
 	}
 	
-	public abstract List<Item> retrieveGroupFeed(GroupFeed feed, Integer maxRequests);
+	public abstract Response retrieveGroupFeed(GroupFeed feed, Integer maxRequests);
 	
 	/**
 	 * Retrieves the info for a specific user on the basis
@@ -98,12 +94,12 @@ public abstract class SocialMediaRetriever implements Retriever {
 	public abstract MediaItem getMediaItem(String id);
 	
 	@Override
-	public List<Item> retrieve(Feed feed) throws Exception {
+	public Response retrieve(Feed feed) throws Exception {
 		return retrieve(feed, 1);
 	}
 	
 	@Override
-	public List<Item> retrieve (Feed feed, Integer requests) throws Exception {
+	public Response retrieve (Feed feed, Integer requests) throws Exception {
 		if(AccountFeed.class.isInstance(feed)) {
 			AccountFeed userFeed = (AccountFeed) feed;				
 			return retrieveAccountFeed(userFeed, requests);
@@ -120,7 +116,7 @@ public abstract class SocialMediaRetriever implements Retriever {
 			GroupFeed listFeed = (GroupFeed) feed;
 			return retrieveGroupFeed(listFeed, requests);
 		}
-		return new ArrayList<Item>();
+		return new Response();
 	}
 	
 }

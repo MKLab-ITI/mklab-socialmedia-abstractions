@@ -18,6 +18,7 @@ import gr.iti.mklab.framework.abstractions.socialmedia.items.RSSItem;
 import gr.iti.mklab.framework.common.domain.Item;
 import gr.iti.mklab.framework.common.domain.feeds.Feed;
 import gr.iti.mklab.framework.common.domain.feeds.RssFeed;
+import gr.iti.mklab.framework.retrievers.Response;
 import gr.iti.mklab.framework.retrievers.Retriever;
 
 /**
@@ -33,13 +34,14 @@ public class RssRetriever implements Retriever {
 	private long oneMonthPeriod = 2592000000L;
 	
 	@Override
-	public List<Item> retrieve(Feed feed) throws Exception {
+	public Response retrieve(Feed feed) throws Exception {
 		return retrieve(feed, 1);
 	}
 		
 	@Override
-	public List<Item> retrieve(Feed feed, Integer maxRequests) throws Exception {
+	public Response retrieve(Feed feed, Integer maxRequests) throws Exception {
 		
+		Response response = new Response();
 		List<Item> items = new ArrayList<Item>();
 		
 		RssFeed ufeed = (RssFeed) feed;
@@ -47,14 +49,14 @@ public class RssRetriever implements Retriever {
 		
 		Integer totalRetrievedItems = 0;
 		if(ufeed.getURL().equals(""))
-			return items;
+			return response;
 			
 		URL url = null;
 		try {
 			url = new URL(ufeed.getURL());
 		} catch (MalformedURLException e) {
 			logger.error(e);
-			return items;
+			return response;
 		}
 			
 		XmlReader reader;
@@ -93,13 +95,12 @@ public class RssRetriever implements Retriever {
 			}
 		} catch (IOException e) {
 			logger.error(e);
-			return items;
 		} catch (Exception e) {
 			logger.error(e);
-			return items;
 		}
 	
-		return items;
+		response.setItems(items);
+		return response;
 	}
 
 	
@@ -111,7 +112,8 @@ public class RssRetriever implements Retriever {
 	public static void main(String...args) throws Exception {
 		RssRetriever retriever = new RssRetriever();
 		
-		Feed feed = new RssFeed("ecowatch", "http://ecowatch.com/feed/", new Date(System.currentTimeMillis()-3600000));
+		Date since = new Date(System.currentTimeMillis()-3600000);
+		Feed feed = new RssFeed("ecowatch", "http://ecowatch.com/feed/", since, "RSS");
 		
 		retriever.retrieve(feed);
 	}

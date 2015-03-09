@@ -38,6 +38,7 @@ import gr.iti.mklab.framework.common.domain.feeds.GroupFeed;
 import gr.iti.mklab.framework.common.domain.feeds.KeywordsFeed;
 import gr.iti.mklab.framework.common.domain.feeds.LocationFeed;
 import gr.iti.mklab.framework.common.util.DateUtil;
+import gr.iti.mklab.framework.retrievers.Response;
 import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
 
 /**
@@ -70,8 +71,9 @@ public class InstagramRetriever extends SocialMediaRetriever {
 	}
 	
 	@Override
-	public List<Item> retrieveAccountFeed(AccountFeed feed, Integer maxRequests) {
+	public Response retrieveAccountFeed(AccountFeed feed, Integer maxRequests) {
 		
+		Response response = new Response();
 		List<Item> items = new ArrayList<Item>();
 		
 		Date lastItemDate = feed.getSinceDate();
@@ -82,7 +84,7 @@ public class InstagramRetriever extends SocialMediaRetriever {
 		String uName = feed.getUsername();
 		if(uName == null) {
 			logger.error("#Instagram : No source feed");
-			return items;
+			return response;
 		}
 			
 		if(loggingEnabled) {
@@ -96,7 +98,7 @@ public class InstagramRetriever extends SocialMediaRetriever {
 		}
 		catch(InstagramException e) {
 			logger.error("#Instagram Exception : " + e.getMessage());
-			return items;
+			return response;
 		}
 		
 		for(UserFeedData revUser : revUsers) {
@@ -107,7 +109,10 @@ public class InstagramRetriever extends SocialMediaRetriever {
 				}
 				catch(InstagramException e) {
 					logger.error("#Instagram Exception:" + e.getMessage());
-					return items;
+					
+					response.setItems(items);
+					response.setRequests(numberOfRequests);
+					return response;
 				} 
 				
 				if(mediaFeed != null) {
@@ -134,7 +139,9 @@ public class InstagramRetriever extends SocialMediaRetriever {
 			}
 			catch (MalformedURLException e) {
 				logger.error("#Instagram Exception: " + e.getMessage());
-				return items;
+				response.setItems(items);
+				response.setRequests(numberOfRequests);
+				return response;
 			}
 		}
 		
@@ -147,12 +154,18 @@ public class InstagramRetriever extends SocialMediaRetriever {
 					" [ " + lastItemDate + " - " + new Date(System.currentTimeMillis()) + " ]");
 		}
 		
-		return items;
+		response.setItems(items);
+		response.setRequests(numberOfRequests);
+		return response;
 	}
 	
 	@Override
-	public List<Item> retrieveKeywordsFeed(KeywordsFeed feed, Integer maxRequests) {
+	public Response retrieveKeywordsFeed(KeywordsFeed feed, Integer maxRequests) {
+		
+		
 		List<Item> items = new ArrayList<Item>();
+		
+		Response response = new Response();
 		
 		Date lastItemDate = feed.getSinceDate();
 		String label = feed.getLabel();
@@ -165,7 +178,7 @@ public class InstagramRetriever extends SocialMediaRetriever {
 		
 		if(keywords == null || keywords.isEmpty()){
 			logger.error("#Instagram : No keywords feed");
-			return items;
+			return response;
 		}
 		
 		String tags = "";
@@ -181,15 +194,15 @@ public class InstagramRetriever extends SocialMediaRetriever {
 		tags = tags.replaceAll(" ", "");
 	
 		if(tags.equals(""))
-			return items;
+			return response;
 		
 		//retrieve first page
 		try {
 			tagFeed = instagram.getRecentMediaTags(tags);
 			numberOfRequests++;
 		}
-		catch(InstagramException e){	
-			return items;
+		catch(InstagramException e) {	
+			return response;
 		}
 		
 		Pagination pagination = tagFeed.getPagination();
@@ -223,7 +236,10 @@ public class InstagramRetriever extends SocialMediaRetriever {
 						
 					} catch (MalformedURLException e) {
 						logger.error("Instagram retriever exception: " + e.getMessage());
-						return items;
+						
+						response.setItems(items);
+						response.setRequests(numberOfRequests);
+						return response;
 					}
 
 				}
@@ -265,9 +281,13 @@ public class InstagramRetriever extends SocialMediaRetriever {
 					}
 					catch(InstagramException e) {	
 						logger.error("#Second Instagram Exception: " + e.getMessage());
-						return items;
+						response.setItems(items);
+						response.setRequests(numberOfRequests);
+						return response;
 					} catch (MalformedURLException e1) {
-						return items;
+						response.setItems(items);
+						response.setRequests(numberOfRequests);
+						return response;
 					}
 
 				}
@@ -280,15 +300,15 @@ public class InstagramRetriever extends SocialMediaRetriever {
 					" [ " + lastItemDate + " - " + new Date(System.currentTimeMillis()) + " ]");
 		}
 		
-		// The next request will retrieve only items of the last day
-		Date dateToRetrieve = new Date(System.currentTimeMillis() - (24*3600*1000));
-		feed.setSinceDate(dateToRetrieve);
-		
-		return items;
+		response.setItems(items);
+		response.setRequests(numberOfRequests);
+		return response;
 	}
 	
 	@Override
-	public List<Item> retrieveLocationFeed(LocationFeed feed, Integer maxRequests) {
+	public Response retrieveLocationFeed(LocationFeed feed, Integer maxRequests) {
+		
+		Response response = new Response();
 		List<Item> items = new ArrayList<Item>();
 		
 		Date lastItemDate = feed.getSinceDate();
@@ -304,7 +324,7 @@ public class InstagramRetriever extends SocialMediaRetriever {
 		
     	if(loc == null){ 
     		logger.error("#Instagram : No Location feed");
-    		return items;
+    		return response;
     	}
 		
 		List<org.jinstagram.entity.common.Location> locations = null;
@@ -318,7 +338,7 @@ public class InstagramRetriever extends SocialMediaRetriever {
     	}
     	catch(InstagramException e){
     		logger.error("#Instagram Exception : "+e.getMessage());
-    		return items;
+    		return response;
     	}
     	
     	for (org.jinstagram.entity.common.Location location : locations){
@@ -354,10 +374,15 @@ public class InstagramRetriever extends SocialMediaRetriever {
         			}
         		}
         		catch(InstagramException e){
+        			response.setItems(items);
+        			response.setRequests(numberOfRequests);
         			
-        			return items;
+        			return response;
         		} catch (MalformedURLException e1) {
-        			return items;
+        			response.setItems(items);
+        			response.setRequests(numberOfRequests);
+        			
+        			return response;
 					
 				}
     			
@@ -375,15 +400,16 @@ public class InstagramRetriever extends SocialMediaRetriever {
 		//		" [ " + lastItemDate + " - " + new Date(System.currentTimeMillis()) + " ]");
 		
 		// The next request will retrieve only items of the last day
-		Date dateToRetrieve = new Date(System.currentTimeMillis() - (24*3600*1000));
-		feed.setSinceDate(dateToRetrieve);
 		
-    	return items;
+    	response.setItems(items);
+		response.setRequests(numberOfRequests);
+		
+    	return response;
     }
 	
 	@Override
-	public List<Item> retrieveGroupFeed(GroupFeed feed, Integer maxRequests) {
-		return new ArrayList<Item>();
+	public Response retrieveGroupFeed(GroupFeed feed, Integer maxRequests) {
+		return new Response();
 	}
 	
 	@Override

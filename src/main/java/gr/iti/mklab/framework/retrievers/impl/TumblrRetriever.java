@@ -28,6 +28,7 @@ import gr.iti.mklab.framework.common.domain.feeds.AccountFeed;
 import gr.iti.mklab.framework.common.domain.feeds.GroupFeed;
 import gr.iti.mklab.framework.common.domain.feeds.KeywordsFeed;
 import gr.iti.mklab.framework.common.domain.feeds.LocationFeed;
+import gr.iti.mklab.framework.retrievers.Response;
 import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
 
 /**
@@ -50,7 +51,10 @@ public class TumblrRetriever extends SocialMediaRetriever {
 
 	
 	@Override
-	public List<Item> retrieveAccountFeed(AccountFeed feed, Integer maxRequests) {
+	public Response retrieveAccountFeed(AccountFeed feed, Integer maxRequests) {
+		
+		Response response = new Response();
+		
 		List<Item> items = new ArrayList<Item>();
 		
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
@@ -64,7 +68,7 @@ public class TumblrRetriever extends SocialMediaRetriever {
 		
 		if(uName == null){
 			logger.info("#Tumblr : No source feed");
-			return null;
+			return response;
 		}
 		
 		Blog blog = client.blogInfo(uName);
@@ -98,7 +102,9 @@ public class TumblrRetriever extends SocialMediaRetriever {
 							isFinished = true;
 						}
 					} catch (Exception e) {
-						return items;
+						response.setItems(items);
+						response.setRequests(numberOfRequests);
+						return response;
 					}
 				}
 			}
@@ -109,12 +115,16 @@ public class TumblrRetriever extends SocialMediaRetriever {
 			offset += limit;
 		}
 
-		return items;
+		response.setItems(items);
+		response.setRequests(numberOfRequests);
+		
+		return response;
 	}
 	
 	@Override
-	public List<Item> retrieveKeywordsFeed(KeywordsFeed feed, Integer maxRequests) {
+	public Response retrieveKeywordsFeed(KeywordsFeed feed, Integer maxRequests) {
 		
+		Response response = new Response();
 		List<Item> items = new ArrayList<Item>();
 		
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
@@ -131,7 +141,7 @@ public class TumblrRetriever extends SocialMediaRetriever {
 		
 		if(keywords == null || keywords.isEmpty()) {
 			logger.info("#Tumblr : No keywords feed");
-			return items;
+			return response;
 		}
 		
 		String tags = "";
@@ -146,7 +156,7 @@ public class TumblrRetriever extends SocialMediaRetriever {
 		
 		
 		if(tags.equals(""))
-			return items;
+			return response;
 		
 		while(indexDate.after(lastItemDate) || indexDate.equals(lastItemDate)){
 			
@@ -158,9 +168,13 @@ public class TumblrRetriever extends SocialMediaRetriever {
 			try{
 				posts = client.tagged(tags);
 			}catch(JumblrException e){
-				return items;
+				response.setItems(items);
+				response.setRequests(numberOfRequests);
+				return response;
 			}catch(OAuthConnectionException e1){
-				return items;
+				response.setItems(items);
+				response.setRequests(numberOfRequests);
+				return response;
 			}
 			
 			if(posts == null || posts.isEmpty())
@@ -179,7 +193,9 @@ public class TumblrRetriever extends SocialMediaRetriever {
 						publicationDate = (Date) formatter.parse(retrievedDate);
 						
 					} catch (ParseException e) {
-						return items;
+						response.setItems(items);
+						response.setRequests(numberOfRequests);
+						return response;
 					}
 					
 					if(publicationDate.after(lastItemDate) && post != null && post.getId() != null){
@@ -192,7 +208,9 @@ public class TumblrRetriever extends SocialMediaRetriever {
 						try {
 							tumblrItem = new TumblrItem(post, tumblrStreamUser);
 						} catch (MalformedURLException e) {
-							return items;
+							response.setItems(items);
+							response.setRequests(numberOfRequests);
+							return response;
 						}
 						
 						if(tumblrItem != null){
@@ -216,18 +234,20 @@ public class TumblrRetriever extends SocialMediaRetriever {
 				
 		}
 		
-		return items;
+		response.setItems(items);
+		response.setRequests(numberOfRequests);
 		
+		return response;
 	}
 
 	@Override
-	public List<Item> retrieveLocationFeed(LocationFeed feed, Integer maxRequests) throws Exception {
-		return new ArrayList<Item>();
+	public Response retrieveLocationFeed(LocationFeed feed, Integer maxRequests) throws Exception {
+		return new Response();
 	}
 	
 	@Override
-	public List<Item> retrieveGroupFeed(GroupFeed feed, Integer maxRequests) {
-		return new ArrayList<Item>();
+	public Response retrieveGroupFeed(GroupFeed feed, Integer maxRequests) {
+		return new Response();
 	}
 	
 	@Override

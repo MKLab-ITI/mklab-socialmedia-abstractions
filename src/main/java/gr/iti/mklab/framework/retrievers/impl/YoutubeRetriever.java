@@ -35,6 +35,7 @@ import gr.iti.mklab.framework.common.domain.feeds.AccountFeed;
 import gr.iti.mklab.framework.common.domain.feeds.GroupFeed;
 import gr.iti.mklab.framework.common.domain.feeds.KeywordsFeed;
 import gr.iti.mklab.framework.common.domain.feeds.LocationFeed;
+import gr.iti.mklab.framework.retrievers.Response;
 import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
 
 /**
@@ -64,8 +65,9 @@ public class YoutubeRetriever extends SocialMediaRetriever {
 
 	
 	@Override
-	public List<Item> retrieveAccountFeed(AccountFeed feed, Integer requests) {
+	public Response retrieveAccountFeed(AccountFeed feed, Integer requests) {
 		
+		Response response = new Response();
 		List<Item> items = new ArrayList<Item>();
 		
 		Date lastItemDate = feed.getSinceDate();
@@ -79,7 +81,7 @@ public class YoutubeRetriever extends SocialMediaRetriever {
 		
 		if(uName == null){
 			logger.error("#YouTube : No source feed");
-			return items;
+			return response;
 		}
 				
 		StreamUser streamUser = getStreamUser(uName);
@@ -91,7 +93,7 @@ public class YoutubeRetriever extends SocialMediaRetriever {
 			channelUrl = getChannelUrl(uName);
 		} catch (MalformedURLException e) {
 			logger.error("#YouTube Exception : " + e.getMessage());
-			return items;
+			return response;
 		}
 		
 		while(channelUrl != null) {
@@ -136,7 +138,7 @@ public class YoutubeRetriever extends SocialMediaRetriever {
 				
 			} catch (Exception e) {
 				logger.error("#YouTube Exception : " + e.getMessage());
-				return items;
+				break;
 			} 
 		
 		}
@@ -146,12 +148,15 @@ public class YoutubeRetriever extends SocialMediaRetriever {
 					" [ " + lastItemDate + " - " + new Date(System.currentTimeMillis()) + " ]");
 		}
 	
-		return items;
+		response.setItems(items);
+		response.setRequests(numberOfRequests);
+		return response;
 	}
 	
 	@Override
-	public List<Item> retrieveKeywordsFeed(KeywordsFeed feed, Integer requests) throws Exception {
+	public Response retrieveKeywordsFeed(KeywordsFeed feed, Integer requests) throws Exception {
 		
+		Response response = new Response();
 		List<Item> items = new ArrayList<Item>();
 		
 		Date lastItemDate = feed.getSinceDate();
@@ -168,7 +173,7 @@ public class YoutubeRetriever extends SocialMediaRetriever {
 		
 		if(keywords == null || keywords.isEmpty()) {
 			logger.error("#YouTube : No keywords feed");
-			return items;
+			return response;
 		}
 	
 		String tags = "";
@@ -182,14 +187,14 @@ public class YoutubeRetriever extends SocialMediaRetriever {
 
 		//one call - 25 results
 		if(tags.equals(""))
-			return items;
+			return response;
 	
 		YouTubeQuery query;
 		try {
 			query = new YouTubeQuery(new URL(activityFeedVideoUrlPrefix));
 		} catch (MalformedURLException e1) {
 		
-			return items;
+			return response;
 		}
 		
 		query.setOrderBy(YouTubeQuery.OrderBy.PUBLISHED);
@@ -240,10 +245,10 @@ public class YoutubeRetriever extends SocialMediaRetriever {
 			
 			}
 			catch(Exception e) {
-				e.printStackTrace();
 				logger.error("YouTube Retriever error during retrieval of " + tags);
 				logger.error("Exception: " + e.getMessage());
-				return items;
+				isFinished = true;
+				break;
 			}
 			
 			if(isFinished)	
@@ -255,21 +260,20 @@ public class YoutubeRetriever extends SocialMediaRetriever {
 			logger.info("#YouTube : Handler fetched " + items.size() + " videos from " + tags + 
 					" [ " + lastItemDate + " - " + new Date(System.currentTimeMillis()) + " ]");
 		}
-		
-		Date dateToRetrieve = new Date(System.currentTimeMillis() - (24*3600*1000));
-		feed.setSinceDate(dateToRetrieve);
-		
-		return items;
+	
+		response.setItems(items);
+		response.setRequests(numberOfRequests);
+		return response;
 	}
 	
 	@Override
-	public List<Item> retrieveLocationFeed(LocationFeed feed, Integer requests) {
-		return new ArrayList<Item>();
+	public Response retrieveLocationFeed(LocationFeed feed, Integer requests) {
+		return new Response();
     }
 	
 	@Override
-	public List<Item> retrieveGroupFeed(GroupFeed feed, Integer requests) {
-		return new ArrayList<Item>();
+	public Response retrieveGroupFeed(GroupFeed feed, Integer requests) {
+		return new Response();
 	}
 
 	public void stop(){
