@@ -112,7 +112,7 @@
     	<dependency>
     		<groupId>com.restfb</groupId>
     		<artifactId>restfb</artifactId>
-    		<version>1.7.0</version>
+    		<version>1.8.0</version>
     	</dependency>
     	
     	<!-- RSS -->
@@ -121,12 +121,13 @@
             <artifactId>rome</artifactId>
             <version>1.0</version>
         </dependency>
-        <dependency>
-			<groupId>org.rometools</groupId>
-			<artifactId>rome-modules</artifactId>
+        
+       	<dependency>
+			<groupId>rome</groupId>
+			<artifactId>rome-fetcher</artifactId>
 			<version>1.0</version>
-		</dependency>  		
-		
+		</dependency>	
+
     	<dependency>
 			<groupId>joda-time</groupId>
 			<artifactId>joda-time</artifactId>
@@ -149,7 +150,12 @@
 			<artifactId>jsoup</artifactId>
 			<version>1.7.2</version>
 		</dependency>
-		
+
+		<dependency>
+			<groupId>org.rometools</groupId>
+			<artifactId>rome-modules</artifactId>
+			<version>1.0</version>
+		</dependency>
     </dependencies>
    	
   	<repositories>

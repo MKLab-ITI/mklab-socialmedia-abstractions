@@ -12,12 +12,15 @@ import com.restfb.Connection;
 import com.restfb.DefaultFacebookClient;
 import com.restfb.FacebookClient;
 import com.restfb.Parameter;
+import com.restfb.Version;
 import com.restfb.exception.FacebookNetworkException;
 import com.restfb.exception.FacebookResponseStatusException;
 import com.restfb.types.CategorizedFacebookType;
+import com.restfb.types.Comment;
 import com.restfb.types.Page;
 import com.restfb.types.Photo;
 import com.restfb.types.Post;
+import com.restfb.types.Post.Comments;
 import com.restfb.types.User;
 
 import gr.iti.mklab.framework.Credentials;
@@ -49,7 +52,7 @@ public class FacebookRetriever extends SocialMediaRetriever {
 	
 	public FacebookRetriever(Credentials credentials) {
 		super(credentials);
-		facebookClient = new DefaultFacebookClient(credentials.getAccessToken());
+		facebookClient = new DefaultFacebookClient(credentials.getAccessToken(), Version.VERSION_2_0);
 	}
 
 	@Override
@@ -60,7 +63,7 @@ public class FacebookRetriever extends SocialMediaRetriever {
 
 		Integer totalRequests = 0;
 		
-		Date lastItemDate = feed.getSinceDate();
+		Date since = new Date(feed.getSinceDate());
 		String label = feed.getLabel();
 		
 		boolean isFinished = false;
@@ -70,47 +73,64 @@ public class FacebookRetriever extends SocialMediaRetriever {
 			logger.error("#Facebook : No source feed");
 			return reponse;
 		}
-		String userFeed = userName+"/feed";
 		
-		Connection<Post> connection;
-		User page;
+		String userFeed = userName + "/feed";
 		try {
-			connection = facebookClient.fetchConnection(userFeed , Post.class);
-			page = facebookClient.fetchObject(userName, User.class);
+			logger.info("Retrieve: " + userFeed + " since " + since);
+			
+			User user = facebookClient.fetchObject(userName, User.class);
+			FacebookStreamUser facebookUser = new FacebookStreamUser(user);
+			
+			Connection<Post> connection = facebookClient.fetchConnection(userFeed, Post.class, Parameter.with("since", since));
+			for(List<Post> connectionPage : connection) {
+				
+				totalRequests++;			
+				for(Post post : connectionPage) {	
+					
+					System.out.println(post);
+					
+					Date publicationDate = post.getCreatedTime();
+					if(post != null && post.getId() != null) {
+						
+						Item item = new FacebookItem(post, facebookUser);
+						if(label != null) {
+							item.addLabel(label);
+						}
+						items.add(item);
+					}
+					
+					Comments postComments = post.getComments();
+					if(postComments != null) {
+						List<Comment> comments = postComments.getData();
+						for(Comment fbComment : comments) {
+							Item commentItem = new FacebookItem(fbComment, post, null);
+							items.add(commentItem);
+						}
+					}
+					
+					if(totalRequests>maxRequests) {
+						isFinished = true;
+						break;
+					}
+					
+					if(publicationDate.before(since)) {
+						isFinished = true;
+						break;
+					}
+				
+				}
+				
+				if(isFinished)
+					break;
+				
+			}
 		}
 		catch(Exception e) {
+			e.printStackTrace();
 			return reponse;
 		}
-		
-		FacebookStreamUser facebookUser = new FacebookStreamUser(page);
-		for(List<Post> connectionPage : connection) {
-		
-			totalRequests++;
-			for(Post post : connectionPage) {	
-				
-				Date publicationDate = post.getCreatedTime();
-				
-				if(publicationDate.after(lastItemDate) && post!=null && post.getId() != null) {
-					Item facebookUpdate = new FacebookItem(post, facebookUser);
-					if(label != null) {
-						facebookUpdate.addLabel(label);
-					}
-					items.add(facebookUpdate);
-					
-				 }
-				
-				if(publicationDate.before(lastItemDate) || totalRequests>maxRequests){
-					isFinished = true;
-					break;
-				}
-			
-			}
-			if(isFinished)
-				break;
-			
-		}
 
-		logger.info("Facebook: " + items.size() + " posts from " + userFeed + " [ " + lastItemDate + " - " + new Date(System.currentTimeMillis()) + " ]");
+		logger.info("Facebook: " + items.size() + " posts from " + userFeed + " [ " + since + " - " + new Date(System.currentTimeMillis()) + " ]");
 		
 		reponse.setItems(items);
 		reponse.setRequests(totalRequests);
@@ -123,7 +143,7 @@ public class FacebookRetriever extends SocialMediaRetriever {
 		Response response = new Response();
 		List<Item> items = new ArrayList<Item>();
 		
-		Date lastItemDate = feed.getSinceDate();
+		Date since = new Date(feed.getSinceDate());
 		String label = feed.getLabel();
 		
 		boolean isFinished = false;
@@ -135,22 +155,85 @@ public class FacebookRetriever extends SocialMediaRetriever {
 			return response;
 		}
 
-		String tags = "";
+		StringBuffer query = new StringBuffer();
 		for(String keyword : keywords) {
 			String [] words = keyword.split(" ");
 			for(String word : words) {
-				if(!tags.contains(word) && word.length() > 1) {
-					tags += word.toLowerCase()+" ";
+				if(word.length() > 1) {
+					query.append(word.toLowerCase() + " ");
 				}
 			}
 		}
 		
-		if(tags.equals(""))
+		if(query.length() <= 1) {
 			return response;
+		}
 		
-		Connection<Post> connection = null;
 		try {
-			connection = facebookClient.fetchConnection("search", Post.class, Parameter.with("q", tags), Parameter.with("type", "post"));
+			logger.info("Query: " + query);
+			Connection<Page> connection = facebookClient.fetchConnection("search", Page.class, 
+					Parameter.with("q", query), Parameter.with("type", "page"));
+			
+			try {
+				for(Page page : connection.getData()) {	
+					logger.info("Page: " + page.getId() + " -> " + page.getName());
+					
+					Connection<Post> pagesConnection = facebookClient.fetchConnection(page.getId()+"/feed", Post.class,
+							Parameter.with("since", since));
+					
+					for(List<Post> connectionPage : pagesConnection) {
+						for(Post post : connectionPage) {	
+
+							Date publicationDate = post.getCreatedTime();
+							try {
+								if(publicationDate.after(since) && post != null && post.getId() != null) {
+								
+									FacebookItem fbItem;
+								
+									//Get the user of the post
+									CategorizedFacebookType cUser = post.getFrom();
+									if(cUser != null) {
+										User user = facebookClient.fetchObject(cUser.getId(), User.class);
+										StreamUser facebookUser = new FacebookStreamUser(user);
+									
+										fbItem = new FacebookItem(post, facebookUser);
+										if(label != null) {
+											fbItem.addLabel(label);
+										}
+									}
+									else {
+										fbItem = new FacebookItem(post);
+										if(label != null) {
+											fbItem.addLabel(label);
+										}
+									}
+								
+									items.add(fbItem);
+								}
+							}
+							catch(Exception e) {
+								logger.error(e.getMessage());
+								break;
+							}
+						
+							if(publicationDate.before(since)){
+								isFinished = true;
+								break;
+							}
+						}
+						
+					}
+					if(isFinished)
+						break;
+				}
+
+			}
+			catch(FacebookNetworkException e){
+				logger.error(e.getMessage());
+				
+				response.setItems(items);
+				return response;
+			}
 		}
 		catch(FacebookResponseStatusException e) {
 			logger.error(e.getMessage());
@@ -161,61 +244,7 @@ public class FacebookRetriever extends SocialMediaRetriever {
 			return response;
 		}
 		
-		try {
-			for(List<Post> connectionPage : connection) {
-				for(Post post : connectionPage) {	
-					
-					Date publicationDate = post.getCreatedTime();
-					try {
-						if(publicationDate.after(lastItemDate) && post!=null && post.getId()!=null) {
-							
-							FacebookItem fbItem;
-							
-							//Get the user of the post
-							CategorizedFacebookType cUser = post.getFrom();
-							if(cUser != null) {
-								User user = facebookClient.fetchObject(cUser.getId(), User.class);
-								StreamUser facebookUser = new FacebookStreamUser(user);
-								
-								fbItem = new FacebookItem(post, facebookUser);
-								if(label != null) {
-									fbItem.addLabel(label);
-								}
-							}
-							else {
-								fbItem = new FacebookItem(post);
-								if(label != null) {
-									fbItem.addLabel(label);
-								}
-							}
-							
-							items.add(fbItem);
-						}
-					}
-					catch(Exception e) {
-						logger.error(e.getMessage());
-						break;
-					}
-					
-					if(publicationDate.before(lastItemDate)){
-						isFinished = true;
-						break;
-					}
-					
-				}
-				if(isFinished)
-					break;
-				
-			}
-		}
-		catch(FacebookNetworkException e){
-			logger.error(e.getMessage());
-			
-			response.setItems(items);
-			return response;
-		}
-		
-		logger.info("Facebook: " + items.size() + " posts for " + tags + " [ " + lastItemDate + " - " + new Date(System.currentTimeMillis()) + " ]");
+		logger.info("Facebook: " + items.size() + " posts for " + query + " [ " + since + " - " + new Date(System.currentTimeMillis()) + " ]");
 		
 		response.setItems(items);
 		return response;
@@ -240,11 +269,13 @@ public class FacebookRetriever extends SocialMediaRetriever {
 
 	@Override
 	public MediaItem getMediaItem(String mediaId) {
+		
 		Photo photo = facebookClient.fetchObject(mediaId, Photo.class);
 		
-		if(photo == null)
+		if(photo == null) {
 			return null;
-
+		}
+		
 		MediaItem mediaItem = null;
 		try {
 			String src = photo.getSource();
@@ -285,6 +316,7 @@ public class FacebookRetriever extends SocialMediaRetriever {
 		try {
 			Page page = facebookClient.fetchObject(uid, Page.class);
 			StreamUser facebookUser = new FacebookStreamUser(page);
+			
 			return facebookUser;
 		}
 		catch(Exception e) {

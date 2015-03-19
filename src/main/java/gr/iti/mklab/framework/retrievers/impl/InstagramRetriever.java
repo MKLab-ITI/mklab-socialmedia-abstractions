@@ -76,7 +76,7 @@ public class InstagramRetriever extends SocialMediaRetriever {
 		Response response = new Response();
 		List<Item> items = new ArrayList<Item>();
 		
-		Date lastItemDate = feed.getSinceDate();
+		Date lastItemDate = new Date(feed.getSinceDate());
 		String label = feed.getLabel();
 		
 		int numberOfRequests = 0;
@@ -145,10 +145,6 @@ public class InstagramRetriever extends SocialMediaRetriever {
 			}
 		}
 		
-		// The next request will retrieve only items of the last day
-		Date dateToRetrieve = new Date(System.currentTimeMillis() - (24*3600*1000));
-		feed.setSinceDate(dateToRetrieve);
-		
 		if(loggingEnabled) {
 			logger.info("#Instagram : Handler fetched " + items.size() + " photos from " + uName + 
 					" [ " + lastItemDate + " - " + new Date(System.currentTimeMillis()) + " ]");
@@ -167,7 +163,7 @@ public class InstagramRetriever extends SocialMediaRetriever {
 		
 		Response response = new Response();
 		
-		Date lastItemDate = feed.getSinceDate();
+		Date lastItemDate = new Date(feed.getSinceDate());
 		String label = feed.getLabel();
 		
 		boolean isFinished = false;
@@ -311,7 +307,7 @@ public class InstagramRetriever extends SocialMediaRetriever {
 		Response response = new Response();
 		List<Item> items = new ArrayList<Item>();
 		
-		Date lastItemDate = feed.getSinceDate();
+		Date lastItemDate = new Date(feed.getSinceDate());
 		Date currentDate = new Date(System.currentTimeMillis());
 		DateUtil dateUtil = new DateUtil();
 		

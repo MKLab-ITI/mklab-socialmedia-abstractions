@@ -76,7 +76,7 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 		
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
 		
-		Date lastItemDate = feed.getSinceDate();
+		Date lastItemDate = new Date(feed.getSinceDate());
 		String label = feed.getLabel();
 		
 		int numberOfRequests = 0;
@@ -202,7 +202,7 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 		int numberOfRequests = 0;
 		
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
-		Date lastItemDate = feed.getSinceDate();
+		Date lastItemDate = new Date(feed.getSinceDate());
 		String label = feed.getLabel();
 		
 		int totalRequests = 0;
@@ -361,7 +361,7 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 	public static void main(String...args) {
 		String uid = "102155862500050097100";
 		Date since = new Date(System.currentTimeMillis()-24*3600000);
-		AccountFeed feed = new AccountFeed(uid, null, since, "GooglePlus");
+		AccountFeed feed = new AccountFeed(uid, null, since.getTime(), "GooglePlus");
 		
 		Credentials credentials = new Credentials();
 		credentials.setKey("AIzaSyB-knYzMRW6tUzobP-V1hTWYAXEps1Wngk");

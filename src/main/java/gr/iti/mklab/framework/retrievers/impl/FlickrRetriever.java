@@ -74,7 +74,7 @@ public class FlickrRetriever extends SocialMediaRetriever {
 		Response response = new Response();
 		List<Item> items = new ArrayList<Item>();
 		
-		Date dateToRetrieve = feed.getSinceDate();
+		Date dateToRetrieve = new Date(feed.getSinceDate());
 		String label = feed.getLabel();
 		
 		int page=1, pages=1; //pagination
@@ -144,7 +144,7 @@ public class FlickrRetriever extends SocialMediaRetriever {
 		Response response = new Response();
 		List<Item> items = new ArrayList<Item>();
 		
-		Date dateToRetrieve = feed.getSinceDate();
+		Date dateToRetrieve = new Date(feed.getSinceDate());
 		String label = feed.getLabel();
 		
 		int page=1, pages=1;
@@ -235,7 +235,7 @@ public class FlickrRetriever extends SocialMediaRetriever {
 		Response response = new Response(); 
 		List<Item> items = new ArrayList<Item>();
 		
-		Date dateToRetrieve = feed.getSinceDate();
+		Date dateToRetrieve = new Date(feed.getSinceDate());
 		String label = feed.getLabel();
 		
 		Double[][] bbox = feed.getLocation().getbbox();
@@ -339,7 +339,8 @@ public class FlickrRetriever extends SocialMediaRetriever {
 		
 		FlickrRetriever retriever = new FlickrRetriever(credentials);
 		
-		Feed feed = new KeywordsFeed( "1", "barcelona", new Date(System.currentTimeMillis()-5*24*3600000), "Flickr");
+		Date since = new Date(System.currentTimeMillis()-5*24*3600000);
+		Feed feed = new KeywordsFeed( "1", "barcelona", since.getTime(), "Flickr");
 		
 		Response response = retriever.retrieve(feed, 1);
 		System.out.println(response.getNumberOfItems());

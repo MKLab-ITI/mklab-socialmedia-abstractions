@@ -11,8 +11,10 @@ import org.apache.log4j.Logger;
 
 import com.sun.syndication.feed.synd.SyndEntry;
 import com.sun.syndication.feed.synd.SyndFeed;
-import com.sun.syndication.io.SyndFeedInput;
-import com.sun.syndication.io.XmlReader;
+import com.sun.syndication.fetcher.FeedFetcher;
+import com.sun.syndication.fetcher.impl.FeedFetcherCache;
+import com.sun.syndication.fetcher.impl.HashMapFeedInfoCache;
+import com.sun.syndication.fetcher.impl.HttpURLFeedFetcher;
 
 import gr.iti.mklab.framework.abstractions.socialmedia.items.RSSItem;
 import gr.iti.mklab.framework.common.domain.Item;
@@ -22,16 +24,18 @@ import gr.iti.mklab.framework.retrievers.Response;
 import gr.iti.mklab.framework.retrievers.Retriever;
 
 /**
- * Class for retrieving rss feeds from official sources
- * The retrieval process takes place through ROME API. 
- * @author ailiakop
- * @email ailiakop@iti.gr
+ * Class for retrieving RSS feeds using Rome API.
+ *  
+ * @author Manos Schinas
+ * 
+ * @email manosetro@iti.gr
  */
 public class RssRetriever implements Retriever {
 	
 	public final Logger logger = Logger.getLogger(RssRetriever.class);
 	
-	private long oneMonthPeriod = 2592000000L;
+	private FeedFetcherCache cache = HashMapFeedInfoCache.getInstance();
+	private FeedFetcher feedFetcher = new HttpURLFeedFetcher(cache);
 	
 	@Override
 	public Response retrieve(Feed feed) throws Exception {
@@ -40,59 +44,53 @@ public class RssRetriever implements Retriever {
 		
 	@Override
 	public Response retrieve(Feed feed, Integer maxRequests) throws Exception {
-		
+
 		Response response = new Response();
 		List<Item> items = new ArrayList<Item>();
 		
-		RssFeed ufeed = (RssFeed) feed;
-		System.out.println("["+new Date()+"] Retrieving RSS Feed: " + ufeed.getURL());
+		if(RssFeed.class.isInstance(feed.getClass())) {
+			throw new Exception("Feed " + feed.getClass() + "is not instance of RssFeed");
+		}
 		
-		Integer totalRetrievedItems = 0;
-		if(ufeed.getURL().equals(""))
-			return response;
-			
-		URL url = null;
-		try {
-			url = new URL(ufeed.getURL());
-		} catch (MalformedURLException e) {
-			logger.error(e);
+		RssFeed rrsFeed = (RssFeed) feed;
+		logger.info("["+new Date()+"] Retrieving RSS Feed: " + rrsFeed.getURL());
+		
+		if(rrsFeed.getURL().equals("")) {
+			logger.error("URL is null");
+			response.setItems(items);
 			return response;
 		}
-			
-		XmlReader reader;
+		
+		Date since = new Date(rrsFeed.getSinceDate());
+		
 		try {
-			reader = new XmlReader(url);
-			SyndFeed rssData = new SyndFeedInput().build(reader);
+			URL url = new URL(rrsFeed.getURL());
+			
+			SyndFeed syndFeed = feedFetcher.retrieveFeed(url);
 			
 			@SuppressWarnings("unchecked")
-			List<SyndEntry> rssEntries = rssData.getEntries();
+			List<SyndEntry> entries = syndFeed.getEntries();
 			
-		
-			for (SyndEntry rss : rssEntries) {		
-				if(rss.getLink() != null) {
-							
-					if(rss.getPublishedDate() != null && rss.getPublishedDate().getTime()>0 && 
-							Math.abs(System.currentTimeMillis() - rss.getPublishedDate().getTime())<oneMonthPeriod) {
-								
-						RSSItem rssItem = new RSSItem(rss);
-								
-						String label = feed.getLabel();
-						if(label != null) {
-							rssItem.addLabel(label);
-						}
-						
-						items.add(rssItem);	
-						totalRetrievedItems++;
-						
-						try {
-							Thread.sleep(100);
-						} catch (InterruptedException e) {
-							logger.error(e);
-							continue;
-						}
+			for (SyndEntry entry : entries) {		
+				if(entry.getLink() != null) {
+					Date publicationDate = entry.getPublishedDate();
+					if(publicationDate.before(since)) {
+						logger.info(publicationDate + " before " + since);
+						break;
 					}
+					
+					Item item = new RSSItem(entry);
+								
+					String label = feed.getLabel();
+					if(label != null) {
+						item.addLabel(label);
+					}			
+					items.add(item);			
 				}
 			}
+			
+		} catch (MalformedURLException e) {
+			logger.error(e);
 		} catch (IOException e) {
 			logger.error(e);
 		} catch (Exception e) {
@@ -113,7 +111,7 @@ public class RssRetriever implements Retriever {
 		RssRetriever retriever = new RssRetriever();
 		
 		Date since = new Date(System.currentTimeMillis()-3600000);
-		Feed feed = new RssFeed("ecowatch", "http://ecowatch.com/feed/", since, "RSS");
+		Feed feed = new RssFeed("ecowatch", "http://ecowatch.com/feed/", since.getTime(), "RSS");
 		
 		retriever.retrieve(feed);
 	}

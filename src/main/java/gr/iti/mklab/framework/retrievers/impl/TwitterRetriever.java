@@ -73,7 +73,7 @@ public class TwitterRetriever extends SocialMediaRetriever {
 		
 		Integer numberOfRequests = 0;
 		
-		Date sinceDate = feed.getSinceDate();
+		Date sinceDate = new Date(feed.getSinceDate());
 		Date newSinceDate = sinceDate;
 		
 		String label = feed.getLabel();
@@ -158,7 +158,7 @@ public class TwitterRetriever extends SocialMediaRetriever {
 		int count = 100;
 		int numberOfRequests = 0;
 
-		Date sinceDate = feed.getSinceDate();
+		Date sinceDate = new Date(feed.getSinceDate());
 		Date newSinceDate = sinceDate;
 		
 		String label = feed.getLabel();
@@ -268,7 +268,7 @@ public class TwitterRetriever extends SocialMediaRetriever {
 		int count = 100;
 		
 		Integer numberOfRequests = 0;
-		Date sinceDate = feed.getSinceDate();
+		Date sinceDate = new Date(feed.getSinceDate());
 		
 		String label = feed.getLabel();
 		
@@ -433,7 +433,7 @@ public class TwitterRetriever extends SocialMediaRetriever {
 		TwitterRetriever retriever = new TwitterRetriever(credentials);
 	
 		Date since = new Date(System.currentTimeMillis()-4*3600000);
-		AccountFeed feed = new AccountFeed("1", "TOPONTIKI", since, "Twitter");
+		AccountFeed feed = new AccountFeed("1", "TOPONTIKI", since.getTime(), "Twitter");
 		
 		Response response = retriever.retrieveAccountFeed(feed, 2);
 		for(Item item : response.getItems()) {

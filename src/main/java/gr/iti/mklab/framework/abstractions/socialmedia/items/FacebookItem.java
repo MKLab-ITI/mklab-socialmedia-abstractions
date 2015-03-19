@@ -14,6 +14,7 @@ import com.restfb.types.Place;
 import com.restfb.types.Post;
 import com.restfb.types.Post.Comments;
 import com.restfb.types.Post.Likes;
+import com.restfb.types.Post.Shares;
 import com.restfb.types.User;
 
 import gr.iti.mklab.framework.abstractions.socialmedia.users.FacebookStreamUser;
@@ -26,8 +27,9 @@ import gr.iti.mklab.framework.common.domain.WebPage;
 
 /**
  * Class that holds the information of a facebook post
- * @author ailiakop
- * @author ailiakop@iti.gr
+ * 
+ * @author Manos Schinas
+ * @author manosetro@iti.gr
  *
  */
 public class FacebookItem extends Item {
@@ -38,7 +40,8 @@ public class FacebookItem extends Item {
 	
 	public FacebookItem(Post post) {
 		
-		if (post == null || post.getId() == null) return;
+		if (post == null || post.getId() == null) 
+			return;
 		
 		//Id
 		id = Source.Facebook+"#"+post.getId();
@@ -80,13 +83,16 @@ public class FacebookItem extends Item {
  		}
 		
 
-  		if(msg != null)
+  		if(msg != null) {
   			text = msg;
-  		else if(description != null) 
+  		}
+  		else if(description != null) {
   		 	text = description;
-  		else
+  		}
+  		else {
   		 	text = title;
-  		 
+  		}
+  		
 		//Location 
 		Place place = post.getPlace();
 		if(place != null) {
@@ -99,26 +105,38 @@ public class FacebookItem extends Item {
 				location = new Location(latitude, longitude, placeName);
 			}
 		}
+		
 		//Popularity of the post
-		if(post.getLikesCount() != null)
-			likes = post.getLikesCount();
-		else {
-			Likes likesPosts = post.getLikes();
-			if(likesPosts!=null) {
-				if(likesPosts.getTotalCount()==null) {
-					List<NamedFacebookType> likeData = likesPosts.getData();
+		//if(post.getLikesCount() != null && post.getLikesCount() > 0) {
+		//	likes = post.getLikesCount();
+		//}
+		//else {
+			Likes postLikes = post.getLikes();
+			if(postLikes != null) {
+				if(postLikes.getTotalCount() == null) {
+					List<NamedFacebookType> likeData = postLikes.getData();
 					if(likeData != null) {
 						likes = (long) likeData.size();
 					}
 				}
 				else {
-					likes = likesPosts.getTotalCount();
+					likes = postLikes.getTotalCount();
 				}
 			}
-		}
+			else {
+				likes = post.getLikesCount();
+			}
+		//}
 		
-		if(post.getSharesCount() != null)
+		if(post.getSharesCount() != null && post.getSharesCount() > 0) {
 			shares = post.getSharesCount();
+		}
+		else {
+			Shares postShares = post.getShares();
+			if(postShares != null) {
+				shares = postShares.getCount();
+			}
+		}
 		
 		Comments cmnts = post.getComments();
 		if(cmnts != null) {
@@ -366,8 +384,10 @@ public class FacebookItem extends Item {
 		
 		//Id
 		id = Source.Facebook+"#"+comment.getId();
+		
 		//Reference to the original post
 		reference = Source.Facebook+"#"+post.getId();
+		
 		//SocialNetwork Name
 		source = Source.Facebook.toString();
 		//Timestamp of the creation of the post
@@ -440,6 +460,7 @@ public class FacebookItem extends Item {
 				//PageUrl
 				String pageUrl = post.getLink();
 				mediaItem.setPageUrl(pageUrl);
+				
 				//Thumbnail
 				String thumbnail = post.getPicture();
 				mediaItem.setThumbnail(thumbnail);
