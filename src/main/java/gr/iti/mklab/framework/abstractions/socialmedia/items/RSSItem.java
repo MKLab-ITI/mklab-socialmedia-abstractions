@@ -4,12 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.jsoup.Jsoup;
-
 import com.sun.syndication.feed.module.slash.Slash;
 import com.sun.syndication.feed.module.mediarss.MediaEntryModule;
 import com.sun.syndication.feed.module.mediarss.types.MediaContent;
 import com.sun.syndication.feed.module.mediarss.types.Metadata;
 import com.sun.syndication.feed.synd.SyndCategory;
+import com.sun.syndication.feed.synd.SyndEnclosure;
 import com.sun.syndication.feed.synd.SyndEntry;
 
 import gr.iti.mklab.framework.common.domain.Item;
@@ -32,7 +32,7 @@ public class RSSItem extends Item {
 	// URIs
 	private static String mrss = "http://search.yahoo.com/mrss/";
 	private static String slash = "http://purl.org/rss/1.0/modules/slash/";
-			
+	
 	public RSSItem(SyndEntry syndEntry) {
 		
 		if(syndEntry == null || syndEntry.getLink() == null)
@@ -74,11 +74,30 @@ public class RSSItem extends Item {
 		if(slashModule != null) {
 			comments = (long) slashModule.getComments();
 		}
-		
+
 	}
 	
 	private List<MediaItem> getMediaItems(SyndEntry syndEntry) {
 		List<MediaItem> mediaItems = new ArrayList<MediaItem>();
+		
+		@SuppressWarnings("unchecked")
+		List<SyndEnclosure> enclosures = syndEntry.getEnclosures();
+		for(SyndEnclosure encl : enclosures) {
+			MediaItem mi = new MediaItem();
+			
+			mi.setUrl(encl.getUrl());
+			
+			String type = encl.getType();
+			if(type.contains("image")) {
+				mi.setType("image");
+			}
+			else if(type.contains("video")) {
+				mi.setType("video");
+			}
+			
+			mediaItems.add(mi);
+		}
+		
 		MediaEntryModule module = (MediaEntryModule) syndEntry.getModule(mrss);
 		if(module != null) {
 			MediaContent[] mediaContents = module.getMediaContents();
@@ -90,6 +109,10 @@ public class RSSItem extends Item {
 				Metadata metadata = mediaContent.getMetadata();
 				mi.setTitle(metadata.getTitle()); 
 				mi.setDescription(metadata.getDescription());
+				
+				if(mediaContent.getWidth() != null && mediaContent.getHeight() != null) {
+					mi.setSize(mediaContent.getWidth(), mediaContent.getHeight());
+				}
 				
 				mediaItems.add(mi);
 			}
