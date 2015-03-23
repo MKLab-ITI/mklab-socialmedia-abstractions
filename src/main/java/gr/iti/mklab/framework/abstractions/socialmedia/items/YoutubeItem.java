@@ -23,8 +23,10 @@ import gr.iti.mklab.framework.common.domain.Source;
 
 /**
  * Class that holds the information of a youtube video
- * @author ailiakop
- * @email  ailiakop@iti.gr
+ * 
+ * @author 	Manos Schinas
+ * 
+ * @email  manosetro@iti.gr
  */
 public class YoutubeItem extends Item {
 
@@ -118,7 +120,7 @@ public class YoutubeItem extends Item {
 			//SocialNetwork Name
 			mediaItem.setSource(source);
 			//Reference
-			mediaItem.setRef(id);
+			mediaItem.setReference(id);
 			//Type 
 			mediaItem.setType("video");
 			//Time of publication

@@ -112,7 +112,7 @@ public class FlickrItem extends Item {
 				//SocialNetwork Name
 				mediaItem.setSource(source);
 				//Reference
-				mediaItem.setRef(id);
+				mediaItem.setReference(id);
 				//Type 
 				mediaItem.setType("image");
 				//Time of publication

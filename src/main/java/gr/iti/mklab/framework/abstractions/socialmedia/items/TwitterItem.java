@@ -29,7 +29,8 @@ import twitter4j.UserMentionEntity;
 /**
  * Class that holds the information of a twitter status
  * 
- * @author manosetro
+ * @author 	Manos Schinas
+ * 
  * @email  manosetro@iti.gr
  */
 public class TwitterItem extends Item {
@@ -194,7 +195,7 @@ public class TwitterItem extends Item {
 				//SocialNetwork Name
 				mediaItem.setSource(source);
 				//Reference
-				mediaItem.setRef(id);
+				mediaItem.setReference(id);
 				//Type 
 				mediaItem.setType("image");
 				//Time of publication

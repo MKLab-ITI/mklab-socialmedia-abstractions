@@ -118,5 +118,4 @@ public abstract class SocialMediaRetriever implements Retriever {
 		}
 		return new Response();
 	}
-	
 }

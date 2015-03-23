@@ -451,7 +451,7 @@ public class InstagramRetriever extends SocialMediaRetriever {
 				//SocialNetwork Name
 				mediaItem.setSource("Instagram");
 				//Reference
-				mediaItem.setRef(id);
+				mediaItem.setReference(id);
 				//Type 
 				mediaItem.setType("image");
 				//Time of publication

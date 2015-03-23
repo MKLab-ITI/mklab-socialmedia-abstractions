@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import com.restfb.util.StringUtils;
 import com.sun.syndication.feed.synd.SyndEntry;
 import com.sun.syndication.feed.synd.SyndFeed;
 import com.sun.syndication.fetcher.FeedFetcher;
@@ -29,6 +30,7 @@ import gr.iti.mklab.framework.retrievers.Retriever;
  * @author Manos Schinas
  * 
  * @email manosetro@iti.gr
+ * 
  */
 public class RssRetriever implements Retriever {
 	
@@ -66,13 +68,21 @@ public class RssRetriever implements Retriever {
 		try {
 			URL url = new URL(rrsFeed.getURL());
 			
-			SyndFeed syndFeed = feedFetcher.retrieveFeed(url);
+			SyndFeed syndFeed;
+			synchronized(feedFetcher) {
+				syndFeed = feedFetcher.retrieveFeed(url);
+			}
 			
+			
+			String sourceLink = syndFeed.getLink();
+			URL sourceURL = new URL(sourceLink);
+
 			@SuppressWarnings("unchecked")
 			List<SyndEntry> entries = syndFeed.getEntries();
 			
 			for (SyndEntry entry : entries) {		
 				if(entry.getLink() != null) {
+					
 					Date publicationDate = entry.getPublishedDate();
 					if(publicationDate.before(since)) {
 						logger.info(publicationDate + " before " + since);
@@ -80,11 +90,13 @@ public class RssRetriever implements Retriever {
 					}
 					
 					Item item = new RSSItem(entry);
-								
+					item.setSource(sourceURL.getHost());
+					
 					String label = feed.getLabel();
 					if(label != null) {
 						item.addLabel(label);
-					}			
+					}	
+					
 					items.add(item);			
 				}
 			}
@@ -108,12 +120,31 @@ public class RssRetriever implements Retriever {
 	}
 	
 	public static void main(String...args) throws Exception {
+		
+		String id = "ft_elec";
+		String url = "http://labourlist.org/category/news/feed";		
+		String source = "labourlist";
+		
+		long since = System.currentTimeMillis() - 90*24*3600*1000L;
+		
+		RssFeed feed = new RssFeed(id, url, since, source);
+			
 		RssRetriever retriever = new RssRetriever();
+		Response response = retriever.retrieve(feed);
 		
-		Date since = new Date(System.currentTimeMillis()-3600000);
-		Feed feed = new RssFeed("ecowatch", "http://ecowatch.com/feed/", since.getTime(), "RSS");
-		
-		retriever.retrieve(feed);
+		System.out.println(response.getNumberOfItems());
+		for(Item item : response.getItems()) {
+			System.out.println("ID: " + item.getId());
+			System.out.println("Title: " + item.getTitle());
+			System.out.println(new Date(item.getPublicationTime()));
+			System.out.println("Description: " + item.getDescription());
+			System.out.println("User: " + item.getUserId());
+			System.out.println("Url: " + item.getUrl());
+			System.out.println("Tags: " + StringUtils.join(item.getTags()));
+			System.out.println(item.getMediaItems());
+			System.out.println("Comments: " + item.getComments());
+			System.out.println("====================================");
+		}
 	}
 	
 }

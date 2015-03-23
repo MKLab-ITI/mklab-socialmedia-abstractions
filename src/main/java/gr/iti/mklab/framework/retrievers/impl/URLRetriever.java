@@ -57,7 +57,7 @@ public class URLRetriever implements Retriever {
 			return response;
 		}
 		
-		Date since = new Date(urlFeed.getSinceDate());
+		//Date since = new Date(urlFeed.getSinceDate());
 		try {
 			URL url = new URL(urlFeed.getURL());
 			
@@ -97,7 +97,7 @@ public class URLRetriever implements Retriever {
 		
 		Elements articleElements = doc.getElementsByTag("article");
 		for(Element articleNode : articleElements) {
-			//articleNode.getElementById("");
+			articleNode.getElementById("");
 		}
 		
 		return items;

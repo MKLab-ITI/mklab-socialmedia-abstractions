@@ -23,8 +23,10 @@ import gr.iti.mklab.framework.common.domain.WebPage;
 
 /**
  * Class that holds the information of a tumblr post
- * @author ailiakop
- * @email  ailiakop@iti.gr
+ * 
+ * @author 	Manos Schinas
+ * 
+ * @email  manosetro@iti.gr
  */
 public class TumblrItem extends Item {
 	
@@ -95,7 +97,7 @@ public class TumblrItem extends Item {
 						//SocialNetwork Name
 						mediaItem.setSource(source);
 						//Reference
-						mediaItem.setRef(id);
+						mediaItem.setReference(id);
 						//Type 
 						mediaItem.setType("image");
 						//Time of publication
@@ -197,7 +199,7 @@ public class TumblrItem extends Item {
 			//SocialNetwork Name
 			mediaItem.setSource(source);
 			//Reference
-			mediaItem.setRef(id);
+			mediaItem.setReference(id);
 			//Type 
 			mediaItem.setType("video");
 			//Time of publication

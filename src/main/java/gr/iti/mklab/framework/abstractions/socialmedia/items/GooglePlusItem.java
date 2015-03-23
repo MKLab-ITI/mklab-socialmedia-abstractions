@@ -147,7 +147,7 @@ public class GooglePlusItem extends Item {
 						//SocialNetwork Name
 						mediaItem.setSource(source);
 						//Reference
-						mediaItem.setRef(id);
+						mediaItem.setReference(id);
 						//Type 
 						mediaItem.setType("video");
 						//Time of publication
@@ -207,7 +207,7 @@ public class GooglePlusItem extends Item {
 						//SocialNetwork Name
 						mediaItem.setSource(source);
 						//Reference
-						mediaItem.setRef(id);
+						mediaItem.setReference(id);
 						//Type 
 						mediaItem.setType("image");
 						//Time of publication
@@ -263,7 +263,7 @@ public class GooglePlusItem extends Item {
 							//SocialNetwork Name
 							mediaItem.setSource(source);
 							//Reference
-							mediaItem.setRef(id);
+							mediaItem.setReference(id);
 							//Type 
 							mediaItem.setType("image");
 							//Time of publication
