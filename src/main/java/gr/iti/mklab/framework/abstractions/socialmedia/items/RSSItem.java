@@ -158,7 +158,9 @@ public class RSSItem extends Item {
 				mi.setTags(metadata.getKeywords());
 				
 				if(mediaContent.getWidth() != null && mediaContent.getHeight() != null) {
-					mi.setSize(mediaContent.getWidth(), mediaContent.getHeight());
+					if(mediaContent.getWidth()>1 && mediaContent.getHeight()>1) {
+						mi.setSize(mediaContent.getWidth(), mediaContent.getHeight());
+					}
 				}
 				
 				mediaItems.put(mi.getId(), mi);
@@ -193,7 +195,11 @@ public class RSSItem extends Item {
 			String h = img.attr("height");
 			if(w != null && h != null && !w.equals("") && !h.equals("")) {
 				try {
-					mi.setSize(Integer.parseInt(w), Integer.parseInt(h));
+					int width = Integer.parseInt(w); 
+					int height = Integer.parseInt(h);
+					if(width>1 && height>1) {
+						mi.setSize(width, height);
+					}
 				}
 				catch(Exception e) {}
 			}
