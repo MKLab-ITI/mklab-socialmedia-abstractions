@@ -37,6 +37,10 @@ public class TumblrItem extends Item {
 	
 	private Logger logger = Logger.getLogger(TumblrItem.class);
 	
+	public TumblrItem() {
+		
+	}
+	
 	public TumblrItem(Post post) throws MalformedURLException {
 		
 		if(post == null || post.getId() == null){

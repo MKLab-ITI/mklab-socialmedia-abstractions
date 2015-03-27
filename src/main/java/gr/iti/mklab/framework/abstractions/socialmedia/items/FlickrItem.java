@@ -30,6 +30,10 @@ public class FlickrItem extends Item {
 	 */
 	private static final long serialVersionUID = 4323341976887218659L;
 	
+	public FlickrItem() {
+		
+	}
+	
 	@SuppressWarnings("deprecation")
 	public FlickrItem(Photo photo) {
 

@@ -37,6 +37,10 @@ public class YoutubeItem extends Item {
 	
 	private Logger logger = Logger.getLogger(YoutubeItem.class);
 	
+	public YoutubeItem() {
+		
+	}
+			
 	public YoutubeItem(VideoEntry videoEntry) {
 		
 		if (videoEntry == null || videoEntry.getId() == null) 

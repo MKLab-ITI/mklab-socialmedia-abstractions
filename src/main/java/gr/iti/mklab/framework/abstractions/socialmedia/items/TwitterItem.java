@@ -40,7 +40,10 @@ public class TwitterItem extends Item {
 	 */
 	private static final long serialVersionUID = 1L;
 	
-    
+	public TwitterItem() {
+		
+	}
+	
 	public TwitterItem(Status status) {
 		
 		if (status == null) {

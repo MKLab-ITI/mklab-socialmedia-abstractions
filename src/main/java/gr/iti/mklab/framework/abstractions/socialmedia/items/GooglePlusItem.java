@@ -36,6 +36,10 @@ public class GooglePlusItem extends Item {
 	
 	private static final long serialVersionUID = 1077924633642822831L;	
 	
+	public GooglePlusItem() {
+		
+	}
+	
 	public GooglePlusItem(Activity activity) {
 		
 		if(activity == null || activity.getId() == null) return;

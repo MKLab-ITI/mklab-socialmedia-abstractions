@@ -35,6 +35,10 @@ public class RSSItem extends Item {
 	 */
 	private static final long serialVersionUID = 1413164596016357110L;
 
+	public RSSItem() {
+		
+	}
+			
 	// URIs of RSS modules
 	private static String mrss = "http://search.yahoo.com/mrss/";
 	private static String slash = "http://purl.org/rss/1.0/modules/slash/";

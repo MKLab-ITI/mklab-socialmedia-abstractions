@@ -24,6 +24,10 @@ public class InstagramItem extends Item {
 
 	private static final long serialVersionUID = -8872330316768925229L;
 	
+	public InstagramItem() {
+		
+	}
+	
 	public InstagramItem(MediaFeedData image) throws MalformedURLException {
 		
 		if(image == null || image.getId() == null)

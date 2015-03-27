@@ -38,6 +38,10 @@ public class FacebookItem extends Item {
 	private static final long serialVersionUID = 2267260425325527385L;
 
 	
+	public FacebookItem() {
+		
+	}
+	
 	public FacebookItem(Post post) {
 		
 		if (post == null || post.getId() == null) 
