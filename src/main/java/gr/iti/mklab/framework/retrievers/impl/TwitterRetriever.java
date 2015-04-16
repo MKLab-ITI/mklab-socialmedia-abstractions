@@ -3,6 +3,8 @@ package gr.iti.mklab.framework.retrievers.impl;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -11,6 +13,7 @@ import twitter4j.GeoLocation;
 import twitter4j.Paging;
 import twitter4j.Query;
 import twitter4j.QueryResult;
+import twitter4j.RateLimitStatus;
 import twitter4j.ResponseList;
 import twitter4j.Status;
 import twitter4j.Twitter;
@@ -61,6 +64,7 @@ public class TwitterRetriever extends SocialMediaRetriever {
 		
 		tf = new TwitterFactory(conf);
 		twitter = tf.getInstance();
+		
 	}
 	
 	@Override
@@ -77,9 +81,13 @@ public class TwitterRetriever extends SocialMediaRetriever {
 		Date newSinceDate = sinceDate;
 		
 		String label = feed.getLabel();
-		
-		//String userId = feed.getId();
+
 		String screenName = feed.getUsername();
+		if(screenName == null) {
+			response.setItems(items);
+			response.setRequests(numberOfRequests);
+			return response;
+		}
 		
 		int page = 1;
 		Paging paging = new Paging(page, count);
@@ -87,19 +95,12 @@ public class TwitterRetriever extends SocialMediaRetriever {
 		while(true) {
 			try {
 				ResponseList<Status> responseList = null;
-				//if(userId != null) {
-				//	response = twitter.getUserTimeline(Integer.parseInt(userId), paging);
-				//}
-				if(screenName != null) {
-					if(loggingEnabled) {
-						logger.info("Retrieve timeline for " + screenName + ". Page: " + paging.getPage());
-					}
-					
-					responseList = twitter.getUserTimeline(screenName, paging);
+				if(loggingEnabled) {
+					logger.info("Retrieve timeline for " + screenName + ". Page: " + paging.getPage());
 				}
-				else {
-					break;
-				}
+				
+				responseList = twitter.getUserTimeline(screenName, paging);
+				
 				numberOfRequests++;
 				
 				for(Status status : responseList) {
@@ -146,7 +147,6 @@ public class TwitterRetriever extends SocialMediaRetriever {
 		response.setItems(items);
 		response.setRequests(numberOfRequests);
 		return response;
-		
 	}
 	
 	@Override
@@ -171,8 +171,9 @@ public class TwitterRetriever extends SocialMediaRetriever {
 		
 		String textQuery = StringUtils.join(keywords, " OR ");
 		
-		if(textQuery.equals("")) 
+		if(textQuery.equals("")) {
 			return response;
+		}
 		
 		//Set the query
 		logger.info("Query String: " + textQuery + " with label=" + label);
@@ -189,6 +190,7 @@ public class TwitterRetriever extends SocialMediaRetriever {
 			}
 			
 			QueryResult queryResult = twitter.search(query);
+			
 			while(queryResult != null) {
 				numberOfRequests++;
 				
@@ -228,19 +230,24 @@ public class TwitterRetriever extends SocialMediaRetriever {
 				}
 				
 				if(numberOfRequests >= requests) {
-					if(loggingEnabled)
+					if(loggingEnabled) {
 						logger.info("numberOfRequests: " + numberOfRequests + " > " + requests);
+					}
 					break;
 				}
+				
 				if(sinceDateReached) {
-					if(loggingEnabled)
+					if(loggingEnabled) {
 						logger.info("Since date reached: " + sinceDate);
+					}
 					break;
 				}
-			
+				
 				query = queryResult.nextQuery();
-				if(query == null)
+				if(query == null) {
+					logger.info("Next Query is null");
 					break;
+				}
 				
 				if(loggingEnabled) {
 					logger.info("Request for " + query);
@@ -425,20 +432,48 @@ public class TwitterRetriever extends SocialMediaRetriever {
 	public static void main(String...args) throws Exception {
 		
 		Credentials credentials = new Credentials ();
-		credentials.setKey("UVWoIsZoP16ndCkEI2gOUNCWV");
-		credentials.setSecret("OckCuM5AynOXH0NsxpqQHNfBTfWPVp5BA20S8Xd8AtMzNy4OO3");
-		credentials.setAccessToken("2547837110-IcVqpQiE764M6FPoYZ9oxwK6QhJGwwaTjX0syZm");
-		credentials.setAccessTokenSecret("wxQuDS6JODxBsZeIv8pHD4jYcVY3Ypsva6vbT7qjejpGA");
+		credentials.setKey("YZdoz58cjYg8sCyIGGec3A");
+		credentials.setSecret("xAMpmtDdGkRZRVeR5saoZpbxbdtG3VoTxpWfHOqM");
+		credentials.setAccessToken("204974667-TmEQ0NztWqxfXXVO8HPSUDPtqoXfw99c8Yu0ijEJ");
+		credentials.setAccessTokenSecret("bRtzNKYi8ocJ1DGFMx3mtWdXQxtVeX6vZWGuKuWAT0");
 		
 		TwitterRetriever retriever = new TwitterRetriever(credentials);
 	
-		Date since = new Date(System.currentTimeMillis()-4*3600000);
-		AccountFeed feed = new AccountFeed("1", "TOPONTIKI", since.getTime(), "Twitter");
+		Date since = new Date(System.currentTimeMillis() - 30*24*3600000l);
 		
-		Response response = retriever.retrieveAccountFeed(feed, 2);
+		List<String> keywords = new ArrayList<String>();
+		keywords.add("(bbc AND bias)");
+		keywords.add("(bbc AND impartial)");
+		keywords.add("(bbc AND partisan)");
+		keywords.add("(bbc AND left AND wing)");
+		keywords.add("(bbc AND right AND wing)");
+		
+		KeywordsFeed feed = new KeywordsFeed("1", keywords, since.getTime(), "Twitter");
+		
+		Response response = retriever.retrieve(feed, 10);
 		for(Item item : response.getItems()) {
-			System.out.println(item);
+			System.out.println(item.getTitle().replaceAll("\n", " "));
+			System.out.println(new Date(item.getPublicationTime()));
+			System.out.println("From: " + item.getStreamUser().getUsername());
+			System.out.println("==============================================");
 		}
+		
+		retriever.printAvailableReq();
+		
+	}
+	
+	private void printAvailableReq() {
+		try {
+			Map<String, RateLimitStatus> rateLimits = twitter.getRateLimitStatus();
+			for(Entry<String, RateLimitStatus> e : rateLimits.entrySet()) {
+				System.out.println(e.getKey());
+				System.out.println(e.getValue());
+				System.out.println("===================================");
+			}
+		} catch (TwitterException e) {
+			e.printStackTrace();
+		}
+		
 	}
 	
 }

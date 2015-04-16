@@ -116,6 +116,9 @@ public abstract class SocialMediaRetriever implements Retriever {
 			GroupFeed listFeed = (GroupFeed) feed;
 			return retrieveGroupFeed(listFeed, requests);
 		}
+		
+		
 		return new Response();
 	}
+	
 }
