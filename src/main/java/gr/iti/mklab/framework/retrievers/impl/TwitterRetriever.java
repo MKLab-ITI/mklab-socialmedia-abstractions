@@ -180,6 +180,7 @@ public class TwitterRetriever extends SocialMediaRetriever {
 	
 		Query query = new Query(textQuery);
 	
+		//query.setUntil("2012-02-01");
 		query.count(count);
 		query.setResultType(Query.RECENT); //do not set last item date-causes problems!
 
@@ -432,14 +433,14 @@ public class TwitterRetriever extends SocialMediaRetriever {
 	public static void main(String...args) throws Exception {
 		
 		Credentials credentials = new Credentials ();
-		credentials.setKey("YZdoz58cjYg8sCyIGGec3A");
-		credentials.setSecret("xAMpmtDdGkRZRVeR5saoZpbxbdtG3VoTxpWfHOqM");
-		credentials.setAccessToken("204974667-TmEQ0NztWqxfXXVO8HPSUDPtqoXfw99c8Yu0ijEJ");
-		credentials.setAccessTokenSecret("bRtzNKYi8ocJ1DGFMx3mtWdXQxtVeX6vZWGuKuWAT0");
+		credentials.setKey("");
+		credentials.setSecret("");
+		credentials.setAccessToken("");
+		credentials.setAccessTokenSecret("");
 		
 		TwitterRetriever retriever = new TwitterRetriever(credentials);
 	
-		Date since = new Date(System.currentTimeMillis() - 30*24*3600000l);
+		Date since = new Date(System.currentTimeMillis() - 30l*24l*3600000l);
 		
 		List<String> keywords = new ArrayList<String>();
 		keywords.add("(bbc AND bias)");
