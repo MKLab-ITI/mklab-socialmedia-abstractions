@@ -63,13 +63,12 @@ public class TwitterItem extends Item {
 			uid = streamUser.getId();
 		}
 		
-		url = "https://twitter.com/" + streamUser.getUsername() + "/statuses/" + status.getId();
+		pageUrl = "https://twitter.com/" + streamUser.getUsername() + "/statuses/" + status.getId();
 		
 		//Store/Update on the basis that it is an original tweet or a retweet
 		Status retweetStatus = status.getRetweetedStatus();
 		if(retweetStatus != null) {
 			original = false;
-			
 			reference = Source.Twitter + "#" + retweetStatus.getId();
 			referencedUserId = Source.Twitter + "#" + retweetStatus.getUser().getId();
 		}

@@ -57,7 +57,7 @@ public class TumblrItem extends Item {
 		//Timestamp of the creation of the post
 		publicationTime = post.getTimestamp()*1000;
 		
-		url = post.getPostUrl();
+		pageUrl = post.getPostUrl();
 		
 		//Tags
 		tags = new String[post.getTags().size()];

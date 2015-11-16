@@ -139,7 +139,7 @@ public class RssRetriever implements Retriever {
 			System.out.println(new Date(item.getPublicationTime()));
 			System.out.println("Description: " + item.getDescription());
 			System.out.println("User: " + item.getUserId());
-			System.out.println("Url: " + item.getUrl());
+			System.out.println("Url: " + item.getPageUrl());
 			System.out.println("Tags: " + StringUtils.join(item.getTags()));
 			System.out.println(item.getMediaItems());
 			System.out.println("Comments: " + item.getComments());

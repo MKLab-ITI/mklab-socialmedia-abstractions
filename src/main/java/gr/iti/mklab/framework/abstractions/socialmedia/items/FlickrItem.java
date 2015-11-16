@@ -84,7 +84,7 @@ public class FlickrItem extends Item {
 			location = new Location(latitude, longitude);
 		}
 		
-		url = photo.getUrl();
+		pageUrl = photo.getUrl();
 		
 		//Popularity
 		comments = (long) photo.getComments();

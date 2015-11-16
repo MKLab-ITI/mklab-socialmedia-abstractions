@@ -81,7 +81,7 @@ public class YoutubeItem extends Item {
 		MediaPlayer mediaPlayer = mediaGroup.getPlayer();
 		
 		// Page Url of this Item
-		url = mediaPlayer.getUrl();
+		pageUrl = mediaPlayer.getUrl();
 				
 		String videoID = videoEntry.getId().substring(videoEntry.getId().indexOf("video:")+("video:").length());
 		List<YouTubeMediaContent> mediaContent = mediaGroup.getYouTubeContents();

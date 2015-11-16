@@ -102,9 +102,9 @@ public class GooglePlusItem extends Item {
 		if(activity.getObject().getReplies() != null)
 			comments = object.getReplies().getTotalItems();
 		
-		url = activity.getUrl();
-		if(url == null) {
-			url = object.getUrl();
+		pageUrl = activity.getUrl();
+		if(pageUrl == null) {
+			pageUrl = object.getUrl();
 		}
 		
 		//Media Items - WebPages in a post

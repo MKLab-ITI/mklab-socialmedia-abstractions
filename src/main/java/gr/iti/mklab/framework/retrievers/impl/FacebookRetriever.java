@@ -85,10 +85,7 @@ public class FacebookRetriever extends SocialMediaRetriever {
 			for(List<Post> connectionPage : connection) {
 				
 				totalRequests++;			
-				for(Post post : connectionPage) {	
-					
-					System.out.println(post);
-					
+				for(Post post : connectionPage) {						
 					Date publicationDate = post.getCreatedTime();
 					if(post != null && post.getId() != null) {
 						

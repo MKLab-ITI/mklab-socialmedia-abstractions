@@ -37,7 +37,14 @@ public class TwitterStreamUser extends StreamUser {
 		//The description of the user
 		description = user.getDescription();
 		//Profile picture of the user
-		profileImage = user.getProfileImageURL();
+		if(user.getBiggerProfileImageURL() != null) {
+			profileImage = user.getBiggerProfileImageURL();
+		}
+		else {
+			profileImage = user.getProfileImageURL();
+		}
+		
+		
 		//Page URL of the user
 		pageUrl = "https://twitter.com/" + user.getScreenName();
 		url = user.getURL();

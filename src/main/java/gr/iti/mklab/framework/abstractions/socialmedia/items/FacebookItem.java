@@ -160,7 +160,7 @@ public class FacebookItem extends Item {
 		
 		if(type.equals("photo")) {
 			
-			url = post.getLink();
+			pageUrl = post.getLink();
 			String picture = post.getPicture();
 			
 			try {
@@ -234,7 +234,7 @@ public class FacebookItem extends Item {
 		}
 		else if(type.equals("link")) {
 			
-			url = "https://www.facebook.com/" + post.getId();
+			pageUrl = "https://www.facebook.com/" + post.getId();
 			
 			webPages = new ArrayList<WebPage>();
 			String picture = post.getPicture(); ///!!!!
@@ -305,7 +305,7 @@ public class FacebookItem extends Item {
 		}
 		else if(type.equals("video")) {
 			
-			url = "https://www.facebook.com/" + post.getId();
+			pageUrl = "https://www.facebook.com/" + post.getId();
 			
 			String vUrl = post.getSource();
 			String picture = post.getPicture();
@@ -362,7 +362,7 @@ public class FacebookItem extends Item {
 			
 		}
 		else {
-			url = "https://www.facebook.com/" + post.getId();
+			pageUrl = "https://www.facebook.com/" + post.getId();
 		}
 	
 	}
@@ -412,7 +412,7 @@ public class FacebookItem extends Item {
 		//All the text inside the comment
 		text = msg; 
 		
-		url = "https://www.facebook.com/" + post.getId();
+		pageUrl = "https://www.facebook.com/" + post.getId();
 		
 		//User that posted the comment
 		if(user != null) {

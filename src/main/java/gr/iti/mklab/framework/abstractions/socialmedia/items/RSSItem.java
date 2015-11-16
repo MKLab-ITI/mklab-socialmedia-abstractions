@@ -66,7 +66,7 @@ public class RSSItem extends Item {
 		publicationTime = syndEntry.getPublishedDate().getTime();
 		
 		//The URL where the document can be found
-		url = syndEntry.getLink();
+		pageUrl = syndEntry.getLink();
 		
 		uid = syndEntry.getAuthor();
 		
@@ -93,7 +93,7 @@ public class RSSItem extends Item {
 		if(textContent != null) {
 			text = extractText(textContent);
 			
-			Map<String, MediaItem> mediaFromContent = extractMedia(textContent, url);
+			Map<String, MediaItem> mediaFromContent = extractMedia(textContent, pageUrl);
 			mediaItems.addAll(mediaFromContent.values());
 			mediaIds.addAll(mediaFromContent.keySet());
 		}

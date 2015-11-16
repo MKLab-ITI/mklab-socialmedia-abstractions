@@ -52,11 +52,11 @@ public class InstagramItem extends Item {
 		int tIndex=0;
 		int tagSize = image.getTags().size();
 		tags = new String[tagSize];
+		for(String tag : image.getTags()) {
+			tags[tIndex++] = tag;	
+		}
 		
-		for(String tag:image.getTags())
-			tags[tIndex++]=tag;	
-		
-		url = image.getLink();
+		pageUrl = image.getLink();
 		
 		//User that posted the photo
         if(image.getUser() !=null){
