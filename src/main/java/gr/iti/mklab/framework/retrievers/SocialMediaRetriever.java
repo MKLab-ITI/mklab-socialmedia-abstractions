@@ -1,6 +1,9 @@
 package gr.iti.mklab.framework.retrievers;
 
+import java.util.List;
+
 import gr.iti.mklab.framework.Credentials;
+import gr.iti.mklab.framework.common.domain.Item;
 import gr.iti.mklab.framework.common.domain.MediaItem;
 import gr.iti.mklab.framework.common.domain.StreamUser;
 import gr.iti.mklab.framework.common.domain.feeds.AccountFeed;
@@ -121,4 +124,19 @@ public abstract class SocialMediaRetriever implements Retriever {
 		return new Response();
 	}
 	
+	public Response getResponse(List<Item> items, int requests) {
+		Response response = new Response();
+		response.setItems(items);
+		response.setRequests(requests);
+		
+		long lastTimestamp = 0l;
+		for(Item item : items) {
+			if(lastTimestamp < item.getPublicationTime()) {
+				lastTimestamp = item.getPublicationTime();
+			}
+		}
+		response.setLastTimestamp(lastTimestamp);
+		
+		return response;
+	}
 }

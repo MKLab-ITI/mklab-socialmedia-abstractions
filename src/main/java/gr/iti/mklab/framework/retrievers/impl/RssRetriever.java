@@ -7,7 +7,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.restfb.util.StringUtils;
 import com.sun.syndication.feed.synd.SyndEntry;
@@ -34,7 +35,7 @@ import gr.iti.mklab.framework.retrievers.Retriever;
  */
 public class RssRetriever implements Retriever {
 	
-	public final Logger logger = Logger.getLogger(RssRetriever.class);
+	public final Logger logger = LogManager.getLogger(RssRetriever.class);
 	
 	private FeedFetcherCache cache = HashMapFeedInfoCache.getInstance();
 	private FeedFetcher feedFetcher = new HttpURLFeedFetcher(cache);

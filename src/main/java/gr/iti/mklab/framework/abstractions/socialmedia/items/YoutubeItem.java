@@ -4,7 +4,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.google.gdata.data.Person;
 import com.google.gdata.data.extensions.Rating;
@@ -35,7 +36,7 @@ public class YoutubeItem extends Item {
 	 */
 	private static final long serialVersionUID = 6355819301582285835L;
 	
-	private Logger logger = Logger.getLogger(YoutubeItem.class);
+	private Logger logger = LogManager.getLogger(YoutubeItem.class);
 	
 	public YoutubeItem() {
 		

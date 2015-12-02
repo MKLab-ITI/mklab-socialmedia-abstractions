@@ -9,7 +9,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.http.HttpTransport;
@@ -48,7 +49,7 @@ import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
  */
 public class GooglePlusRetriever extends SocialMediaRetriever {
 	
-	private Logger logger = Logger.getLogger(GooglePlusRetriever.class);
+	private Logger logger = LogManager.getLogger(GooglePlusRetriever.class);
 	
 	private static final HttpTransport transport = new NetHttpTransport();
 	private static final JsonFactory jsonFactory = new JacksonFactory();
@@ -71,7 +72,6 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 	@Override
 	public Response retrieveAccountFeed(AccountFeed feed, Integer maxRequests) {
 		
-		Response resposne = new Response();
 		List<Item> items = new ArrayList<Item>();
 		
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
@@ -88,7 +88,8 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 		String uName = feed.getUsername();
 		if(uName == null && userID == null) {
 			logger.info("#GooglePlus : No source feed");
-			return resposne;
+			Response response = getResponse(items, numberOfRequests);
+			return response;
 		}
 				
 		//Retrieve userID from Google+
@@ -127,7 +128,8 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 			
 		} catch (Exception e) {
 			logger.error(e);
-			return resposne;
+			Response response = getResponse(items, numberOfRequests);
+			return response;
 		}
 		
 		while(pageOfActivities != null && !pageOfActivities.isEmpty()) {
@@ -145,9 +147,8 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 					} catch (ParseException e) {
 						logger.error("#GooglePlus - ParseException: "+e);
 						
-						resposne.setItems(items);
-						resposne.setRequests(numberOfRequests);
-						return resposne;
+						Response response = getResponse(items, numberOfRequests);
+						return response;
 					}
 					
 					if(publicationDate.after(lastItemDate) && activity != null && activity.getId() != null) {
@@ -178,9 +179,8 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 				
 			} catch (IOException e) {
 				logger.error("#GooglePlus Exception : "+e);
-				resposne.setItems(items);
-				resposne.setRequests(numberOfRequests);
-				return resposne;
+				Response response = getResponse(items, numberOfRequests);
+				return response;
 			}
 			
 			if(isFinished){
@@ -188,24 +188,19 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 			}
 		}
 		
-		resposne.setItems(items);
-		resposne.setRequests(numberOfRequests);
-		return resposne;
+		Response response = getResponse(items, numberOfRequests);
+		return response;
 	}
 	
 	@Override
 	public Response retrieveKeywordsFeed(KeywordsFeed feed, Integer maxRequests) {
 		
-		Response response = new Response();
 		List<Item> items = new ArrayList<Item>();
-		
 		int numberOfRequests = 0;
 		
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
 		Date lastItemDate = new Date(feed.getSinceDate());
 		String label = feed.getLabel();
-		
-		int totalRequests = 0;
 		
 		boolean isFinished = false;
 		
@@ -213,6 +208,7 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 		
 		if(keywords == null || keywords.isEmpty()) {
 			logger.info("#GooglePlus : No keywords feed");
+			Response response = getResponse(items, numberOfRequests);
 			return response;
 		}
 		
@@ -226,8 +222,10 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 		}
 		
 		
-		if(tags.equals(""))
+		if(tags.equals("")) {
+			Response response = getResponse(items, numberOfRequests);
 			return response;
+		}
 		
 		Plus.Activities.Search searchActivities;
 		ActivityFeed activityFeed;
@@ -238,8 +236,9 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 			searchActivities.setOrderBy("recent");
 			activityFeed = searchActivities.execute();
 			pageOfActivities = activityFeed.getItems();
-			totalRequests++;
+			numberOfRequests++;
 		} catch (IOException e1) {
+			Response response = getResponse(items, numberOfRequests);
 			return response;
 		}
 		
@@ -262,8 +261,7 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 					} catch (ParseException e) {
 						logger.error("#GooglePlus - ParseException: " + e.getMessage());
 						
-						response.setItems(items);
-						response.setRequests(numberOfRequests);
+						Response response = getResponse(items, numberOfRequests);
 						return response;
 					}
 					
@@ -282,21 +280,24 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 						else {
 							streamUser = users.get(userID);
 						}
-						if(streamUser != null)
+						
+						if(streamUser != null) {
 							googlePlusItem.setStreamUser(streamUser);
+						}
 						
 						items.add(googlePlusItem);
-						
+
 					}
 		
 				}
 		
 			 }
 			
-			 totalRequests++;
+			numberOfRequests++;
 
-			 if(totalRequests>maxRequests || isFinished || (activityFeed.getNextPageToken() == null))
+			 if(numberOfRequests>maxRequests || isFinished || (activityFeed.getNextPageToken() == null)) {
 				 break;
+			 }
 			 
 			 searchActivities.setPageToken(activityFeed.getNextPageToken());
 			 try {
@@ -308,12 +309,7 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 		
 		}
 		
-//		logger.info("#GooglePlus : KeywordsFeed "+feed.getId()+" is done retrieving for this session");
-//		logger.info("#GooglePlus : Handler fetched " + items.size() + " posts from " + tags + 
-//				" [ " + lastItemDate + " - " + new Date(System.currentTimeMillis()) + " ]");
-		
-		response.setItems(items);
-		response.setRequests(numberOfRequests);
+		Response response = getResponse(items, numberOfRequests);
 		return response;
 		
 	}

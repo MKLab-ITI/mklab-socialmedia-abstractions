@@ -9,7 +9,8 @@ public class Response {
 	
 	private List<Item> items = new ArrayList<Item>();
 	private int requests = 0;
-	
+	private long lastTimestamp = 0l;
+
 	public void setItems(List<Item> items) {
 		this.items.addAll(items);
 	}
@@ -28,5 +29,13 @@ public class Response {
 	
 	public void setRequests(int requests) {
 		this.requests = requests;
+	}
+	
+	public long getLastTimestamp() {
+		return lastTimestamp;
+	}
+
+	public void setLastTimestamp(long lastTimestamp) {
+		this.lastTimestamp = lastTimestamp;
 	}
 }

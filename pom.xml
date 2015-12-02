@@ -67,7 +67,13 @@
   			<groupId>com.google.api-client</groupId>
   			<artifactId>google-api-client</artifactId>
   			<version>1.19.0</version>
-		</dependency>
+  			<exclusions>
+  				<exclusion>
+  					<artifactId>commons-logging</artifactId>
+  					<groupId>commons-logging</groupId>
+  				</exclusion>
+  			</exclusions>
+    	</dependency>
 
     	<dependency>
     		<groupId>com.google.gdata</groupId>
@@ -80,6 +86,12 @@
 			<groupId>com.flickr4java</groupId>
 			<artifactId>flickr4java</artifactId>
 			<version>2.12</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>log4j</artifactId>
+					<groupId>log4j</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 			
 		<!-- Instagram -->
@@ -126,7 +138,17 @@
 			<groupId>rome</groupId>
 			<artifactId>rome-fetcher</artifactId>
 			<version>1.0</version>
-		</dependency>	
+			<exclusions>
+				<exclusion>
+					<artifactId>commons-logging</artifactId>
+					<groupId>commons-logging</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>commons-logging-api</artifactId>
+					<groupId>commons-logging</groupId>
+				</exclusion>
+			</exclusions>
+       	</dependency>	
 
     	<dependency>
 			<groupId>joda-time</groupId>
@@ -155,6 +177,11 @@
 			<groupId>org.rometools</groupId>
 			<artifactId>rome-modules</artifactId>
 			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
+			<version>2.1</version>
 		</dependency>
     </dependencies>
    	

@@ -5,7 +5,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.tumblr.jumblr.types.LinkPost;
 import com.tumblr.jumblr.types.Photo;
@@ -35,7 +36,7 @@ public class TumblrItem extends Item {
 	 */
 	private static final long serialVersionUID = 6421124470696047372L;
 	
-	private Logger logger = Logger.getLogger(TumblrItem.class);
+	private Logger logger = LogManager.getLogger(TumblrItem.class);
 	
 	public TumblrItem() {
 		

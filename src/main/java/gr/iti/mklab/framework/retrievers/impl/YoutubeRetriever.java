@@ -7,7 +7,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.joda.time.DateTime;
 
 import com.google.gdata.client.youtube.YouTubeQuery;
@@ -51,15 +52,12 @@ public class YoutubeRetriever extends SocialMediaRetriever {
 	private final String activityFeedVideoUrlPrefix = "http://gdata.youtube.com/feeds/api/videos";
 	private final String uploadsActivityFeedUrlSuffix = "/uploads";
 	
-	private Logger logger = Logger.getLogger(YoutubeRetriever.class);
-	private boolean loggingEnabled = false;
+	private Logger logger = LogManager.getLogger(YoutubeRetriever.class);
 	
 	private YouTubeService service;
 	
 	public YoutubeRetriever(Credentials credentials) {		
-		
 		super(credentials);	
-		
 		this.service = new YouTubeService(credentials.getClientId(), credentials.getKey());
 	}
 
@@ -67,7 +65,6 @@ public class YoutubeRetriever extends SocialMediaRetriever {
 	@Override
 	public Response retrieveAccountFeed(AccountFeed feed, Integer requests) {
 		
-		Response response = new Response();
 		List<Item> items = new ArrayList<Item>();
 		
 		Date lastItemDate = new Date(feed.getSinceDate());
@@ -81,18 +78,19 @@ public class YoutubeRetriever extends SocialMediaRetriever {
 		
 		if(uName == null){
 			logger.error("#YouTube : No source feed");
+			Response response = getResponse(items, numberOfRequests);
 			return response;
 		}
 				
 		StreamUser streamUser = getStreamUser(uName);
-		if(loggingEnabled)
-			logger.info("#YouTube : Retrieving User Feed : "+uName);
+		logger.info("#YouTube : Retrieving User Feed : "+uName);
 		
 		URL channelUrl = null;
 		try {
 			channelUrl = getChannelUrl(uName);
 		} catch (MalformedURLException e) {
 			logger.error("#YouTube Exception : " + e.getMessage());
+			Response response = getResponse(items, numberOfRequests);
 			return response;
 		}
 		
@@ -143,20 +141,15 @@ public class YoutubeRetriever extends SocialMediaRetriever {
 		
 		}
 	
-		if(loggingEnabled) {
-			logger.info("#YouTube : Handler fetched " + items.size() + " videos from " + uName + 
-					" [ " + lastItemDate + " - " + new Date(System.currentTimeMillis()) + " ]");
-		}
+		logger.info("#YouTube : Handler fetched " + items.size() + " videos from " + uName + " [ " + lastItemDate + " - " + new Date(System.currentTimeMillis()) + " ]");
 	
-		response.setItems(items);
-		response.setRequests(numberOfRequests);
+		Response response = getResponse(items, numberOfRequests);
 		return response;
 	}
 	
 	@Override
 	public Response retrieveKeywordsFeed(KeywordsFeed feed, Integer requests) throws Exception {
 		
-		Response response = new Response();
 		List<Item> items = new ArrayList<Item>();
 		
 		Date lastItemDate = new Date(feed.getSinceDate());
@@ -173,6 +166,7 @@ public class YoutubeRetriever extends SocialMediaRetriever {
 		
 		if(keywords == null || keywords.isEmpty()) {
 			logger.error("#YouTube : No keywords feed");
+			Response response = getResponse(items, numberOfRequests);
 			return response;
 		}
 	
@@ -186,14 +180,16 @@ public class YoutubeRetriever extends SocialMediaRetriever {
 		}
 
 		//one call - 25 results
-		if(tags.equals(""))
+		if(tags.equals("")) {
+			Response response = getResponse(items, numberOfRequests);
 			return response;
+		}
 	
 		YouTubeQuery query;
 		try {
 			query = new YouTubeQuery(new URL(activityFeedVideoUrlPrefix));
 		} catch (MalformedURLException e1) {
-		
+			Response response = getResponse(items, numberOfRequests);
 			return response;
 		}
 		
@@ -203,7 +199,6 @@ public class YoutubeRetriever extends SocialMediaRetriever {
 		query.setMaxResults(numPerPage);
 		
 		VideoFeed videoFeed = new VideoFeed();
-		
 		while(true) {
 			try {
 				query.setStartIndex(startIndex);
@@ -245,8 +240,7 @@ public class YoutubeRetriever extends SocialMediaRetriever {
 			
 			}
 			catch(Exception e) {
-				logger.error("YouTube Retriever error during retrieval of " + tags);
-				logger.error("Exception: " + e.getMessage());
+				logger.error("YouTube Retriever error during retrieval of " + tags, e);
 				isFinished = true;
 				break;
 			}
@@ -256,13 +250,9 @@ public class YoutubeRetriever extends SocialMediaRetriever {
 		
 		}
 	
-		if(loggingEnabled) {
-			logger.info("#YouTube : Handler fetched " + items.size() + " videos from " + tags + 
-					" [ " + lastItemDate + " - " + new Date(System.currentTimeMillis()) + " ]");
-		}
+		logger.info("#YouTube : Handler fetched " + items.size() + " videos from " + tags + " [ " + lastItemDate + " - " + new Date(System.currentTimeMillis()) + " ]");
 	
-		response.setItems(items);
-		response.setRequests(numberOfRequests);
+		Response response = getResponse(items, numberOfRequests);
 		return response;
 	}
 	

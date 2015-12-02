@@ -6,7 +6,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.restfb.Connection;
 import com.restfb.DefaultFacebookClient;
@@ -48,7 +49,7 @@ public class FacebookRetriever extends SocialMediaRetriever {
 			
 	private FacebookClient facebookClient;
 	
-	private Logger  logger = Logger.getLogger(FacebookRetriever.class);
+	private Logger logger = LogManager.getLogger(FacebookRetriever.class);
 	
 	public FacebookRetriever(Credentials credentials) {
 		super(credentials);
@@ -58,10 +59,9 @@ public class FacebookRetriever extends SocialMediaRetriever {
 	@Override
 	public Response retrieveAccountFeed(AccountFeed feed, Integer maxRequests) {
 		
-		Response reponse = new Response();
 		List<Item> items = new ArrayList<Item>();
 
-		Integer totalRequests = 0;
+		Integer numberOfRequests = 0;
 		
 		Date since = new Date(feed.getSinceDate());
 		String label = feed.getLabel();
@@ -71,7 +71,8 @@ public class FacebookRetriever extends SocialMediaRetriever {
 		String userName = feed.getUsername();
 		if(userName == null) {
 			logger.error("#Facebook : No source feed");
-			return reponse;
+			Response response = getResponse(items, numberOfRequests);
+			return response;
 		}
 		
 		String userFeed = userName + "/feed";
@@ -84,7 +85,7 @@ public class FacebookRetriever extends SocialMediaRetriever {
 			Connection<Post> connection = facebookClient.fetchConnection(userFeed, Post.class, Parameter.with("since", since));
 			for(List<Post> connectionPage : connection) {
 				
-				totalRequests++;			
+				numberOfRequests++;			
 				for(Post post : connectionPage) {						
 					Date publicationDate = post.getCreatedTime();
 					if(post != null && post.getId() != null) {
@@ -105,7 +106,7 @@ public class FacebookRetriever extends SocialMediaRetriever {
 						}
 					}
 					
-					if(totalRequests>maxRequests) {
+					if(numberOfRequests > maxRequests) {
 						isFinished = true;
 						break;
 					}
@@ -124,21 +125,21 @@ public class FacebookRetriever extends SocialMediaRetriever {
 		}
 		catch(Exception e) {
 			e.printStackTrace();
-			return reponse;
+			Response response = getResponse(items, numberOfRequests);
+			return response;
 		}
 
 		logger.info("Facebook: " + items.size() + " posts from " + userFeed + " [ " + since + " - " + new Date(System.currentTimeMillis()) + " ]");
 		
-		reponse.setItems(items);
-		reponse.setRequests(totalRequests);
-		return reponse;
+		Response response = getResponse(items, numberOfRequests);
+		return response;
 	}
 	
 	@Override
 	public Response retrieveKeywordsFeed(KeywordsFeed feed, Integer maxRequests) {
 		
-		Response response = new Response();
 		List<Item> items = new ArrayList<Item>();
+		Integer numberOfRequests = 0;
 		
 		Date since = new Date(feed.getSinceDate());
 		String label = feed.getLabel();
@@ -149,6 +150,7 @@ public class FacebookRetriever extends SocialMediaRetriever {
 		
 		if(keywords == null || keywords.isEmpty()) {
 			logger.error("#Facebook : No keywords feed");
+			Response response = getResponse(items, numberOfRequests);
 			return response;
 		}
 
@@ -163,6 +165,7 @@ public class FacebookRetriever extends SocialMediaRetriever {
 		}
 		
 		if(query.length() <= 1) {
+			Response response = getResponse(items, numberOfRequests);
 			return response;
 		}
 		
@@ -175,6 +178,7 @@ public class FacebookRetriever extends SocialMediaRetriever {
 				for(Page page : connection.getData()) {	
 					logger.info("Page: " + page.getId() + " -> " + page.getName());
 					
+					numberOfRequests++;
 					Connection<Post> pagesConnection = facebookClient.fetchConnection(page.getId()+"/feed", Post.class,
 							Parameter.with("since", since));
 					
@@ -220,30 +224,32 @@ public class FacebookRetriever extends SocialMediaRetriever {
 						}
 						
 					}
-					if(isFinished)
+					if(isFinished) {
 						break;
+					}
 				}
 
 			}
 			catch(FacebookNetworkException e){
 				logger.error(e.getMessage());
-				
-				response.setItems(items);
+				Response response = getResponse(items, numberOfRequests);
 				return response;
 			}
 		}
 		catch(FacebookResponseStatusException e) {
 			logger.error(e.getMessage());
+			Response response = getResponse(items, numberOfRequests);
 			return response;
 		}
 		catch(Exception e) {
 			logger.error(e.getMessage());
+			Response response = getResponse(items, numberOfRequests);
 			return response;
 		}
 		
 		logger.info("Facebook: " + items.size() + " posts for " + query + " [ " + since + " - " + new Date(System.currentTimeMillis()) + " ]");
 		
-		response.setItems(items);
+		Response response = getResponse(items, numberOfRequests);
 		return response;
 	}
 	

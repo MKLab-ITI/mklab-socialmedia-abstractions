@@ -7,7 +7,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.flickr4java.flickr.Flickr;
 import com.flickr4java.flickr.FlickrException;
@@ -43,7 +44,7 @@ import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
  */
 public class FlickrRetriever extends SocialMediaRetriever {
 
-	private Logger logger = Logger.getLogger(FlickrRetriever.class);
+	private Logger logger = LogManager.getLogger(FlickrRetriever.class);
 	
 	private static final int PER_PAGE = 500;
 	
@@ -71,7 +72,6 @@ public class FlickrRetriever extends SocialMediaRetriever {
 	@Override
 	public Response retrieveAccountFeed(AccountFeed feed, Integer maxRequests) {
 		
-		Response response = new Response();
 		List<Item> items = new ArrayList<Item>();
 		
 		Date dateToRetrieve = new Date(feed.getSinceDate());
@@ -83,6 +83,7 @@ public class FlickrRetriever extends SocialMediaRetriever {
 		String userID = feed.getId();
 		if(userID == null) {
 			logger.info("#Flickr : No source feed");
+			Response response = getResponse(items, numberOfRequests);
 			return response;
 		}
 		
@@ -129,19 +130,13 @@ public class FlickrRetriever extends SocialMediaRetriever {
 			}
 		}
 		
-		//logger.info("#Flickr : Done retrieving for this session");
-//		logger.info("#Flickr : Handler fetched " + items.size() + " photos from " + userID + 
-//				" [ " + lastItemDate + " - " + new Date(System.currentTimeMillis()) + " ]");
-		
-		response.setItems(items);
-		response.setRequests(numberOfRequests);
+		Response response = getResponse(items, numberOfRequests);
 		return response;
 	}
 	
 	@Override
 	public Response retrieveKeywordsFeed(KeywordsFeed feed, Integer maxRequests) {
 		
-		Response response = new Response();
 		List<Item> items = new ArrayList<Item>();
 		
 		Date dateToRetrieve = new Date(feed.getSinceDate());
@@ -155,6 +150,7 @@ public class FlickrRetriever extends SocialMediaRetriever {
 		
 		if(keywords == null || keywords.isEmpty()) {
 			logger.error("#Flickr : Text is emtpy");
+			Response response = getResponse(items, numberOfRequests);
 			return response;
 		}
 		
@@ -173,6 +169,7 @@ public class FlickrRetriever extends SocialMediaRetriever {
 		
 		if(text.equals("")) {
 			logger.error("#Flickr : Text is emtpy");
+			Response response = getResponse(items, numberOfRequests);
 			return response;
 		}
 		
@@ -219,32 +216,28 @@ public class FlickrRetriever extends SocialMediaRetriever {
 				items.add(flickrItem);
 			}
 		}
-			
-		//logger.info("#Flickr : Done retrieving for this session");
-		//logger.info("#Flickr : Handler fetched " + items.size() + " photos from " + text + 
-		//		" [ " + lastItemDate + " - " + new Date(System.currentTimeMillis()) + " ]");
-		
-		response.setItems(items);
-		response.setRequests(numberOfRequests);
+
+		Response response = getResponse(items, numberOfRequests);
 		return response;
 	}
 	
 	@Override
 	public Response retrieveLocationFeed(LocationFeed feed, Integer maxRequests) {
 		
-		Response response = new Response(); 
 		List<Item> items = new ArrayList<Item>();
 		
 		Date dateToRetrieve = new Date(feed.getSinceDate());
 		String label = feed.getLabel();
 		
-		Double[][] bbox = feed.getLocation().getbbox();
-		
-		if(bbox == null || bbox.length==0)
-			return response;
-		
 		int page=1, pages=1;
 		int numberOfRequests = 0;
+		
+		Double[][] bbox = feed.getLocation().getbbox();
+		
+		if(bbox == null || bbox.length==0) {
+			Response response = getResponse(items, numberOfRequests);
+			return response;
+		}
 		
 		PhotosInterface photosInteface = flickr.getPhotosInterface();
 		SearchParameters params = new SearchParameters();
@@ -292,8 +285,7 @@ public class FlickrRetriever extends SocialMediaRetriever {
 		logger.info("#Flickr : Handler fetched " + items.size() + " photos "+ 
 				" [ " + dateToRetrieve + " - " + new Date(System.currentTimeMillis()) + " ]");
 		
-		response.setItems(items);
-		response.setRequests(numberOfRequests);
+		Response response = getResponse(items, numberOfRequests);
 		return response;
     }
 	

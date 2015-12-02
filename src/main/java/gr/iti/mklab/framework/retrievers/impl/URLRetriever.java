@@ -10,7 +10,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -31,7 +32,7 @@ import gr.iti.mklab.framework.retrievers.Retriever;
  */
 public class URLRetriever implements Retriever {
 	
-	public final Logger logger = Logger.getLogger(URLRetriever.class);
+	public final Logger logger = LogManager.getLogger(URLRetriever.class);
 	
 	@Override
 	public Response retrieve(Feed feed) throws Exception {
