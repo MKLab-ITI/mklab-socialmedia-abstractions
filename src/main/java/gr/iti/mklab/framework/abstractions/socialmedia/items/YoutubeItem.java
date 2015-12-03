@@ -4,9 +4,11 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
-
+import com.google.api.services.youtube.model.Thumbnail;
+import com.google.api.services.youtube.model.ThumbnailDetails;
+import com.google.api.services.youtube.model.Video;
+import com.google.api.services.youtube.model.VideoSnippet;
+import com.google.api.services.youtube.model.VideoStatistics;
 import com.google.gdata.data.Person;
 import com.google.gdata.data.extensions.Rating;
 import com.google.gdata.data.media.mediarss.MediaDescription;
@@ -21,6 +23,7 @@ import gr.iti.mklab.framework.abstractions.socialmedia.users.YoutubeStreamUser;
 import gr.iti.mklab.framework.common.domain.Item;
 import gr.iti.mklab.framework.common.domain.MediaItem;
 import gr.iti.mklab.framework.common.domain.Source;
+import gr.iti.mklab.framework.common.domain.StreamUser;
 
 /**
  * Class that holds the information of a youtube video
@@ -36,12 +39,14 @@ public class YoutubeItem extends Item {
 	 */
 	private static final long serialVersionUID = 6355819301582285835L;
 	
-	private Logger logger = LogManager.getLogger(YoutubeItem.class);
-	
 	public YoutubeItem() {
 		
 	}
 			
+	/**
+	 * @Deprecated
+	 * @param videoEntry
+	 */
 	public YoutubeItem(VideoEntry videoEntry) {
 		
 		if (videoEntry == null || videoEntry.getId() == null) 
@@ -101,7 +106,7 @@ public class YoutubeItem extends Item {
 		try {
 			url = new URL(videoURL);
 		} catch (MalformedURLException e1) {
-			logger.error("Video URL is distorted");
+
 		}
 		
 		int size = 0;
@@ -165,10 +170,136 @@ public class YoutubeItem extends Item {
 
 	}
 	
+	public YoutubeItem(Video video) {
+		
+		if (video == null || video.getId() == null) {
+			return;
+		}
+		
+		VideoSnippet snippet = video.getSnippet();
+		VideoStatistics statistics = video.getStatistics();
+
+		//Id
+		id = Source.Youtube + "#" + video.getId();
+		
+		//SocialNetwork Name
+		source = Source.Youtube.toString();
+		
+		//Timestamp of the creation of the video
+		publicationTime = snippet.getPublishedAt().getValue();
+		
+		//Title of the video
+		title = snippet.getTitle();
+		
+		//Description of the video
+		description = snippet.getDescription();
+	
+		List<String> tagsList = snippet.getTags();
+		if(tagsList != null) {
+			tags = tagsList.toArray(new String[tagsList.size()]);
+		}
+		
+		//User that uploaded the video
+		//List<Person> authors = videoEntry.getAuthors();
+		//if(authors.size()>0) {
+		//	streamUser = new YoutubeStreamUser(authors.get(0));
+		//}
+		//else{
+			//if(mediaGroup.getUploader()!=null){
+			//	streamUser = new YoutubeStreamUser(mediaGroup.getUploader());
+			//}
+		//}
+		uid = Source.Youtube + "#" + snippet.getChannelId();
+				
+				
+		//Getting the video
+		ThumbnailDetails thumbnails = snippet.getThumbnails();
+		Thumbnail thumbnail = thumbnails.getHigh();
+		
+		if(thumbnail != null) {
+			String videoURL = "https://www.youtube.com/embed/" + video.getId();
+			//url
+			URL url;
+			try {
+				url = new URL(videoURL);
+			} catch (MalformedURLException e) {
+				return;
+			}
+			
+			MediaItem mediaItem = new MediaItem(url);
+			
+			String mediaId = Source.Youtube + "#" + video.getId(); 
+			
+			//id
+			mediaItem.setId(mediaId);
+			
+			//SocialNetwork Name
+			mediaItem.setSource(source);
+			
+			//Reference
+			mediaItem.setReference(id);
+			
+			//Type 
+			mediaItem.setType("video");
+			
+			//Time of publication
+			mediaItem.setPublicationTime(publicationTime);
+			//Author
+			if(streamUser != null) {
+				mediaItem.setUser(streamUser);
+				mediaItem.setUserId(streamUser.getId());
+			}
+			//PageUrl
+			mediaItem.setPageUrl(pageUrl);
+			
+			//Thumbnail
+			String thumbUrl = thumbnail.getUrl();
+			mediaItem.setThumbnail(thumbUrl);	
+			
+			//Title
+			mediaItem.setTitle(title);
+			
+			//Description
+			mediaItem.setDescription(description);
+			
+			//Tags
+			mediaItem.setTags(tags);
+			
+			//Popularity
+			if(statistics!=null){
+				mediaItem.setLikes(statistics.getLikeCount().longValue());
+				mediaItem.setComments(statistics.getCommentCount().longValue());
+				mediaItem.setViews(statistics.getViewCount().longValue());
+			}
+			
+			//Rating rating = videoEntry.getRating();
+			//if(rating != null) {
+			//	mediaItem.setRatings(rating.getAverage());
+			//}
+			
+			//Size
+			mediaItem.setSize(thumbnail.getWidth().intValue(), thumbnail.getHeight().intValue());
+			
+			mediaItems.add(mediaItem);
+			mediaIds.add(mediaId);
+		}
+		
+		//Popularity
+		if(statistics != null){
+			likes = statistics.getLikeCount().longValue();
+			comments = statistics.getCommentCount().longValue();
+		}
+		
+		// Page Url of this Item
+		pageUrl = "https://www.youtube.com/watch?v=" + video.getId(); 
+		
+	}
+	
+	/**
+	 * @Deprecated
+	*/
 	public YoutubeItem(VideoEntry videoEntry, YoutubeStreamUser user) {
-		
 		this(videoEntry);
-		
 		//User that posted the post
 		streamUser = user;
 		uid = streamUser.getId();
@@ -176,7 +307,16 @@ public class YoutubeItem extends Item {
 		for(MediaItem mItem : this.mediaItems) {
 			mItem.setUserId(uid);
 		}
-		
+	}
+	
+	public YoutubeItem(Video video, StreamUser user) {
+		this(video);
+		//User that posted the post
+		streamUser = user;
+		uid = streamUser.getId();
+		for(MediaItem mItem : this.mediaItems) {
+			mItem.setUserId(uid);
+		}
 	}
 	
 }

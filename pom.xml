@@ -40,6 +40,9 @@
     
   	<properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <project.http.version>1.18.0-rc</project.http.version>
+        <project.oauth.version>1.18.0-rc</project.oauth.version>
     </properties>
     
     <dependencies>

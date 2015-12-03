@@ -1,30 +1,33 @@
 package gr.iti.mklab.framework.retrievers.impl;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import org.apache.logging.log4j.Logger;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
-import org.joda.time.DateTime;
+import org.apache.logging.log4j.Logger;
 
-import com.google.gdata.client.youtube.YouTubeQuery;
-import com.google.gdata.client.youtube.YouTubeService;
-import com.google.gdata.data.Link;
-import com.google.gdata.data.extensions.Rating;
-import com.google.gdata.data.media.mediarss.MediaDescription;
-import com.google.gdata.data.media.mediarss.MediaPlayer;
-import com.google.gdata.data.media.mediarss.MediaThumbnail;
-import com.google.gdata.data.youtube.UserProfileEntry;
-import com.google.gdata.data.youtube.VideoEntry;
-import com.google.gdata.data.youtube.VideoFeed;
-import com.google.gdata.data.youtube.YouTubeMediaContent;
-import com.google.gdata.data.youtube.YouTubeMediaGroup;
-import com.google.gdata.data.youtube.YtStatistics;
-import com.google.gdata.util.ServiceException;
+import com.google.api.services.youtube.YouTube;
+import com.google.api.services.youtube.model.Channel;
+import com.google.api.services.youtube.model.ChannelListResponse;
+import com.google.api.services.youtube.model.SearchListResponse;
+import com.google.api.services.youtube.model.SearchResult;
+import com.google.api.services.youtube.model.Video;
+import com.google.api.services.youtube.model.VideoListResponse;
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
+import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpRequestInitializer;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.util.Joiner;
 
 import gr.iti.mklab.framework.Credentials;
 import gr.iti.mklab.framework.abstractions.socialmedia.items.YoutubeItem;
@@ -39,377 +42,395 @@ import gr.iti.mklab.framework.common.domain.feeds.LocationFeed;
 import gr.iti.mklab.framework.retrievers.Response;
 import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
 
-/**
- * Class responsible for retrieving YouTube content based on keywords and YouTube users 
- * The retrieval process takes place through Google API.
- * 
- * @author manosetro
- * @email  manosetro@iti.gr
- */
-public class YoutubeRetriever extends SocialMediaRetriever {
+public class YoutubeRetriever extends SocialMediaRetriever{
 
-	private final String activityFeedUserUrlPrefix = "http://gdata.youtube.com/feeds/api/users/";
-	private final String activityFeedVideoUrlPrefix = "http://gdata.youtube.com/feeds/api/videos";
-	private final String uploadsActivityFeedUrlSuffix = "/uploads";
+	private Logger  logger = LogManager.getLogger(YoutubeRetriever.class);
+
+	private String apiKey;
 	
-	private Logger logger = LogManager.getLogger(YoutubeRetriever.class);
+	private static YouTube youtubeService;
 	
-	private YouTubeService service;
+	public static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
+	public static final JsonFactory JSON_FACTORY = new JacksonFactory();
 	
-	public YoutubeRetriever(Credentials credentials) {		
-		super(credentials);	
-		this.service = new YouTubeService(credentials.getClientId(), credentials.getKey());
+	private static final long NUMBER_OF_VIDEOS_RETURNED = 50;
+	
+	public YoutubeRetriever(Credentials credentials) {
+		super(credentials);
+		
+		apiKey = credentials.getKey();
+		
+		// This object is used to make YouTube Data API requests. The last argument is required, but since we don't need anything
+        // initialized when the HttpRequest is initialized, we override the interface and provide a no-op function.
+		youtubeService = new YouTube.Builder(HTTP_TRANSPORT, JSON_FACTORY, new HttpRequestInitializer() {
+            public void initialize(HttpRequest request) throws IOException {
+            }
+        }).setApplicationName("youtube-search-module").build();
+		
 	}
 
-	
 	@Override
-	public Response retrieveAccountFeed(AccountFeed feed, Integer requests) {
+	public void stop() {
+		
+	}
+
+	@Override
+	public Response retrieveKeywordsFeed(KeywordsFeed feed, Integer requests) throws Exception {
+				
+		String label = feed.getLabel();
+		long sinceDate = feed.getSinceDate();
 		
 		List<Item> items = new ArrayList<Item>();
+		int numberOfRequests = 0;
 		
-		Date lastItemDate = new Date(feed.getSinceDate());
+		// Define the API request for retrieving search results.
+        YouTube.Search.List search = youtubeService.search().list("id");
+        search.setKey(apiKey);
+        		
+        List<String> keywords = feed.getKeywords();
+		if(keywords == null || keywords.isEmpty()) {
+			logger.error("#Youtube : No keywords feed");
+			Response response = getResponse(items, numberOfRequests);
+			return response;
+		}
+		
+		String textQuery = StringUtils.join(keywords, " OR ");
+		if(textQuery.equals("")) {
+			logger.error("Text Query is empty.");
+			Response response = getResponse(items, numberOfRequests);
+			return response;
+		}
+        search.setQ(textQuery);
+        search.setType("video");
+        search.setMaxResults(NUMBER_OF_VIDEOS_RETURNED);
+        search.setOrder("date");
+        
+        Set<String> uids = new HashSet<String>();
+        boolean sinceDateReached = false;
+        String nextPageToken = null;
+        while(true) {
+        	try {
+        		
+        		if(nextPageToken != null) {
+        			search.setPageToken(nextPageToken);
+        		}
+        		
+        		SearchListResponse searchResponse = search.execute();
+        		numberOfRequests++;
+        	
+        		List<SearchResult> searchResultList = searchResponse.getItems();
+        		if (searchResultList != null) {
+ 
+        			List<String> videoIds = new ArrayList<String>();
+        			for (SearchResult searchResult : searchResultList) {
+        				videoIds.add(searchResult.getId().getVideoId());
+        			}
+        			Joiner stringJoiner = Joiner.on(',');
+        			String videoId = stringJoiner.join(videoIds);
+                
+        			YouTube.Videos.List listVideosRequest = youtubeService.videos().list("snippet,recordingDetails,player");
+        			listVideosRequest.setId(videoId);
+        			listVideosRequest.setKey(apiKey);
+        			listVideosRequest.setMaxResults(NUMBER_OF_VIDEOS_RETURNED);
+                	VideoListResponse listResponse = listVideosRequest.execute();
+                	numberOfRequests++;
+                
+                	List<Video> videoList = listResponse.getItems();
+                	if (videoList != null) {
+                		for(Video video : videoList) {
+                			uids.add(video.getSnippet().getChannelId());
+                			
+                			Item item = new YoutubeItem(video);
+                			if(item.getPublicationTime() < sinceDate) {
+                				System.out.println(new Date(item.getPublicationTime()) + " < " + new Date(sinceDate));
+                				sinceDateReached = true;
+								break;
+                			}
+                			
+							if(label != null) {
+								item.addLabel(label);
+							}
+						
+                			items.add(item);
+                		}
+                	}
+        		}
+        	
+        		nextPageToken = searchResponse.getNextPageToken();
+        		if(nextPageToken == null) {
+        			logger.info("Stop retriever. There is no more pages to fetch for query " + textQuery);
+        			break;
+        		}
+        				
+			} catch (GoogleJsonResponseException e) {
+				logger.error("There was a service error: " + e.getDetails().getCode() + " : " + e.getDetails().getMessage(), e);
+				break;
+			} catch (IOException e) {
+				logger.error("There was an IO error: " + e.getCause() + " : " + e.getMessage(), e);
+				break;
+			} catch (Throwable t) {
+				logger.error(t);
+				break;
+			}
+        
+        	if(numberOfRequests >= requests) {
+        		logger.info("Stop retriever. Number of requests (" + numberOfRequests + ") has reached for " + textQuery);
+				break;
+			}
+        	
+			if(sinceDateReached) {
+				logger.info("Stop retriever. Since date " + sinceDate + " reached for query " + textQuery);
+				break;
+			}
+			
+        }
+        
+//        Map<String, StreamUser> users = getStreamUsers(uids);
+//        for(Item item : items) {
+//        	String uid = item.getUserId();
+//        	StreamUser streamUser = users.get(uid);
+//        	item.setStreamUser(streamUser);
+//        }
+        
+		Response response = getResponse(items, numberOfRequests);
+		return response;
+	}
+
+	@Override
+	public Response retrieveAccountFeed(AccountFeed feed, Integer requests) throws Exception {
+
+		List<Item> items = new ArrayList<Item>();
+		int numberOfRequests = 0;
+		
+		long sinceDate = feed.getSinceDate();
 		String label = feed.getLabel();
-		
-		boolean isFinished = false;
 		
 		String uName = feed.getUsername();
 		
-		int numberOfRequests = 0;
-		
-		if(uName == null){
+		if(uName == null) {
 			logger.error("#YouTube : No source feed");
 			Response response = getResponse(items, numberOfRequests);
 			return response;
 		}
 				
-		StreamUser streamUser = getStreamUser(uName);
-		logger.info("#YouTube : Retrieving User Feed : "+uName);
-		
-		URL channelUrl = null;
-		try {
-			channelUrl = getChannelUrl(uName);
-		} catch (MalformedURLException e) {
-			logger.error("#YouTube Exception : " + e.getMessage());
+		StreamUser streamUser = getStreamUserForUsername(uName);
+		numberOfRequests++;
+		if(streamUser == null) {
 			Response response = getResponse(items, numberOfRequests);
 			return response;
 		}
+		logger.info("#YouTube: Retrieving User Feed: " + streamUser.getUserid());
 		
-		while(channelUrl != null) {
-			
-			try {
-				VideoFeed videoFeed = service.getFeed(channelUrl, VideoFeed.class);
-				//service.getEntry(channelUrl, UserProfileEntry.class);
-				numberOfRequests ++ ;
-				
-				for(VideoEntry  video : videoFeed.getEntries()) {
-					
-					com.google.gdata.data.DateTime publishedTime = video.getPublished();
-					DateTime publishedDateTime = new DateTime(publishedTime.toString());
-					Date publicationDate = publishedDateTime.toDate();
-					
-					if(publicationDate.after(lastItemDate) && (video != null && video.getId() != null)) {
-						Item ytItem = new YoutubeItem(video);
-						if(label != null) {
-							ytItem.addLabel(label);
-						}
-						
-						if(streamUser != null) {
-							ytItem.setUserId(streamUser.getId());
-							ytItem.setStreamUser(streamUser);
-						}
-						
-						items.add(ytItem);
-					}
-					
-					if(numberOfRequests > requests) {
-						isFinished = true;
-						break;
-					}
-						
-				}
-				
-				if(isFinished)
-					break;
-				
-				Link nextLink = videoFeed.getNextLink();
-				channelUrl = nextLink==null ? null : new URL(nextLink.getHref());
-				
-			} catch (Exception e) {
-				logger.error("#YouTube Exception : " + e.getMessage());
-				break;
-			} 
-		
-		}
-	
-		logger.info("#YouTube : Handler fetched " + items.size() + " videos from " + uName + " [ " + lastItemDate + " - " + new Date(System.currentTimeMillis()) + " ]");
-	
-		Response response = getResponse(items, numberOfRequests);
-		return response;
-	}
-	
-	@Override
-	public Response retrieveKeywordsFeed(KeywordsFeed feed, Integer requests) throws Exception {
-		
-		List<Item> items = new ArrayList<Item>();
-		
-		Date lastItemDate = new Date(feed.getSinceDate());
-		String label = feed.getLabel();
-		
-		int startIndex = 1;
-		int numPerPage = 25;
-		int currResults = 0;
-		int numberOfRequests = 0;
-		
-		boolean isFinished = false;
-		
-		List<String> keywords = feed.getKeywords();
-		
-		if(keywords == null || keywords.isEmpty()) {
-			logger.error("#YouTube : No keywords feed");
-			Response response = getResponse(items, numberOfRequests);
-			return response;
-		}
-	
-		String tags = "";
-		for(String key : keywords) {
-			String [] words = key.split(" ");
-			for(String word : words) {
-				if(!tags.contains(word) && word.length() > 1)
-					tags += word.toLowerCase()+" ";
-			}
-		}
-
-		//one call - 25 results
-		if(tags.equals("")) {
-			Response response = getResponse(items, numberOfRequests);
-			return response;
-		}
-	
-		YouTubeQuery query;
-		try {
-			query = new YouTubeQuery(new URL(activityFeedVideoUrlPrefix));
-		} catch (MalformedURLException e1) {
-			Response response = getResponse(items, numberOfRequests);
-			return response;
-		}
-		
-		query.setOrderBy(YouTubeQuery.OrderBy.PUBLISHED);
-		query.setFullTextQuery(tags);
-		query.setSafeSearch(YouTubeQuery.SafeSearch.NONE);
-		query.setMaxResults(numPerPage);
-		
-		VideoFeed videoFeed = new VideoFeed();
+		// Define the API request for retrieving search results.
+        YouTube.Search.List search = youtubeService.search().list("id");
+        search.setKey(apiKey);
+        search.setChannelId(streamUser.getUserid());
+        search.setMaxResults(NUMBER_OF_VIDEOS_RETURNED);
+        
+		boolean sinceDateReached = false;
+		String nextPageToken = null;
 		while(true) {
 			try {
-				query.setStartIndex(startIndex);
-				videoFeed = service.query(query, VideoFeed.class);
-				
-				numberOfRequests++;
-				
-				currResults = videoFeed.getEntries().size();
-				startIndex +=currResults;
-				
-				for(VideoEntry  video : videoFeed.getEntries()) {
-					com.google.gdata.data.DateTime publishedTime = video.getPublished();
-					DateTime publishedDateTime = new DateTime(publishedTime.toString());
-					Date publicationDate = publishedDateTime.toDate();
-					
-					if(publicationDate.after(lastItemDate) && (video != null && video.getId() != null)){
-						Item ytItem = new YoutubeItem(video);
-						if(label != null) {
-							ytItem.addLabel(label);
-						}
-						
-						StreamUser tempStreamUser = ytItem.getStreamUser();
-						if(tempStreamUser != null) {
-							StreamUser user = this.getStreamUser(tempStreamUser);
-							if(user != null) {
-								ytItem.setUserId(user.getId());
-								ytItem.setStreamUser(user);
-							}
-						}
-
-						items.add(ytItem);
-					}
-					
-					if(numberOfRequests >= requests) {
-						isFinished = true;
-						break;
-					}
+				if(nextPageToken != null) {
+					search.setPageToken(nextPageToken);
 				}
-			
-			}
-			catch(Exception e) {
-				logger.error("YouTube Retriever error during retrieval of " + tags, e);
-				isFinished = true;
+				
+				SearchListResponse searchResponse = search.execute();
+				numberOfRequests++;
+								
+				List<SearchResult> searchResultList = searchResponse.getItems();
+        		if (searchResultList != null) {
+        			List<String> videoIds = new ArrayList<String>();
+        			for (SearchResult searchResult : searchResultList) {
+        				videoIds.add(searchResult.getId().getVideoId());
+        			}
+        			Joiner stringJoiner = Joiner.on(',');
+        			String videoId = stringJoiner.join(videoIds);
+        			
+        			YouTube.Videos.List listVideosRequest = youtubeService.videos().list("snippet,recordingDetails,player");
+        			listVideosRequest.setId(videoId);
+        			listVideosRequest.setKey(apiKey);
+        			listVideosRequest.setMaxResults(NUMBER_OF_VIDEOS_RETURNED);
+                	VideoListResponse listResponse = listVideosRequest.execute();
+                	numberOfRequests++;
+                	
+                	List<Video> videoList = listResponse.getItems();
+                	if (videoList != null) {
+                		for(Video video : videoList) {
+                			Item item = new YoutubeItem(video, streamUser);
+                			
+                			if(item.getPublicationTime() < sinceDate) {
+                				System.out.println(new Date(item.getPublicationTime()) +"<"+ new Date(sinceDate));
+                				sinceDateReached = true;
+								break;
+                			}
+                			
+							if(label != null) {
+								item.addLabel(label);
+							}
+                			items.add(item);
+                		}
+                	}
+                	
+                	nextPageToken = searchResponse.getNextPageToken();
+    				if(nextPageToken == null) {
+    					logger.info("Stop retriever. There is no more pages to fetch for " + uName);
+            			break;
+    				}
+        		}
+        		else {
+        			logger.info("Stop retriever. No more results in response.");
+        			break;
+        		}
+			} catch (GoogleJsonResponseException e) {
+				logger.error("There was a service error: " + e.getDetails().getCode() + " : " + e.getDetails().getMessage(), e);
+				break;
+			} catch (IOException e) {
+				logger.error("There was an IO error: " + e.getCause() + " : " + e.getMessage(), e);
+				break;
+			} catch (Throwable t) {
+				logger.error(t);
 				break;
 			}
-			
-			if(isFinished)	
-				break;
 		
+			if(numberOfRequests >= requests) {
+        		logger.info("Stop retriever. Number of requests (" + numberOfRequests + ") has reached for " + uName);
+				break;
+			}
+        	
+			if(sinceDateReached) {
+				logger.info("Stop retriever. Since date " + sinceDate + " reached for " + uName);
+				break;
+			}
 		}
-	
-		logger.info("#YouTube : Handler fetched " + items.size() + " videos from " + tags + " [ " + lastItemDate + " - " + new Date(System.currentTimeMillis()) + " ]");
-	
+		
 		Response response = getResponse(items, numberOfRequests);
 		return response;
 	}
-	
+
 	@Override
-	public Response retrieveLocationFeed(LocationFeed feed, Integer requests) {
-		return new Response();
-    }
-	
-	@Override
-	public Response retrieveGroupFeed(GroupFeed feed, Integer requests) {
-		return new Response();
+	public Response retrieveLocationFeed(LocationFeed feed, Integer requests) throws Exception {
+		List<Item> items = new ArrayList<Item>();
+		int numberOfRequests = 0;
+		
+		Response response = getResponse(items, numberOfRequests);
+		return response;
 	}
 
-	public void stop(){
-		if(service != null){
-			service = null;
-		}
+	@Override
+	public Response retrieveGroupFeed(GroupFeed feed, Integer maxRequests) {
+		return null;
 	}
-	
-	private URL getChannelUrl(String channel) throws MalformedURLException {
-		StringBuffer urlStr = new StringBuffer(activityFeedUserUrlPrefix);
-		urlStr.append(channel).append(uploadsActivityFeedUrlSuffix);
+
+	public StreamUser getStreamUserForUsername(String uName) {
 		
-		return new URL(urlStr.toString());
-	}
-		
-	public MediaItem getMediaItem(String id) {
 		try {
-			URL entryUrl = new URL(activityFeedVideoUrlPrefix +"/"+ id);
-			VideoEntry entry = service.getEntry(entryUrl, VideoEntry.class);
-			if(entry != null) {
-				YouTubeMediaGroup mediaGroup = entry.getMediaGroup();
-				List<YouTubeMediaContent> mediaContent = mediaGroup.getYouTubeContents();
-				List<MediaThumbnail> thumbnails = mediaGroup.getThumbnails();
+			YouTube.Channels.List channelListResponse = youtubeService.channels()
+					.list("id,snippet,statistics");
+			channelListResponse.setKey(apiKey);
+			channelListResponse.setForUsername(uName);
+			 
+			ChannelListResponse response = channelListResponse.execute();
+			List<Channel> channels = response.getItems();
+			if(channels != null) {
+				Channel channel = channels.get(0);
 				
-				String videoURL = null;
-				for(YouTubeMediaContent content : mediaContent) {
-					if(content.getType().equals("application/x-shockwave-flash")) {
-						videoURL = content.getUrl();
-						break;
-					}
-				}
+				YoutubeStreamUser user = new YoutubeStreamUser(channel);
+				user.setUsername(uName);
 				
-				if(videoURL != null) {
-					MediaPlayer mediaPlayer = mediaGroup.getPlayer();
-					YtStatistics statistics = entry.getStatistics();
-					
-					Long publicationTime = entry.getPublished().getValue();
-					
-					String mediaId = "Youtube#" + mediaGroup.getVideoId();
-					URL url = new URL(videoURL);
+				return user;
+			}
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return null;
+	}
+
+	public StreamUser getStreamUser(String uid) {
+		try {
+			YouTube.Channels.List channelListResponse = youtubeService.channels()
+					.list("id,snippet,statistics");
+			
+			channelListResponse.setKey(apiKey);
+			channelListResponse.setId(uid);
+			channelListResponse.setMaxResults(NUMBER_OF_VIDEOS_RETURNED);
+			
+			ChannelListResponse response = channelListResponse.execute();
+			List<Channel> channels = response.getItems();
+			if(channels != null) {
+				Channel channel = channels.get(0);
 				
-					String title = mediaGroup.getTitle().getPlainTextContent();
-		
-					MediaDescription desc = mediaGroup.getDescription();
-					String description = desc==null ? "" : desc.getPlainTextContent();
-					//url
-					MediaItem mediaItem = new MediaItem(url);
-					
-					//id
-					mediaItem.setId(mediaId);
-					//SocialNetwork Name
-					mediaItem.setSource("Youtube");
-					//Type 
-					mediaItem.setType("video");
-					//Time of publication
-					mediaItem.setPublicationTime(publicationTime);
-					//PageUrl
-					String pageUrl = mediaPlayer.getUrl();
-					mediaItem.setPageUrl(pageUrl);
-					//Thumbnail
-					MediaThumbnail thumb = null;
-					int size = 0;
-					for(MediaThumbnail thumbnail : thumbnails) {
-						int t_size = thumbnail.getHeight() * thumbnail.getWidth();
-						if(t_size > size) {
-							thumb = thumbnail;
-							size = t_size;
-						}
-					}
-					//Title
-					mediaItem.setTitle(title);
-					mediaItem.setDescription(description);
-					
-					//Popularity
-					if(statistics!=null){
-						mediaItem.setLikes(statistics.getFavoriteCount());
-						mediaItem.setViews(statistics.getViewCount());
-					}
-					Rating rating = entry.getRating();
-					if(rating != null) {
-						mediaItem.setRatings(rating.getAverage());
-					}
-					//Size
-					if(thumb!=null) {
-						mediaItem.setThumbnail(thumb.getUrl());
-						mediaItem.setSize(thumb.getWidth(), thumb.getHeight());
-					}
-					
-					String uploader = mediaGroup.getUploader();
-					StreamUser user = getStreamUser(uploader);
-					if(user != null) {
-						mediaItem.setUser(user);
-						mediaItem.setUserId(user.getId());
-					}
-					
-					return mediaItem;
+				YoutubeStreamUser user = new YoutubeStreamUser(channel);
+
+				return user;
+			}
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return null;
+	}
+
+	public Map<String, StreamUser> getStreamUsers(Set<String> uids) {
+		Map<String, StreamUser> users = new HashMap<String, StreamUser>();
+		try {
+			Joiner stringJoiner = Joiner.on(',');
+			String userIds = stringJoiner.join(uids);
+		        
+			YouTube.Channels.List channelListResponse = youtubeService.channels()
+					.list("id,snippet,statistics");
+			channelListResponse.setKey(apiKey);
+			channelListResponse.setId(userIds);
+			 
+			ChannelListResponse response = channelListResponse.execute();
+			List<Channel> channels = response.getItems();
+			if(channels != null) {
+				for(Channel channel : channels) {
+					YoutubeStreamUser user = new YoutubeStreamUser(channel);
+					users.put(user.getId(), user);
 				}
 			}
-		} catch (Exception e) {
-			logger.error(e.getMessage());
-		} 
-		return null;
-	}
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
+		return users;
+	}
+	
 	@Override
-	public StreamUser getStreamUser(String uid) {
-		URL profileUrl;
-		try {
-			profileUrl = new URL(activityFeedUserUrlPrefix + uid);
-			UserProfileEntry userProfile = service.getEntry(profileUrl , UserProfileEntry.class);
-			
-			StreamUser user = new YoutubeStreamUser(userProfile);
-			
-			return user;
-		} catch (MalformedURLException e) {
-			//e.printStackTrace();
-			logger.error(e.getMessage());
-		} catch (IOException e) {
-			//e.printStackTrace();
-			logger.error(e.getMessage());
-		} catch (ServiceException e) {
-			//e.printStackTrace();
-			logger.error(e.getMessage());
-		}
-		
+	public MediaItem getMediaItem(String id) {
 		return null;
 	}
 
-	private StreamUser getStreamUser(StreamUser u) {
-		URL profileUrl;
-		try {
-			profileUrl = new URL(u.getPageUrl());
-			UserProfileEntry userProfile = service.getEntry(profileUrl , UserProfileEntry.class);
-			
-			StreamUser user = new YoutubeStreamUser(userProfile);
-			
-			return user;
-		} catch (MalformedURLException e) {
-			logger.error(e.getMessage());
-		} catch (IOException e) {
-			logger.error(e.getMessage());
-		} catch (ServiceException e) {
-			logger.error(e.getMessage());
-		}
+	public static void main(String...args) throws Exception {
 		
-		return null;
+		Credentials credentials = new Credentials();
+		credentials.setKey("AIzaSyBs4RWhrqw9-3kCvvAN3qKJc79RI2DxOis");
+		
+		YoutubeRetriever retriever = new YoutubeRetriever(credentials);
+		
+		long since = System.currentTimeMillis()-(365*24*3600000l);
+		KeywordsFeed feed = new KeywordsFeed("id", "barack obama", since, "Youtube");
+		
+		//AccountFeed feed = new AccountFeed(
+		//		"UC16niRr50-MSBwiO3YDb3RA", 
+		//		"bbcnews", 
+		//		since, 
+		//		"Youtube");
+		
+		Response response = retriever.retrieveKeywordsFeed(feed, 6);
+		//Response response = retriever.retrieveAccountFeed(feed, 6);
+		for(Item item : response.getItems()) {
+			System.out.println(item.getTitle());
+		}
+		System.out.println(response.getNumberOfItems());
+		//StreamUser user = retriever.getStreamUser("bbcnews");
+		
+		
 	}
 	
 }

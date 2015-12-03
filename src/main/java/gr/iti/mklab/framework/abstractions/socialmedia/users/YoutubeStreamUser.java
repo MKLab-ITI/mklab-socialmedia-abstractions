@@ -1,5 +1,10 @@
 package gr.iti.mklab.framework.abstractions.socialmedia.users;
 
+import com.google.api.services.youtube.model.Channel;
+import com.google.api.services.youtube.model.ChannelSnippet;
+import com.google.api.services.youtube.model.ChannelStatistics;
+import com.google.api.services.youtube.model.Thumbnail;
+import com.google.api.services.youtube.model.ThumbnailDetails;
 import com.google.gdata.data.Link;
 import com.google.gdata.data.Person;
 import com.google.gdata.data.media.mediarss.MediaThumbnail;
@@ -86,4 +91,43 @@ public class YoutubeStreamUser extends StreamUser {
 		}
 	}
 	
+	public YoutubeStreamUser(Channel channel) {
+
+		if (channel == null) {
+			return;
+		}
+		
+		ChannelSnippet snippet = channel.getSnippet();
+
+		//Id
+		id = Source.Youtube+"#"+channel.getId();
+
+		//The id of the user in the network
+		userid = channel.getId();
+		
+		//The username of the user
+		username = "";
+		
+		//The name of the user
+		name = snippet.getTitle();
+		
+		//streamId
+		streamId = Source.Youtube.toString();
+
+		ThumbnailDetails thumbnails = snippet.getThumbnails();
+		Thumbnail thumbnail = thumbnails.getHigh();
+		profileImage = thumbnail.getUrl();
+
+		pageUrl = "https://www.youtube.com/user/" + channel.getId();
+		
+		//location = user.getLocation();
+
+		description = snippet.getDescription();
+
+		ChannelStatistics statistics = channel.getStatistics();
+		if(statistics != null) {
+			followers = statistics.getSubscriberCount().longValue();
+			items = statistics.getVideoCount().intValue();
+		}
+	}
 }

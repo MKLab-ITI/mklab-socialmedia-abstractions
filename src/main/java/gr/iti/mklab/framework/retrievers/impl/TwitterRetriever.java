@@ -77,7 +77,6 @@ public class TwitterRetriever extends SocialMediaRetriever {
 		Integer numberOfRequests = 0;
 		
 		Date sinceDate = new Date(feed.getSinceDate());
-		
 		String label = feed.getLabel();
 
 		String screenName = feed.getUsername();
@@ -149,7 +148,6 @@ public class TwitterRetriever extends SocialMediaRetriever {
 		int numberOfRequests = 0;
 
 		Date sinceDate = new Date(feed.getSinceDate());
-		
 		String label = feed.getLabel();
 		
 		List<String> keywords = feed.getKeywords();
