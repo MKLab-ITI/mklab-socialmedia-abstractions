@@ -127,7 +127,7 @@
     	<dependency>
     		<groupId>com.restfb</groupId>
     		<artifactId>restfb</artifactId>
-    		<version>1.8.0</version>
+    		<version>1.17.0</version>
     	</dependency>
     	
     	<!-- RSS -->
@@ -185,6 +185,11 @@
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-core</artifactId>
 			<version>2.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-1.2-api</artifactId>
+			<version>2.0-rc1</version>
 		</dependency>
     </dependencies>
    	

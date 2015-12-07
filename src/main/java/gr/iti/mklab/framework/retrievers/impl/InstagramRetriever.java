@@ -52,12 +52,8 @@ import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
 public class InstagramRetriever extends SocialMediaRetriever {
 	
 	private Logger logger = LogManager.getLogger(InstagramRetriever.class);
-	private boolean loggingEnabled = false;
 	
 	private Instagram instagram = null;
-
-	private MediaFeed mediaFeed = new MediaFeed();
-	private TagMediaFeed tagFeed = new TagMediaFeed();
 
 	private InstagramOembed instagramOembed;
 	
@@ -76,80 +72,99 @@ public class InstagramRetriever extends SocialMediaRetriever {
 		
 		List<Item> items = new ArrayList<Item>();
 		
-		Date lastItemDate = new Date(feed.getSinceDate());
+		Date sinceDate = new Date(feed.getSinceDate());
 		String label = feed.getLabel();
 		
 		int numberOfRequests = 0;
-
+		int count = 100;
+		
 		String uName = feed.getUsername();
 		if(uName == null) {
 			logger.error("#Instagram : No source feed");
 			Response response = getResponse(items, numberOfRequests);
 			return response;
 		}
-			
-		if(loggingEnabled) {
-			logger.info("#Instagram : Retrieving User Feed : " + uName);
-		}
-		
-		List<UserFeedData>revUsers = null; 
+
+		List<UserFeedData> usersFeed = null; 
 		try {
 			UserFeed userf = instagram.searchUser(uName);
-			revUsers = userf.getUserList();
+			usersFeed = userf.getUserList();
 		}
 		catch(InstagramException e) {
-			logger.error("#Instagram Exception : " + e.getMessage());
+			logger.error("#Instagram Exception for feed (" + feed.getId() + ")", e);
 			Response response = getResponse(items, numberOfRequests);
 			return response;
 		}
 		
-		for(UserFeedData revUser : revUsers) {
-
+		for(UserFeedData userFeed : usersFeed) {
 			try {
-				try {
-					mediaFeed = instagram.getRecentMediaFeed(revUser.getId(), 0, null, null, null, null);
+				if(!userFeed.getUserName().equals(uName)) {
+					continue;
 				}
-				catch(InstagramException e) {
-					logger.error("#Instagram Exception:" + e.getMessage());
-					
-					Response response = getResponse(items, numberOfRequests);
-					return response;
-				} 
 				
-				if(mediaFeed != null) {
-					
+				logger.info("#Instagram : Retrieving media feed for user " + userFeed.getId() + " (" + userFeed.getUserName() + ")");
+				
+				//String userId, int count, String minId, String maxId, Date maxTimeStamp, Date minTimeStamp
+				MediaFeed mediaFeed = instagram.getRecentMediaFeed(userFeed.getId(), count, null, null, null, sinceDate);
+				boolean sinceDateReached = false;
+				while(true) {
+					if(mediaFeed == null) {
+						break;
+					}
+						
 					for(MediaFeedData mfeed : mediaFeed.getData()) {
 						int createdTime = Integer.parseInt(mfeed.getCreatedTime());
 						Date publicationDate = new Date((long) createdTime * 1000);
-						
-						if(lastItemDate.after(publicationDate) || numberOfRequests>maxRequests) {
+							
+						if(sinceDate.after(publicationDate)) {
+							sinceDateReached = true;
 							break;
-    					}
-						
+	    				}
+							
 						if(mfeed != null && mfeed.getId() != null) {
 							Item instagramItem = new InstagramItem(mfeed);
 							if(label != null) {
 								instagramItem.addLabel(label);
 							}
-							
+								
 							items.add(instagramItem);
 						}
 					}
+						
+					Pagination pagination = mediaFeed.getPagination();
+					if(pagination == null || !pagination.hasNextPage()) {
+						logger.info("Stop retriever. There is no next page for user (" + userFeed.getUserName() + ")");
+						break;
+					}
+						
+			        if(numberOfRequests >= maxRequests) {
+			        	logger.info("Stop retriever. Number of requests (" + numberOfRequests + ") has reached for user (" + userFeed.getUserName() + ")");
+						break;
+					}
+			        	
+					if(sinceDateReached) {
+						logger.info("Stop retriever. Since date " + sinceDate + " reached for user (" + userFeed.getUserName() + ")");
+						break;
+					}
+						
+					numberOfRequests++;
+					mediaFeed = instagram.getRecentMediaNextPage(pagination);
 				}
-				
+					
 			}
+			catch(InstagramException e) {
+				logger.error("#Instagram Exception for feed (" + feed.getId() + ")", e);
+					
+				Response response = getResponse(items, numberOfRequests);
+				return response;
+			} 
 			catch (MalformedURLException e) {
-				logger.error("#Instagram Exception: " + e.getMessage());
+				logger.error("#Instagram Exception for (" + feed.getId() + ")", e);
 				Response response = getResponse(items, numberOfRequests);
 				return response;
 			}
 		}
-		
-		if(loggingEnabled) {
-			logger.info("#Instagram : Handler fetched " + items.size() + " photos from " + uName + 
-					" [ " + lastItemDate + " - " + new Date(System.currentTimeMillis()) + " ]");
-		}
-		
+
 		Response response = getResponse(items, numberOfRequests);
 		return response;
 	}
@@ -157,20 +172,16 @@ public class InstagramRetriever extends SocialMediaRetriever {
 	@Override
 	public Response retrieveKeywordsFeed(KeywordsFeed feed, Integer maxRequests) {
 		
-		
 		List<Item> items = new ArrayList<Item>();
 		
-		Date lastItemDate = new Date(feed.getSinceDate());
+		Date sinceDate = new Date(feed.getSinceDate());
 		String label = feed.getLabel();
-		
-		boolean isFinished = false;
 		
 		int numberOfRequests = 0;
 
 		List<String> keywords = feed.getKeywords();
-		
-		if(keywords == null || keywords.isEmpty()){
-			logger.error("#Instagram : No keywords feed");
+		if(keywords == null || keywords.isEmpty()) {
+			logger.error("#Instagram : No keywords feed for (" + feed.getId() + ")");
 			Response response = getResponse(items, numberOfRequests);
 			return response;
 		}
@@ -179,119 +190,90 @@ public class InstagramRetriever extends SocialMediaRetriever {
 		for(String key : keywords) {
 			String [] words = key.split(" ");
 			for(String word : words) {
-				if(!tags.contains(word) && word.length()>1) {
+				if(!tags.contains(word) && word.length() > 1) {
 					tags += word.toLowerCase();
 				}
 			}
 		}
 		
 		tags = tags.replaceAll(" ", "");
-	
 		if(tags.equals("")) {
+			logger.error("#Instagram : No keywords feed for (" + tags + ")");
 			Response response = getResponse(items, numberOfRequests);
 			return response;
 		}
 		
-		//retrieve first page
+		
+		boolean sinceDateReached = false;
+		TagMediaFeed tagFeed = null;
 		try {
-			tagFeed = instagram.getRecentMediaTags(tags);
 			numberOfRequests++;
+			tagFeed = instagram.getRecentMediaTags(tags, 50l);
 		}
 		catch(InstagramException e) {
+			logger.error("Instagram retriever exception for (" + feed.getId() + ")", e);
+			
 			Response response = getResponse(items, numberOfRequests);
 			return response;
 		}
 		
-		Pagination pagination = tagFeed.getPagination();
-		if(tagFeed.getData() != null){
-			
-			for(MediaFeedData mfeed : tagFeed.getData()) {
-				int createdTime = Integer.parseInt(mfeed.getCreatedTime());
-				Date publicationDate = new Date((long) createdTime * 1000);
+		while(true) {
+			try {
 				
-				if(publicationDate.before(lastItemDate)){
-					if(loggingEnabled)
-						logger.info("Since date reached: " + lastItemDate);
-					isFinished = true;
+				if(tagFeed == null) { 
+					logger.info("Stop retriever. Tag feed not found for query (" + tags + ")");
 					break;
 				}
 				
-				if(numberOfRequests > maxRequests) {
-					if(loggingEnabled)
-						logger.info("numberOfRequests: " + numberOfRequests + " > " + maxRequests);
-					isFinished = true;
-					break;
-				}
-				
-				if(mfeed != null && mfeed.getId() != null) {
-					try {
-						Item instagramItem = new InstagramItem(mfeed);
-						if(label != null) {
-							instagramItem.addLabel(label);
-						}
-						items.add(instagramItem);
-						
-					} catch (MalformedURLException e) {
-						logger.error("Instagram retriever exception: " + e.getMessage());
-						
-						Response response = getResponse(items, numberOfRequests);
-						return response;
-					}
-
-				}
-			}
-				
-			//continue retrieving other pages
-			if(!isFinished) {
-				while(pagination.hasNextPage()){
+				for(MediaFeedData mediaData : tagFeed.getData()) {
+					int createdTime = Integer.parseInt(mediaData.getCreatedTime());
+					Date publicationDate = new Date((long) createdTime * 1000);
 					
-					try {
-						if(numberOfRequests>=maxRequests)
-							break;
-						
-						tagFeed = instagram.getTagMediaInfoNextPage(pagination);
-						numberOfRequests++;
-						pagination = tagFeed.getPagination();
-						if(tagFeed.getData() != null){
-							
-							for(MediaFeedData mfeed : tagFeed.getData()) {
-								int createdTime = Integer.parseInt(mfeed.getCreatedTime());
-								Date publicationDate = new Date((long) createdTime * 1000);
-								if(publicationDate.before(lastItemDate) || numberOfRequests>maxRequests){
-									isFinished = true;
-									break;
-								}
-								
-								if(mfeed != null && mfeed.getId() != null){
-									Item instagramItem = new InstagramItem(mfeed);
-									if(label != null) {
-										instagramItem.addLabel(label);
-									}
-									items.add(instagramItem);
-								}
-	
-							}
-							if(isFinished)
-								break;
-						}
-					}
-					catch(InstagramException e) {	
-						logger.error("#Second Instagram Exception: " + e.getMessage());
-						Response response = getResponse(items, numberOfRequests);
-						return response;
-					} catch (MalformedURLException e1) {
-						Response response = getResponse(items, numberOfRequests);
-						return response;
+					if(publicationDate.before(sinceDate)) {
+						sinceDateReached = true;
+						break;
 					}
 
+					Item instagramItem = new InstagramItem(mediaData);
+					if(label != null) {
+						instagramItem.addLabel(label);
+					}
+					items.add(instagramItem);
 				}
+				
+				Pagination pagination = tagFeed.getPagination();
+				
+				if(pagination==null || !pagination.hasNextPage()) {
+					logger.info("Stop retriever. There is no next page for query (" + tags + ")");
+					break;
+				}
+				
+	        	if(numberOfRequests >= maxRequests) {
+	        		logger.info("Stop retriever. Number of requests (" + numberOfRequests + ") has reached for query (" + tags + ")");
+					break;
+				}
+	        	
+				if(sinceDateReached) {
+					logger.info("Stop retriever. Since date " + sinceDate + " reached for query (" + tags + ")");
+					break;
+				}
+				
+				numberOfRequests++;
+				tagFeed = instagram.getTagMediaInfoNextPage(pagination);
+				
+			}
+			catch(InstagramException e) {
+				logger.error("Instagram retriever exception for (" + feed.getId() + ")", e);
+				
+				Response response = getResponse(items, numberOfRequests);
+				return response;
+			} catch (MalformedURLException e) {
+				logger.error("Instagram retriever exception for (" + feed.getId() + ")", e);
+				
+				Response response = getResponse(items, numberOfRequests);
+				return response;
 			}
 			
-		}
-
-		if(loggingEnabled) {
-			logger.info("#Instagram : Handler fetched " + items.size() + " posts from " + tags + 
-					" [ " + lastItemDate + " - " + new Date(System.currentTimeMillis()) + " ]");
 		}
 		
 		Response response = getResponse(items, numberOfRequests);
@@ -334,20 +316,19 @@ public class InstagramRetriever extends SocialMediaRetriever {
     		return response;
     	}
     	
-    	for (org.jinstagram.entity.common.Location location : locations){
+    	for (org.jinstagram.entity.common.Location location : locations) {
     		
     		Date upDate = currentDate;
     		Date downDate = DateUtils.addDays(upDate, -1); 
     		
-    		while(downDate.after(lastItemDate) || downDate.equals(lastItemDate)){
+    		while(downDate.after(lastItemDate) || downDate.equals(lastItemDate)) {
     	
     			it++;
     			try{
-        			mediaFeed = instagram.getRecentMediaByLocation(location.getId(),0,0,upDate,downDate);
+        			MediaFeed mediaFeed = instagram.getRecentMediaByLocation(location.getId(),0,0,upDate,downDate);
         			numberOfRequests++;
-        			if(mediaFeed != null){
-        				if(loggingEnabled)
-        					logger.info("#Instagram : Retrieving page "+it+" that contains "+mediaFeed.getData().size()+" posts");	
+        			if(mediaFeed != null) {
+        				logger.info("#Instagram : Retrieving page "+it+" that contains "+mediaFeed.getData().size()+" posts");	
             			
                 		for(MediaFeedData mfeed : mediaFeed.getData()){
         					int createdTime = Integer.parseInt(mfeed.getCreatedTime());
@@ -383,12 +364,6 @@ public class InstagramRetriever extends SocialMediaRetriever {
     		}
     		
     	}
-    	
-    	//logger.info("#Instagram : Done retrieving for this session");
-		//logger.info("#Instagram : Handler fetched " + totalRetrievedItems + " posts from (" + latitude+","+longtitude+")" + 
-		//		" [ " + lastItemDate + " - " + new Date(System.currentTimeMillis()) + " ]");
-		
-		// The next request will retrieve only items of the last day
 		
     	Response response = getResponse(items, numberOfRequests);
     	return response;
@@ -501,7 +476,7 @@ public class InstagramRetriever extends SocialMediaRetriever {
 			return user;
 		}
 		catch(Exception e) {
-			logger.error("Exception for user " + uid + " => " + e.getMessage());
+			logger.error("Exception for user " + uid, e);
 			return null;
 		}
 	}
@@ -509,13 +484,42 @@ public class InstagramRetriever extends SocialMediaRetriever {
 	private String getMediaId(String url) {
 		try {
 			OembedInformation info = instagramOembed.getOembedInformation(url);
-			if(info == null) 
+			if(info == null) {
 				return null;
+			}
 			return info.getMediaId();
 		} catch (Exception e) {
-			logger.error("Failed to get id for " + url + " => " + e.getMessage());
+			logger.error("Failed to get id for " + url, e);
 		}
 		return null;
 	}
 
+	public static void main(String...args) throws Exception {
+		
+		Credentials credentials = new Credentials();
+		credentials.setKey("xxxxxxx");
+		credentials.setSecret("xxxxxxxx");
+		credentials.setAccessToken("xxxxxxxxx");
+
+		InstagramRetriever retriever = new InstagramRetriever(credentials);
+		
+		long since = System.currentTimeMillis()-(365 * 24 * 3600000l);
+		KeywordsFeed feed = new KeywordsFeed("id", "greek debt", since, "Instagram");
+		
+		
+		
+		AccountFeed accountFeed = new AccountFeed(
+						"persian.partizan", 
+						"persian.partizan", 
+						since, 
+						"Instagram");
+		
+		Response response = retriever.retrieveKeywordsFeed(feed, 3);
+		//Response response = retriever.retrieveAccountFeed(accountFeed, 3);
+		for(Item item : response.getItems()) {
+			System.out.println(item.getPageUrl());
+		}
+		System.out.println(response.getNumberOfItems());
+	}
+	
 }

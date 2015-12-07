@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
@@ -46,23 +47,19 @@ public class FlickrRetriever extends SocialMediaRetriever {
 
 	private Logger logger = LogManager.getLogger(FlickrRetriever.class);
 	
-	private static final int PER_PAGE = 500;
+	private static final int RESULTS_PER_PAGE = 500;
 	
 	private String flickrKey;
 	private String flickrSecret;
 
-	private Flickr flickr;
-
-	private HashMap<String, StreamUser> userMap;
+	private Flickr flickr;	
+	private Map<String, StreamUser> userMap = new HashMap<String, StreamUser>();
 	
-
 	public FlickrRetriever(Credentials credentials) {
 		super(credentials);
 		
 		this.flickrKey = credentials.getKey();
 		this.flickrSecret = credentials.getSecret();
-		
-		userMap = new HashMap<String, StreamUser>();
 		
 		Flickr.debugStream = false;
 		
@@ -74,7 +71,7 @@ public class FlickrRetriever extends SocialMediaRetriever {
 		
 		List<Item> items = new ArrayList<Item>();
 		
-		Date dateToRetrieve = new Date(feed.getSinceDate());
+		Date sinceDate = new Date(feed.getSinceDate());
 		String label = feed.getLabel();
 		
 		int page=1, pages=1; //pagination
@@ -82,51 +79,67 @@ public class FlickrRetriever extends SocialMediaRetriever {
 		
 		String userID = feed.getId();
 		if(userID == null) {
-			logger.info("#Flickr : No source feed");
+			logger.info("#Flickr : No source feed " + feed);
 			Response response = getResponse(items, numberOfRequests);
 			return response;
+		}
+		
+		
+		StreamUser streamUser = getStreamUser(userID);
+		if(streamUser == null) {
+			logger.info("#Flickr: There is no user with id " + userID);
 		}
 		
 		PhotosInterface photosInteface = flickr.getPhotosInterface();
 		SearchParameters params = new SearchParameters();
 		params.setUserId(userID);
-		params.setMinUploadDate(dateToRetrieve);
+		params.setMinUploadDate(sinceDate);
 		
 		Set<String> extras = new HashSet<String>(Extras.ALL_EXTRAS);
 		extras.remove(Extras.MACHINE_TAGS);
 		params.setExtras(extras);
 		
-		while(page<=pages && numberOfRequests<=maxRequests) {
-			
+		boolean sinceDateReached = false;
+		while(true) {
 			PhotoList<Photo> photos;
 			try {
 				numberOfRequests++;
-				photos = photosInteface.search(params , PER_PAGE, page++);
+				photos = photosInteface.search(params , RESULTS_PER_PAGE, page++);
 			} catch (Exception e) {
+				logger.error(e);
 				break;
 			}
 			
 			pages = photos.getPages();
-
 			if(photos.isEmpty()) {
 				break;
 			}
 		
 			for(Photo photo : photos) {
-
-				String userid = photo.getOwner().getId();
-				StreamUser streamUser = userMap.get(userid);
-				if(streamUser == null) {
-					streamUser = getStreamUser(userid);
-					userMap.put(userid, streamUser);
+				if(photo.getDatePosted().before(sinceDate)) {
+					sinceDateReached = true;
+					break;
 				}
-
 				FlickrItem flickrItem = new FlickrItem(photo, streamUser);
 				if(label != null) {
 					flickrItem.addLabel(label);
 				}
-				
 				items.add(flickrItem);
+			}
+			
+			if(page > pages) {
+				logger.info("Stop retriever. Number of pages (" + pages + ") reached.");
+				break;
+			}
+			
+			if(numberOfRequests >= maxRequests) {
+				logger.info("Stop retriever. Number of requests (" + maxRequests + ") reached.");
+				break;
+			}
+			
+			if(sinceDateReached) {
+				logger.info("Stop retriever. Since Date Reached: " + sinceDate);
+				break;
 			}
 		}
 		
@@ -139,17 +152,15 @@ public class FlickrRetriever extends SocialMediaRetriever {
 		
 		List<Item> items = new ArrayList<Item>();
 		
-		Date dateToRetrieve = new Date(feed.getSinceDate());
+		Date sinceDate = new Date(feed.getSinceDate());
 		String label = feed.getLabel();
 		
-		int page=1, pages=1;
-		
+		int page = 1, pages = 1;
 		int numberOfRequests = 0;
 		
 		List<String> keywords = feed.getKeywords();
-		
 		if(keywords == null || keywords.isEmpty()) {
-			logger.error("#Flickr : Text is emtpy");
+			logger.error("#Flickr : Text is emtpy for (" + feed.getId() + ")");
 			Response response = getResponse(items, numberOfRequests);
 			return response;
 		}
@@ -166,9 +177,8 @@ public class FlickrRetriever extends SocialMediaRetriever {
 			}
 		}
 		
-		
 		if(text.equals("")) {
-			logger.error("#Flickr : Text is emtpy");
+			logger.error("#Flickr: Text is emtpy for (" + feed.getId() + ")");
 			Response response = getResponse(items, numberOfRequests);
 			return response;
 		}
@@ -176,44 +186,62 @@ public class FlickrRetriever extends SocialMediaRetriever {
 		PhotosInterface photosInteface = flickr.getPhotosInterface();
 		SearchParameters params = new SearchParameters();
 		params.setText(text);
-		params.setMinUploadDate(dateToRetrieve);
+		params.setMinUploadDate(sinceDate);
 		
 		Set<String> extras = new HashSet<String>(Extras.ALL_EXTRAS);
 		extras.remove(Extras.MACHINE_TAGS);
 		params.setExtras(extras);
 		
-		while(page<=pages && numberOfRequests<maxRequests ) {
-			logger.info("Request: " + numberOfRequests + " Page: " + page);
+		boolean sinceDateReached = false;
+				
+		logger.info("Search for (" + text + ")");
+		while(true) {
 			PhotoList<Photo> photos;
 			try {
 				numberOfRequests++;
-				photos = photosInteface.search(params , PER_PAGE, page++);
+				photos = photosInteface.search(params , RESULTS_PER_PAGE, page++);
 			} catch (Exception e) {
-				logger.error("Exception: " + e.getMessage());
+				logger.error(e);
 				continue;
 			}
 			
 			pages = photos.getPages();
-
 			if(photos.isEmpty()) {
 				break;
 			}
 		
 			for(Photo photo : photos) {
-
-				String userid = photo.getOwner().getId();
-				StreamUser streamUser = userMap.get(userid);
-				if(streamUser == null) {
-					streamUser = getStreamUser(userid);
-					userMap.put(userid, streamUser);
+				if(photo.getDatePosted().before(sinceDate)) {
+					sinceDateReached = true;
+					break;
 				}
-
+				
+				String userid = photo.getOwner().getId();
+				StreamUser streamUser = getStreamUser(userid);
+				if(streamUser == null) {
+					continue;
+				}
+				
 				Item flickrItem = new FlickrItem(photo, streamUser);
 				if(label != null) {
 					flickrItem.addLabel(label);
 				}
-				
 				items.add(flickrItem);
+			}
+			
+			if(page > pages) {
+				logger.info("Stop retriever. Number of pages (" + pages + ") reached.");
+				break;
+			}
+			
+			if(numberOfRequests >= maxRequests) {
+				logger.info("Stop retriever. Number of requests (" + maxRequests + ") reached.");
+				break;
+			}
+			
+			if(sinceDateReached) {
+				logger.info("Stop retriever. Since Date Reached: " + sinceDate);
+				break;
 			}
 		}
 
@@ -249,30 +277,25 @@ public class FlickrRetriever extends SocialMediaRetriever {
 		params.setExtras(extras);
 		
 		while(page<=pages && numberOfRequests<=maxRequests ) {
-			
 			PhotoList<Photo> photos;
 			try {
-				photos = photosInteface.search(params , PER_PAGE, page++);
+				photos = photosInteface.search(params , RESULTS_PER_PAGE, page++);
 			} catch (FlickrException e) {
 				break;
 			}
 			
 			pages = photos.getPages();
-
 			if(photos.isEmpty()) {
 				break;
 			}
 		
 			for(Photo photo : photos) {
-
 				String userid = photo.getOwner().getId();
-				StreamUser streamUser = userMap.get(userid);
+				StreamUser streamUser = getStreamUser(userid);
 				if(streamUser == null) {
-					streamUser = getStreamUser(userid);
-
-					userMap.put(userid, streamUser);
+					continue;
 				}
-
+				
 				Item flickrItem = new FlickrItem(photo, streamUser);
 				if(label != null) {
 					flickrItem.addLabel(label);
@@ -281,9 +304,6 @@ public class FlickrRetriever extends SocialMediaRetriever {
 				items.add(flickrItem);
 			}
 		}
-		
-		logger.info("#Flickr : Handler fetched " + items.size() + " photos "+ 
-				" [ " + dateToRetrieve + " - " + new Date(System.currentTimeMillis()) + " ]");
 		
 		Response response = getResponse(items, numberOfRequests);
 		return response;
@@ -296,8 +316,9 @@ public class FlickrRetriever extends SocialMediaRetriever {
 	
 	@Override
 	public void stop() {
-		if(flickr != null)
+		if(flickr != null) {
 			flickr = null;
+		}
 	}
 	
 	@Override
@@ -308,10 +329,18 @@ public class FlickrRetriever extends SocialMediaRetriever {
 	@Override
 	public StreamUser getStreamUser(String uid) {
 		try {
-			PeopleInterface peopleInterface = flickr.getPeopleInterface();
-			User user = peopleInterface.getInfo(uid);
+			if(userMap.size() > 5000) {
+				userMap.clear();
+			}
 			
-			StreamUser streamUser = new FlickrStreamUser(user);
+			StreamUser streamUser = userMap.get(uid);
+			if(streamUser == null) {
+				PeopleInterface peopleInterface = flickr.getPeopleInterface();
+				User user = peopleInterface.getInfo(uid);
+				
+				streamUser = new FlickrStreamUser(user);
+				userMap.put(uid, streamUser);
+			}	
 			return streamUser;
 		}
 		catch(Exception e) {
@@ -322,8 +351,8 @@ public class FlickrRetriever extends SocialMediaRetriever {
 	
 	public static void main(String...args) throws Exception {
 		
-		String flickrKey = "029eab4d06c40e08670d78055bf61205";
-		String flickrSecret = "bc4105126a4dfb8c";
+		String flickrKey = "xxxxxxxxxxxxxxxxxxx";
+		String flickrSecret = "xxxxxxxxxx";
 		
 		Credentials credentials = new Credentials();
 		credentials.setKey(flickrKey);
@@ -331,11 +360,15 @@ public class FlickrRetriever extends SocialMediaRetriever {
 		
 		FlickrRetriever retriever = new FlickrRetriever(credentials);
 		
-		Date since = new Date(System.currentTimeMillis()-5*24*3600000);
-		Feed feed = new KeywordsFeed( "1", "barcelona", since.getTime(), "Flickr");
+		Date since = new Date(System.currentTimeMillis()-30*24*3600000l);
+		Feed feed = new KeywordsFeed( "1", "obamacare", since.getTime(), "Flickr");
 		
 		Response response = retriever.retrieve(feed, 1);
 		System.out.println(response.getNumberOfItems());
+		
+		for(Item item : response.getItems()) {
+			System.out.println(item);
+		}
 	}
 	
 }

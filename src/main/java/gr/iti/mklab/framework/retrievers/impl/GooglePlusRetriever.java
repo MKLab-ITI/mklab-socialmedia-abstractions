@@ -1,13 +1,9 @@
 package gr.iti.mklab.framework.retrievers.impl;
 
 import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
@@ -21,11 +17,13 @@ import com.google.api.client.util.DateTime;
 import com.google.api.services.plus.Plus;
 import com.google.api.services.plus.Plus.People;
 import com.google.api.services.plus.Plus.People.Get;
+import com.google.api.services.plus.Plus.People.Search;
 import com.google.api.services.plus.PlusRequestInitializer;
 import com.google.api.services.plus.model.Activity;
 import com.google.api.services.plus.model.ActivityFeed;
 import com.google.api.services.plus.model.PeopleFeed;
 import com.google.api.services.plus.model.Person;
+import com.restfb.util.StringUtils;
 
 import gr.iti.mklab.framework.Credentials;
 import gr.iti.mklab.framework.abstractions.socialmedia.items.GooglePlusItem;
@@ -54,16 +52,16 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 	private static final HttpTransport transport = new NetHttpTransport();
 	private static final JsonFactory jsonFactory = new JacksonFactory();
 	
-	private Plus plusSrv;
-	private String userPrefix = "https://plus.google.com/+";
+	private Plus googlePlusService;
 	private String GooglePlusKey;
-
+	
 	public GooglePlusRetriever(Credentials credentials) {
 		super(credentials);
 		
 		GooglePlusKey = credentials.getKey();
+		
 		GoogleCredential credential = new GoogleCredential();
-		plusSrv = new Plus.Builder(transport, jsonFactory, credential)
+		googlePlusService = new Plus.Builder(transport, jsonFactory, credential)
 						.setApplicationName("SocialSensor")
 						.setHttpRequestInitializer(credential)
 						.setPlusRequestInitializer(new PlusRequestInitializer(GooglePlusKey)).build();
@@ -74,40 +72,33 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 		
 		List<Item> items = new ArrayList<Item>();
 		
-		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
-		
-		Date lastItemDate = new Date(feed.getSinceDate());
+		Date sinceDate = new Date(feed.getSinceDate());
 		String label = feed.getLabel();
 		
 		int numberOfRequests = 0;
 		
-		boolean isFinished = false;
-		
-		
 		String userID = feed.getId();
 		String uName = feed.getUsername();
 		if(uName == null && userID == null) {
-			logger.info("#GooglePlus : No source feed");
+			logger.info("#GooglePlus : No account feed");
 			Response response = getResponse(items, numberOfRequests);
 			return response;
 		}
 				
 		//Retrieve userID from Google+
 		StreamUser streamUser = null;
-		Plus.People.Search searchPeople = null;
-		List<Person> people;
-		List<Activity> pageOfActivities;
-		ActivityFeed activityFeed;
-		Plus.Activities.List userActivities;
-		
 		try {
 			if(userID == null) {
-				searchPeople = plusSrv.people().search(uName);
-				searchPeople.setMaxResults(20L);
+				// userid is not available. search with username
+				Search searchPeople = googlePlusService.people().search(uName);
+				searchPeople.setMaxResults(50L);
+				
 				PeopleFeed peopleFeed = searchPeople.execute();
-				people = peopleFeed.getItems();
-				for(Person person : people) {
-					if(person.getUrl().compareTo(userPrefix+uName) == 0) {
+				numberOfRequests++;
+
+				List<Person> personsFound = peopleFeed.getItems();
+				for(Person person : personsFound) {
+					if(person.getUrl().equals("https://plus.google.com/+" + uName) || person.getDisplayName().equals(uName)) {
 						userID = person.getId();
 						streamUser = getStreamUser(userID);
 						break;
@@ -115,76 +106,99 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 				}
 			}
 			else {
+				numberOfRequests++;
 				streamUser = getStreamUser(userID);
+				uName = streamUser.getUsername();
 			}
-			
-			//Retrieve activity with userID
-			logger.info("Get public feed of " + userID);
-			userActivities = plusSrv.activities().list(userID, "public");
-			userActivities.setMaxResults(20L);
-			activityFeed = userActivities.execute();
-			pageOfActivities = activityFeed.getItems();
-			numberOfRequests ++;
-			
 		} catch (Exception e) {
 			logger.error(e);
 			Response response = getResponse(items, numberOfRequests);
 			return response;
 		}
-		
-		while(pageOfActivities != null && !pageOfActivities.isEmpty()) {
-			try {
-				for (Activity activity : pageOfActivities) {
+
+		if(streamUser == null) {
+			logger.error("User not found. Feed: (" + feed.getId() + "");
+			
+			Response response = getResponse(items, numberOfRequests);
+			return response;
+		}
 				
-					DateTime publicationTime = activity.getPublished();
-					String PublicationTimeStr = publicationTime.toString();
-					String newPublicationTimeStr = PublicationTimeStr.replace("T", " ").replace("Z", " ");
-					
-					Date publicationDate = null;
-					try {
-						publicationDate = (Date) formatter.parse(newPublicationTimeStr);
-						
-					} catch (ParseException e) {
-						logger.error("#GooglePlus - ParseException: "+e);
-						
-						Response response = getResponse(items, numberOfRequests);
-						return response;
-					}
-					
-					if(publicationDate.after(lastItemDate) && activity != null && activity.getId() != null) {
-						Item googlePlusItem = new GooglePlusItem(activity);
-						if(label != null) {
-							googlePlusItem.addLabel(label);
-						}
-						
-						if(streamUser != null) {
-							googlePlusItem.setStreamUser(streamUser);
-						}
-						
-						items.add(googlePlusItem);
-					}
-					else {
+		//Retrieve activity with userID
+		logger.info("Get public feed of user " + userID);
+		boolean isFinished = false, sinceDateReached = false;
+		while(true) {
+			try {		
+				Plus.Activities.List userActivities = googlePlusService.activities().list(userID, "public");
+				userActivities.setMaxResults(100L);
+				
+				ActivityFeed activityFeed = userActivities.execute();
+				numberOfRequests ++;
+				
+				List<Activity> activities = activityFeed.getItems();
+				if(activities == null) {
+					isFinished = true;
+					break;
+				}
+				
+				for (Activity activity : activities) {					
+					if(activity == null || activity.getId() == null) {
 						isFinished = true;
 						break;
 					}
 					
+					DateTime publicationTime = activity.getPublished();
+					Date publicationDate = new Date(publicationTime.getValue());
+					
+					if(publicationDate.before(sinceDate)) {
+						sinceDateReached = true;
+						break;
+					}
+					
+					String verb = activity.getVerb();
+					String objectType = activity.getObject().getObjectType();
+					if(!verb.equals("post") && !verb.equals("share") && !objectType.equals("note") && !objectType.equals("activity")) {
+						// unknown type of activity
+						continue;
+					}
+					
+					Item googlePlusItem = new GooglePlusItem(activity, streamUser);
+					if(label != null) {
+						googlePlusItem.addLabel(label);
+					}
+						
+					if(streamUser != null) {
+						googlePlusItem.setStreamUser(streamUser);
+					}
+						
+					items.add(googlePlusItem);
 				}
-				numberOfRequests++;
-				if(isFinished || numberOfRequests>maxRequests || (activityFeed.getNextPageToken() == null))
+				
+				if(sinceDateReached) {
+					logger.info("Stop retriever. Since date " + sinceDate + " reached for " + userID + " (" + uName + ").");
 					break;
-				 
+				}
+				
+				if(numberOfRequests > maxRequests) {
+					logger.info("Stop retriever. Number of requests (" + numberOfRequests + ") has reached for " + userID + " (" + uName + ").");
+					break;
+				}
+				
+				if(activityFeed.getNextPageToken() == null) {
+					logger.info("Stop retriever. There is no more pages to fetch for " + userID + " (" + uName + ").");
+					break;
+				}
+				
+				if(isFinished) {
+					logger.info("Stop retriever. Activity is null for " + userID + " (" + uName + ").");
+					break;
+				}
+				
 				userActivities.setPageToken(activityFeed.getNextPageToken());
-				activityFeed = userActivities.execute();
-				pageOfActivities = activityFeed.getItems();
 				
 			} catch (IOException e) {
-				logger.error("#GooglePlus Exception : "+e);
+				logger.error("#GooglePlus Exception for feed (" + feed.getId() + ")", e);
 				Response response = getResponse(items, numberOfRequests);
 				return response;
-			}
-			
-			if(isFinished){
-				break;
 			}
 		}
 		
@@ -197,15 +211,11 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 		
 		List<Item> items = new ArrayList<Item>();
 		int numberOfRequests = 0;
-		
-		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
-		Date lastItemDate = new Date(feed.getSinceDate());
+	
+		Date sinceDate = new Date(feed.getSinceDate());
 		String label = feed.getLabel();
 		
-		boolean isFinished = false;
-		
 		List<String> keywords = feed.getKeywords();
-		
 		if(keywords == null || keywords.isEmpty()) {
 			logger.info("#GooglePlus : No keywords feed");
 			Response response = getResponse(items, numberOfRequests);
@@ -220,99 +230,81 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 					tags += word.toLowerCase()+" ";
 			}
 		}
-		
-		
+			
 		if(tags.equals("")) {
 			Response response = getResponse(items, numberOfRequests);
 			return response;
 		}
 		
-		Plus.Activities.Search searchActivities;
-		ActivityFeed activityFeed;
-		List<Activity> pageOfActivities;
-		try {
-			searchActivities = plusSrv.activities().search(tags);
-			searchActivities.setMaxResults(20L);
-			searchActivities.setOrderBy("recent");
-			activityFeed = searchActivities.execute();
-			pageOfActivities = activityFeed.getItems();
-			numberOfRequests++;
-		} catch (IOException e1) {
-			Response response = getResponse(items, numberOfRequests);
-			return response;
-		}
-		
-		Map<String, StreamUser> users = new HashMap<String, StreamUser>();
-		
-		while(pageOfActivities != null && !pageOfActivities.isEmpty()) {
-			numberOfRequests++;
-			for (Activity activity : pageOfActivities) {
+		logger.info("Search for (" + tags + ")");
+		boolean isFinished = false, sinceDateReached = false;
+		while(true) {
+			try {
+				Plus.Activities.Search searchActivities = googlePlusService.activities().search(tags);
+				searchActivities.setMaxResults(20L);
+				searchActivities.setOrderBy("recent");
 				
-				if(activity.getObject().getAttachments() != null){
-					
+				ActivityFeed activityFeed = searchActivities.execute();
+				numberOfRequests++;
+				
+				List<Activity> activities = activityFeed.getItems();
+				for (Activity activity : activities) {
 					DateTime publicationTime = activity.getPublished();
-					String PublicationTimeStr = publicationTime.toString();
-					String newPublicationTimeStr = PublicationTimeStr.replace("T", " ").replace("Z", " ");
-					
-					Date publicationDate = null;
-					try {
-						publicationDate = (Date) formatter.parse(newPublicationTimeStr);
+					Date publicationDate = new Date(publicationTime.getValue());
 						
-					} catch (ParseException e) {
-						logger.error("#GooglePlus - ParseException: " + e.getMessage());
-						
-						Response response = getResponse(items, numberOfRequests);
-						return response;
+					if(publicationDate.before(sinceDate)) {
+						sinceDateReached = true;
+						break;
 					}
 					
-					if(publicationDate.after(lastItemDate) && activity != null && activity.getId() != null) {
-						Item googlePlusItem = new GooglePlusItem(activity);
-						if(label != null) {
-							googlePlusItem.addLabel(label);
-						}
-						
-						String userID = googlePlusItem.getStreamUser().getUserid();
-						StreamUser streamUser = null;
-						if(userID != null && !users.containsKey(userID)) {
-							streamUser = getStreamUser(userID);
-							users.put(userID, streamUser);	
-						}
-						else {
-							streamUser = users.get(userID);
-						}
-						
-						if(streamUser != null) {
-							googlePlusItem.setStreamUser(streamUser);
-						}
-						
-						items.add(googlePlusItem);
+					String verb = activity.getVerb();
+					String objectType = activity.getObject().getObjectType();
+					if(!verb.equals("post") && !verb.equals("share") && !objectType.equals("note") && !objectType.equals("activity")) {
+						// unknown type of activity
+						continue;
+					}
 
+					Item googlePlusItem = new GooglePlusItem(activity);
+					if(label != null) {
+						googlePlusItem.addLabel(label);
 					}
-		
+
+					items.add(googlePlusItem);
+					
 				}
-		
-			 }
-			
-			numberOfRequests++;
-
-			 if(numberOfRequests>maxRequests || isFinished || (activityFeed.getNextPageToken() == null)) {
-				 break;
-			 }
-			 
-			 searchActivities.setPageToken(activityFeed.getNextPageToken());
-			 try {
-				activityFeed = searchActivities.execute();
+				
+				if(sinceDateReached) {
+					logger.info("Stop retriever. Since date " + sinceDate + " reached for (" + tags + ").");
+					break;
+				}
+				
+				if(numberOfRequests > maxRequests) {
+					logger.info("Stop retriever. Number of requests (" + numberOfRequests + ") has reached for (" + tags + ").");
+					break;
+				}
+				
+				if(activityFeed.getNextPageToken() == null) {
+					logger.info("Stop retriever. There is no more pages to fetch for (" + tags + ").");
+					break;
+				}
+				
+				if(isFinished) {
+					logger.info("Stop retriever. Activity is null for (" + tags + ").");
+					break;
+				}
+				
+				searchActivities.setPageToken(activityFeed.getNextPageToken());
+				
 			} catch (IOException e) {
-				logger.error("GPlus Retriever Exception: " + e.getMessage());
+				logger.error(e);
 			}
-			 pageOfActivities = activityFeed.getItems();
-		
 		}
 		
 		Response response = getResponse(items, numberOfRequests);
 		return response;
 		
 	}
+	
 	@Override
 	public Response retrieveLocationFeed(LocationFeed feed, Integer maxRequests) {
 		return new Response();
@@ -325,8 +317,8 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 	
 	@Override
 	public void stop() {
-		if(plusSrv != null) {
-			plusSrv = null;
+		if(googlePlusService != null) {
+			googlePlusService = null;
 		}
 	}
 	
@@ -337,36 +329,38 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 	
 	@Override
 	public StreamUser getStreamUser(String uid) {
-		
-		People peopleSrv = plusSrv.people();
+		People people = googlePlusService.people();
 		try {
-			Get getRequest = peopleSrv.get(uid);
+			Get getRequest = people.get(uid);
 			Person person = getRequest.execute();
-			
 			StreamUser streamUser = new GooglePlusStreamUser(person);
-			
 			return streamUser;
 		} catch (IOException e) {
-			logger.error("Exception for user " + uid);
+			logger.error("Exception for user " + uid, e);
 		}
-		
 		return null;
 	}
 	
 	
 	public static void main(String...args) {
-		String uid = "102155862500050097100";
-		Date since = new Date(System.currentTimeMillis()-24*3600000);
-		AccountFeed feed = new AccountFeed(uid, null, since.getTime(), "GooglePlus");
+		
+		String uid = "103783079217258362060";
+		Date since = new Date(System.currentTimeMillis()-365*24*3600000l);
+		
+		AccountFeed aFeed = new AccountFeed(uid, null, since.getTime(), "GooglePlus");
+		KeywordsFeed kFeed = new KeywordsFeed("id", "#debt", since.getTime(), "GooglePlus");
 		
 		Credentials credentials = new Credentials();
-		credentials.setKey("AIzaSyB-knYzMRW6tUzobP-V1hTWYAXEps1Wngk");
+		credentials.setKey("xxxxxxxxxxxxxxxxxxxxxxxxxxx");
+		
 		
 		GooglePlusRetriever retriever = new GooglePlusRetriever(credentials);
 		
-		Response response = retriever.retrieveAccountFeed(feed, 1);
-		for(Item item : response.getItems()) {
-			System.out.println(item);
+		Response response = retriever.retrieveAccountFeed(aFeed, 1);
+		System.out.println(response.getNumberOfItems() + " items found for " + aFeed.getId());
+		Response response2 = retriever.retrieveKeywordsFeed(kFeed, 1);
+		for(Item item : response2.getItems()) {
+			System.out.println(StringUtils.join(item.getTags()));
 		}
 	}
 	

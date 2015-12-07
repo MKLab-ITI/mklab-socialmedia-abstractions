@@ -53,7 +53,7 @@ public class YoutubeRetriever extends SocialMediaRetriever{
 	public static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
 	public static final JsonFactory JSON_FACTORY = new JacksonFactory();
 	
-	private static final long NUMBER_OF_VIDEOS_RETURNED = 50;
+	private static final long NUMBER_OF_RESULTS_RETURNED = 50;
 	
 	public YoutubeRetriever(Credentials credentials) {
 		super(credentials);
@@ -84,7 +84,9 @@ public class YoutubeRetriever extends SocialMediaRetriever{
 		int numberOfRequests = 0;
 		
 		// Define the API request for retrieving search results.
-        YouTube.Search.List search = youtubeService.search().list("id");
+        YouTube.Search.List search = youtubeService.search()
+        		.list("id");
+        
         search.setKey(apiKey);
         		
         List<String> keywords = feed.getKeywords();
@@ -102,7 +104,7 @@ public class YoutubeRetriever extends SocialMediaRetriever{
 		}
         search.setQ(textQuery);
         search.setType("video");
-        search.setMaxResults(NUMBER_OF_VIDEOS_RETURNED);
+        search.setMaxResults(NUMBER_OF_RESULTS_RETURNED);
         search.setOrder("date");
         
         Set<String> uids = new HashSet<String>();
@@ -131,7 +133,7 @@ public class YoutubeRetriever extends SocialMediaRetriever{
         			YouTube.Videos.List listVideosRequest = youtubeService.videos().list("snippet,recordingDetails,player");
         			listVideosRequest.setId(videoId);
         			listVideosRequest.setKey(apiKey);
-        			listVideosRequest.setMaxResults(NUMBER_OF_VIDEOS_RETURNED);
+        			listVideosRequest.setMaxResults(NUMBER_OF_RESULTS_RETURNED);
                 	VideoListResponse listResponse = listVideosRequest.execute();
                 	numberOfRequests++;
                 
@@ -225,7 +227,7 @@ public class YoutubeRetriever extends SocialMediaRetriever{
         YouTube.Search.List search = youtubeService.search().list("id");
         search.setKey(apiKey);
         search.setChannelId(streamUser.getUserid());
-        search.setMaxResults(NUMBER_OF_VIDEOS_RETURNED);
+        search.setMaxResults(NUMBER_OF_RESULTS_RETURNED);
         
 		boolean sinceDateReached = false;
 		String nextPageToken = null;
@@ -250,7 +252,7 @@ public class YoutubeRetriever extends SocialMediaRetriever{
         			YouTube.Videos.List listVideosRequest = youtubeService.videos().list("snippet,recordingDetails,player");
         			listVideosRequest.setId(videoId);
         			listVideosRequest.setKey(apiKey);
-        			listVideosRequest.setMaxResults(NUMBER_OF_VIDEOS_RETURNED);
+        			listVideosRequest.setMaxResults(NUMBER_OF_RESULTS_RETURNED);
                 	VideoListResponse listResponse = listVideosRequest.execute();
                 	numberOfRequests++;
                 	
@@ -355,7 +357,7 @@ public class YoutubeRetriever extends SocialMediaRetriever{
 			
 			channelListResponse.setKey(apiKey);
 			channelListResponse.setId(uid);
-			channelListResponse.setMaxResults(NUMBER_OF_VIDEOS_RETURNED);
+			channelListResponse.setMaxResults(NUMBER_OF_RESULTS_RETURNED);
 			
 			ChannelListResponse response = channelListResponse.execute();
 			List<Channel> channels = response.getItems();
@@ -384,7 +386,8 @@ public class YoutubeRetriever extends SocialMediaRetriever{
 					.list("id,snippet,statistics");
 			channelListResponse.setKey(apiKey);
 			channelListResponse.setId(userIds);
-			 
+			channelListResponse.setMaxResults(NUMBER_OF_RESULTS_RETURNED);
+			
 			ChannelListResponse response = channelListResponse.execute();
 			List<Channel> channels = response.getItems();
 			if(channels != null) {
@@ -409,7 +412,7 @@ public class YoutubeRetriever extends SocialMediaRetriever{
 	public static void main(String...args) throws Exception {
 		
 		Credentials credentials = new Credentials();
-		credentials.setKey("AIzaSyBs4RWhrqw9-3kCvvAN3qKJc79RI2DxOis");
+		credentials.setKey("xxxxxxxxxxxxxxxxxxxxxxxxx");
 		
 		YoutubeRetriever retriever = new YoutubeRetriever(credentials);
 		

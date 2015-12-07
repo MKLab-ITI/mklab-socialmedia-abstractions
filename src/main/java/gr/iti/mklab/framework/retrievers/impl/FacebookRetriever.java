@@ -14,14 +14,11 @@ import com.restfb.DefaultFacebookClient;
 import com.restfb.FacebookClient;
 import com.restfb.Parameter;
 import com.restfb.Version;
-import com.restfb.exception.FacebookNetworkException;
-import com.restfb.exception.FacebookResponseStatusException;
 import com.restfb.types.CategorizedFacebookType;
-import com.restfb.types.Comment;
 import com.restfb.types.Page;
 import com.restfb.types.Photo;
+import com.restfb.types.Photo.Image;
 import com.restfb.types.Post;
-import com.restfb.types.Post.Comments;
 import com.restfb.types.User;
 
 import gr.iti.mklab.framework.Credentials;
@@ -47,13 +44,14 @@ import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
  */
 public class FacebookRetriever extends SocialMediaRetriever {
 			
-	private FacebookClient facebookClient;
-	
 	private Logger logger = LogManager.getLogger(FacebookRetriever.class);
+	
+	private FacebookClient facebookClient;
+	private String fields = "id,from,to,message,source,caption,picture,full_picture,link,object_id,name,description,type,created_time,updated_time,likes.summary(true),comments.summary(true),shares";
 	
 	public FacebookRetriever(Credentials credentials) {
 		super(credentials);
-		facebookClient = new DefaultFacebookClient(credentials.getAccessToken(), Version.VERSION_2_0);
+		facebookClient = new DefaultFacebookClient(credentials.getAccessToken(), Version.VERSION_2_5);
 	}
 
 	@Override
@@ -63,10 +61,8 @@ public class FacebookRetriever extends SocialMediaRetriever {
 
 		Integer numberOfRequests = 0;
 		
-		Date since = new Date(feed.getSinceDate());
+		Date sinceDate = new Date(feed.getSinceDate());
 		String label = feed.getLabel();
-		
-		boolean isFinished = false;
 		
 		String userName = feed.getUsername();
 		if(userName == null) {
@@ -75,28 +71,38 @@ public class FacebookRetriever extends SocialMediaRetriever {
 			return response;
 		}
 		
+		boolean sinceDateReached = false;
+		
 		String userFeed = userName + "/feed";
 		try {
-			logger.info("Retrieve: " + userFeed + " since " + since);
-			
+			logger.info("Retrieve: " + userFeed + " since " + sinceDate);
+					
 			User user = facebookClient.fetchObject(userName, User.class);
 			FacebookStreamUser facebookUser = new FacebookStreamUser(user);
 			
-			Connection<Post> connection = facebookClient.fetchConnection(userFeed, Post.class, Parameter.with("since", since));
+			Connection<Post> connection = facebookClient.fetchConnection(userFeed, Post.class, 
+					Parameter.with("since", sinceDate),
+					Parameter.with("limit", 100),
+					Parameter.with("fields", fields)
+				);
+			
 			for(List<Post> connectionPage : connection) {
 				
 				numberOfRequests++;			
 				for(Post post : connectionPage) {						
 					Date publicationDate = post.getCreatedTime();
-					if(post != null && post.getId() != null) {
-						
-						Item item = new FacebookItem(post, facebookUser);
-						if(label != null) {
-							item.addLabel(label);
-						}
-						items.add(item);
+					if(publicationDate.before(sinceDate)) {
+						sinceDateReached = true;
+						break;
 					}
+
+					Item item = new FacebookItem(post, facebookUser);
+					if(label != null) {
+						item.addLabel(label);
+					}
+					items.add(item);
 					
+					/*
 					Comments postComments = post.getComments();
 					if(postComments != null) {
 						List<Comment> comments = postComments.getData();
@@ -105,31 +111,34 @@ public class FacebookRetriever extends SocialMediaRetriever {
 							items.add(commentItem);
 						}
 					}
+					*/
 					
-					if(numberOfRequests > maxRequests) {
-						isFinished = true;
-						break;
-					}
-					
-					if(publicationDate.before(since)) {
-						isFinished = true;
-						break;
-					}
-				
 				}
 				
-				if(isFinished)
+				if(sinceDateReached) {
+					logger.info("Stop retriever. Since date " + sinceDate + " reached for " + userFeed);
 					break;
+				}
+	
+				if(numberOfRequests > maxRequests) {
+					logger.info("Stop retriever. Number of requests (" + numberOfRequests + ") has reached for " + userFeed);
+					break;
+				}
+				
+				if(!connection.hasNext()) {
+					logger.info("Stop retriever. There is no more pages to fetch for " + userFeed);
+					break;
+				}
 				
 			}
 		}
 		catch(Exception e) {
 			e.printStackTrace();
+			logger.error(e);
+			
 			Response response = getResponse(items, numberOfRequests);
 			return response;
 		}
-
-		logger.info("Facebook: " + items.size() + " posts from " + userFeed + " [ " + since + " - " + new Date(System.currentTimeMillis()) + " ]");
 		
 		Response response = getResponse(items, numberOfRequests);
 		return response;
@@ -141,6 +150,10 @@ public class FacebookRetriever extends SocialMediaRetriever {
 		List<Item> items = new ArrayList<Item>();
 		Integer numberOfRequests = 0;
 		
+		Response response = getResponse(items, numberOfRequests);
+		return response;
+		
+		/*
 		Date since = new Date(feed.getSinceDate());
 		String label = feed.getLabel();
 		
@@ -171,24 +184,18 @@ public class FacebookRetriever extends SocialMediaRetriever {
 		
 		try {
 			logger.info("Query: " + query);
-			Connection<Page> connection = facebookClient.fetchConnection("search", Page.class, 
-					Parameter.with("q", query), Parameter.with("type", "page"));
+			Connection<Page> connection = facebookClient.fetchConnection("search", Page.class, Parameter.with("q", query), Parameter.with("type", "page"));
 			
 			try {
 				for(Page page : connection.getData()) {	
-					logger.info("Page: " + page.getId() + " -> " + page.getName());
-					
 					numberOfRequests++;
-					Connection<Post> pagesConnection = facebookClient.fetchConnection(page.getId()+"/feed", Post.class,
-							Parameter.with("since", since));
-					
+					Connection<Post> pagesConnection = facebookClient.fetchConnection(page.getId()+"/feed", Post.class, Parameter.with("since", since));
 					for(List<Post> connectionPage : pagesConnection) {
 						for(Post post : connectionPage) {	
 
 							Date publicationDate = post.getCreatedTime();
 							try {
 								if(publicationDate.after(since) && post != null && post.getId() != null) {
-								
 									FacebookItem fbItem;
 								
 									//Get the user of the post
@@ -242,15 +249,15 @@ public class FacebookRetriever extends SocialMediaRetriever {
 			return response;
 		}
 		catch(Exception e) {
-			logger.error(e.getMessage());
+			logger.error(e);
 			Response response = getResponse(items, numberOfRequests);
 			return response;
 		}
 		
-		logger.info("Facebook: " + items.size() + " posts for " + query + " [ " + since + " - " + new Date(System.currentTimeMillis()) + " ]");
-		
 		Response response = getResponse(items, numberOfRequests);
 		return response;
+		*/
+		
 	}
 	
 	@Override
@@ -281,8 +288,25 @@ public class FacebookRetriever extends SocialMediaRetriever {
 		
 		MediaItem mediaItem = null;
 		try {
-			String src = photo.getSource();
-			mediaItem = new MediaItem(new URL(src));
+			int maxSize = 0, minSize = Integer.MAX_VALUE;
+			Image largestImage = null, smallestImage = null;
+			for(Image image : photo.getImages()) {
+				int size = image.getHeight() * image.getWidth();
+				if(size > maxSize) {
+					maxSize = size;
+					largestImage = image;
+				}
+				if(size < minSize) {
+					minSize = size;
+					smallestImage = image;
+				}
+			}
+			
+			if(largestImage == null || smallestImage == null) {
+				return mediaItem;
+			}
+			
+			mediaItem = new MediaItem(new URL(largestImage.getSource()));
 			mediaItem.setId("Facebook#" + photo.getId());
 			
 			mediaItem.setPageUrl(photo.getLink());
@@ -296,8 +320,10 @@ public class FacebookRetriever extends SocialMediaRetriever {
 			Date date = photo.getCreatedTime();
 			mediaItem.setPublicationTime(date.getTime());
 			
-			mediaItem.setSize(photo.getWidth(), photo.getHeight());
+			mediaItem.setSize(largestImage.getWidth(), largestImage.getHeight());
 			mediaItem.setLikes((long) photo.getLikes().size());
+			
+			mediaItem.setThumbnail(smallestImage.getSource());
 			
 			CategorizedFacebookType from = photo.getFrom();
 			if(from != null) {
@@ -328,4 +354,26 @@ public class FacebookRetriever extends SocialMediaRetriever {
 		}
 	}
 	
+public static void main(String...args) {
+		
+		String uid = "bbcnews";
+		Date since = new Date(System.currentTimeMillis() - 48*3600000l);
+		
+		AccountFeed aFeed = new AccountFeed(uid, "bbcnews", since.getTime(), "Facebook");
+		
+		Credentials credentials = new Credentials();
+		credentials.setAccessToken("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+		
+		
+		FacebookRetriever retriever = new FacebookRetriever(credentials);
+		
+		Response response = retriever.retrieveAccountFeed(aFeed, 1);
+		System.out.println(response.getNumberOfItems() + " items found for " + aFeed.getId());
+		for(Item item : response.getItems()) {
+			System.out.println(item.getShares());
+			System.out.println(item.getMediaItems());
+			System.out.println("=============================================================");
+		}
+	}
+
 }
