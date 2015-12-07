@@ -33,7 +33,7 @@ public class TwitterStreamUser extends StreamUser {
 		//The username of the user
 		username = user.getScreenName();
 		//streamId
-		streamId = Source.Twitter.toString();
+		source = Source.Twitter.toString();
 		//The description of the user
 		description = user.getDescription();
 		//Profile picture of the user

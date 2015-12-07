@@ -23,7 +23,7 @@ public class GooglePlusStreamUser extends StreamUser {
 		if (actor == null) return;
 		
 		//Id
-		id = Source.GooglePlus + "#"+actor.getId();
+		id = Source.GooglePlus + "#" + actor.getId();
 		
 		//The id of the user in the network
 		userid = actor.getId();
@@ -35,7 +35,7 @@ public class GooglePlusStreamUser extends StreamUser {
 		username = actor.getDisplayName();
 		
 		//streamId
-		streamId = Source.GooglePlus.toString();
+		source = Source.GooglePlus.toString();
 		
 		//Profile picture of the user
 		profileImage = actor.getImage().getUrl();
@@ -67,8 +67,8 @@ public class GooglePlusStreamUser extends StreamUser {
 		//The brief description of this person.
 		description = person.getTagline();
 		
-		//streamId
-		streamId = Source.GooglePlus.toString();
+		//source
+		source = Source.GooglePlus.toString();
 		
 		//Profile picture of the user
 		profileImage = person.getImage().getUrl();
@@ -78,8 +78,9 @@ public class GooglePlusStreamUser extends StreamUser {
 		
 		verified = person.getVerified();
 		
-		if(person.getCircledByCount() != null)
+		if(person.getCircledByCount() != null) {
 			followers = (long) person.getCircledByCount();
+		}
 		
 		location = person.getCurrentLocation();
 

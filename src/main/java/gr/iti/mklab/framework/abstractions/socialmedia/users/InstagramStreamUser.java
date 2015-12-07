@@ -32,7 +32,7 @@ public class InstagramStreamUser extends StreamUser {
 		//The username of the user
 		username = user.getUserName();
 		//streamId
-		streamId = Source.Instagram.toString();
+		source = Source.Instagram.toString();
 		//The description of the user
 		description = user.getBio();
 		//Profile picture of the user
@@ -56,7 +56,7 @@ public class InstagramStreamUser extends StreamUser {
 		//The username of the user
 		username = user.getUsername();
 		//streamId
-		streamId = Source.Instagram.toString();
+		source = Source.Instagram.toString();
 		//The description of the user
 		description = user.getBio();
 		//Profile picture of the user

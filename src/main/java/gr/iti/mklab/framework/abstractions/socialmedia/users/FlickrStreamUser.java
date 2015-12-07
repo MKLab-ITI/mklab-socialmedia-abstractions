@@ -30,7 +30,7 @@ public class FlickrStreamUser extends StreamUser {
 		//The username of the user
 		username = user.getUsername();
 		//streamId
-		streamId = Source.Flickr.toString();
+		source = Source.Flickr.toString();
 		//Profile picture of the user
 		int iconFarm = user.getIconFarm();
 		int iconServer = user.getIconServer();

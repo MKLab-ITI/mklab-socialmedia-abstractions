@@ -36,7 +36,7 @@ public class YoutubeStreamUser extends StreamUser {
 		//The name of the user
 		username = user;
 		//streamId
-		streamId = Source.Youtube.toString();
+		source = Source.Youtube.toString();
 	}
 
 	public YoutubeStreamUser(Person user) {
@@ -51,7 +51,7 @@ public class YoutubeStreamUser extends StreamUser {
 		//The name of the user
 		username = user.getName();
 		//streamId
-		streamId = Source.Youtube.toString();
+		source = Source.Youtube.toString();
 		//The link to the user's profile
 		pageUrl = user.getUri();
 	}
@@ -71,7 +71,7 @@ public class YoutubeStreamUser extends StreamUser {
 		//The name of the user
 		name = (user.getFirstName()==null?"":user.getFirstName()+" ") + (user.getLastName()==null?"":user.getLastName());
 		//streamId
-		streamId = Source.Youtube.toString();
+		source = Source.Youtube.toString();
 
 		MediaThumbnail thumnail = user.getThumbnail();
 		profileImage = thumnail.getUrl();
@@ -112,7 +112,7 @@ public class YoutubeStreamUser extends StreamUser {
 		name = snippet.getTitle();
 		
 		//streamId
-		streamId = Source.Youtube.toString();
+		source = Source.Youtube.toString();
 
 		ThumbnailDetails thumbnails = snippet.getThumbnails();
 		Thumbnail thumbnail = thumbnails.getHigh();

@@ -27,7 +27,7 @@ public class TumblrStreamUser extends StreamUser {
 		//The name of the blog
 		name = blog.getName();
 		//streamId
-		streamId = Source.Tumblr.toString();
+		source = Source.Tumblr.toString();
 		//The description of the blog
 		blog.getDescription();
 		//Profile picture of the blog
@@ -51,7 +51,7 @@ public class TumblrStreamUser extends StreamUser {
 		name = user.getName();
 		
 		//streamId
-		streamId = Source.Tumblr.toString();
+		source = Source.Tumblr.toString();
 		//Profile picture of the blog
 		//profileImage = blog.avatar();
 		//Likes of the blog

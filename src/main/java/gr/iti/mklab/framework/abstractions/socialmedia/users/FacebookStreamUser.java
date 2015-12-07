@@ -47,7 +47,7 @@ public class FacebookStreamUser extends StreamUser {
 		username = user.getUsername();
 		
 		//streamId
-		streamId =  Source.Facebook.toString();
+		source =  Source.Facebook.toString();
 		
 		//The description of the user
 		description = user.getAbout();
@@ -95,7 +95,7 @@ public class FacebookStreamUser extends StreamUser {
 		username = page.getUsername();
 		
 		//The name of the Social Network
-		streamId = Source.Facebook.toString();
+		source = Source.Facebook.toString();
 		
 		//The description of the page
 		description = page.getAbout();
@@ -106,7 +106,6 @@ public class FacebookStreamUser extends StreamUser {
 		}
 		
 		//Avatar of the page
-		profileImage = page.getPicture();
 		if(profileImage == null) {
 			profileImage = "https://graph.facebook.com/" + userid + "/picture";
 		}
