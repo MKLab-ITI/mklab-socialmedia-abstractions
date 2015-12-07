@@ -44,17 +44,22 @@ public class FacebookItem extends Item {
 	
 	public FacebookItem(Post post) {
 		
-		if (post == null || post.getId() == null) 
+		if (post == null || post.getId() == null) {
 			return;
+		}
 		
 		//Id
 		id = Source.Facebook+"#"+post.getId();
+		
 		//SocialNetwork Name
 		source = Source.Facebook.toString();
+		
 		//Timestamp of the creation of the post
 		publicationTime = post.getCreatedTime().getTime();
+		
 		//post's descritpion
 		description = post.getDescription();
+		
 		//is this the original or a shared fb post
 		original = true;
 		
@@ -111,26 +116,21 @@ public class FacebookItem extends Item {
 		}
 		
 		//Popularity of the post
-		//if(post.getLikesCount() != null && post.getLikesCount() > 0) {
-		//	likes = post.getLikesCount();
-		//}
-		//else {
-			Likes postLikes = post.getLikes();
-			if(postLikes != null) {
-				if(postLikes.getTotalCount() == null) {
-					List<NamedFacebookType> likeData = postLikes.getData();
-					if(likeData != null) {
-						likes = (long) likeData.size();
-					}
-				}
-				else {
-					likes = postLikes.getTotalCount();
+		Likes postLikes = post.getLikes();
+		if(postLikes != null) {
+			if(postLikes.getTotalCount() == null) {
+				List<NamedFacebookType> likeData = postLikes.getData();
+				if(likeData != null) {
+					likes = (long) likeData.size();
 				}
 			}
 			else {
-				likes = post.getLikesCount();
+				likes = postLikes.getTotalCount();
 			}
-		//}
+		}
+		else {
+			likes = post.getLikesCount();
+		}
 		
 		if(post.getSharesCount() != null && post.getSharesCount() > 0) {
 			shares = post.getSharesCount();
@@ -144,9 +144,9 @@ public class FacebookItem extends Item {
 		
 		Comments cmnts = post.getComments();
 		if(cmnts != null) {
-			Long n = cmnts.getTotalCount();
-			if(n != null) {
-				comments = n;
+			Long commentsCount = cmnts.getTotalCount();
+			if(commentsCount != null) {
+				comments = commentsCount;
 			}
 			else {
 				List<Comment> data = cmnts.getData();
@@ -159,106 +159,16 @@ public class FacebookItem extends Item {
 		String type = post.getType();
 		
 		if(type.equals("photo")) {
-			
 			pageUrl = post.getLink();
 			String picture = post.getPicture();
-			
+			String fullPicture = post.getFullPicture();
 			try {
-				if (picture != null) { 
-					URL p_url = null;
-					StringBuilder b = new StringBuilder(picture);
-					int index = picture.lastIndexOf("_s.");
-					if(index>0) {
-						b.replace(index, index+3, "_n." );
-						picture = picture.replaceAll("_s.", "_n.");
-						p_url = new URL(picture);
-					
-						if(p_url != null){
-							
-							String mediaId = Source.Facebook+"#"+post.getId();
-							//url
-							MediaItem mediaItem = new MediaItem(p_url);
-							
-							//id
-							mediaItem.setId(mediaId);
-							//SocialNetwork Name
-							mediaItem.setSource(source);
-							//Reference
-							mediaItem.setReference(id);
-							//Type 
-							mediaItem.setType("image");
-							//Time of publication
-							mediaItem.setPublicationTime(publicationTime);
-							//Author
-							if(streamUser != null) {
-								mediaItem.setUser(streamUser);
-								mediaItem.setUserId(streamUser.getId());
-							}
-							
-							//PageUrl
-							String pageUrl = post.getLink();
-							mediaItem.setPageUrl(pageUrl);
-							//Thumbnail
-							String thumbnail = post.getPicture();
-							mediaItem.setThumbnail(thumbnail);
-							//Title
-							mediaItem.setTitle(title);
-							//Description
-							mediaItem.setDescription(description);
-							//Tags
-							mediaItem.setTags(tags);
-							//Popularity
-							mediaItem.setLikes(likes);
-							mediaItem.setShares(shares);
-							
-							Comments postComments = post.getComments();
-							if(postComments != null) {
-								List<Comment> commentsList = postComments.getData();
-								if(commentsList != null) {
-									Integer commentsCount = commentsList.size();
-									mediaItem.setComments(commentsCount.longValue());
-								}
-							}
-							
-							
-							//Store mediaItems and their ids 
-							mediaItems.add(mediaItem);
-							
-							mediaIds.add(mediaId);
-						}
-					}
-				}
-			} catch (MalformedURLException e) { 
-				e.printStackTrace();
-			}
-		}
-		else if(type.equals("link")) {
-			
-			pageUrl = "https://www.facebook.com/" + post.getId();
-			
-			webPages = new ArrayList<WebPage>();
-			String picture = post.getPicture(); ///!!!!
-			if (picture != null) { 
-				
-				URL p_url = null;
-				StringBuilder b = new StringBuilder(picture);
-				int index = picture.lastIndexOf("_s.");
-				if(index>0) {
-					b.replace(index, index+3, "_n." );
-					picture = picture.replaceAll("_s.", "_n.");
-					try {
-						p_url = new URL(picture);
-					} catch (MalformedURLException e) {
-						e.printStackTrace();
-					}
-				
-					if(p_url != null){
-						
-						String mediaId = Source.Facebook+"#"+post.getId();
-						//url
-						MediaItem mediaItem = new MediaItem(p_url);
+				if (picture != null && fullPicture != null) { 
+						URL pictureUrl = new URL(picture);
+						MediaItem mediaItem = new MediaItem(pictureUrl);
 						
 						//id
+						String mediaId = Source.Facebook + "#" + post.getObjectId();
 						mediaItem.setId(mediaId);
 						//SocialNetwork Name
 						mediaItem.setSource(source);
@@ -269,15 +179,15 @@ public class FacebookItem extends Item {
 						//Time of publication
 						mediaItem.setPublicationTime(publicationTime);
 						//Author
-						mediaItem.setUser(streamUser);
-						mediaItem.setUserId(streamUser.getId());
-						
+						if(streamUser != null) {
+							mediaItem.setUser(streamUser);
+							mediaItem.setUserId(streamUser.getId());
+						}
+							
 						//PageUrl
-						String pageUrl = post.getLink();
 						mediaItem.setPageUrl(pageUrl);
 						//Thumbnail
-						String thumbnail = post.getPicture();
-						mediaItem.setThumbnail(thumbnail);
+						mediaItem.setThumbnail(picture);
 						//Title
 						mediaItem.setTitle(title);
 						//Description
@@ -287,39 +197,91 @@ public class FacebookItem extends Item {
 						//Popularity
 						mediaItem.setLikes(likes);
 						mediaItem.setShares(shares);
+
+							
 						//Store mediaItems and their ids 
-						mediaItems.add(mediaItem);
+						mediaItems.add(mediaItem);	
 						mediaIds.add(mediaId);
 						
 					}
+			} catch (MalformedURLException e) { 
+				e.printStackTrace();
+			}
+		}
+		else if(type.equals("link")) {
+			
+			pageUrl = "https://www.facebook.com/" + post.getId();
+			
+			webPages = new ArrayList<WebPage>();
+			String picture = post.getPicture();
+			String fullPicture = post.getFullPicture();
+			if (picture != null && fullPicture != null) { 
+				try {
+					URL pictureUrl = new URL(fullPicture);
+				
+					//url
+					MediaItem mediaItem = new MediaItem(pictureUrl);
+					
+					//id
+					mediaItem.setId(id);
+					//SocialNetwork Name
+					mediaItem.setSource(source);
+					//Reference
+					mediaItem.setReference(id);
+					//Type 
+					mediaItem.setType("image");
+					//Time of publication
+					mediaItem.setPublicationTime(publicationTime);
+					//Author
+					if(streamUser != null) {
+						mediaItem.setUser(streamUser);
+						mediaItem.setUserId(streamUser.getId());
+					}
+		
+					//PageUrl
+					String pageUrl = "https://www.facebook.com/" + id.replaceAll("_", "/posts/");
+					mediaItem.setPageUrl(pageUrl);
+					
+					//Thumbnail
+					mediaItem.setThumbnail(picture);	
+					//Title
+					mediaItem.setTitle(title);
+					//Description
+					mediaItem.setDescription(description);
+					//Tags
+					mediaItem.setTags(tags);	
+					//Popularity
+					mediaItem.setLikes(likes);
+					mediaItem.setShares(shares);
+					mediaItem.setComments(comments);
+					
+					//Store mediaItems and their ids 
+					mediaItems.add(mediaItem);
+					mediaIds.add(mediaItem.getId());
+					
+				} catch (MalformedURLException e) {
+					e.printStackTrace();
 				}
 			}
 			
 			String link = post.getLink();
 			if (link != null) {
-				
 				WebPage webPage = new WebPage(link, id);
 				webPage.setSource(source);
 				webPages.add(webPage);
 			}
 		}
 		else if(type.equals("video")) {
-			
 			pageUrl = "https://www.facebook.com/" + post.getId();
-			
-			String vUrl = post.getSource();
-			String picture = post.getPicture();
-			if(picture != null) {
-				
-				URL videoUrl = null;
+			String videoUrl = post.getSource();
+			String picture = post.getFullPicture();
+			if(picture != null && videoUrl != null) {
 				try {
-					videoUrl = new URL(vUrl);
-					
-					String mediaId = Source.Facebook+"#"+post.getId();
-					//url
-					MediaItem mediaItem = new MediaItem(videoUrl);
+					URL url = new URL(videoUrl);
+					MediaItem mediaItem = new MediaItem(url);
 					
 					//id
+					String mediaId = Source.Facebook+"#"+post.getObjectId();
 					mediaItem.setId(mediaId);
 					//SocialNetwork Name
 					mediaItem.setSource(source);
@@ -336,11 +298,9 @@ public class FacebookItem extends Item {
 					}
 					
 					//PageUrl
-					String pageUrl = post.getLink();
 					mediaItem.setPageUrl(pageUrl);
 					//Thumbnail
-					String thumbnail = post.getPicture();
-					mediaItem.setThumbnail(thumbnail);
+					mediaItem.setThumbnail(picture);
 					//Title
 					mediaItem.setTitle(title);
 					//Description
@@ -356,7 +316,7 @@ public class FacebookItem extends Item {
 					mediaIds.add(mediaId);
 					
 				} catch (MalformedURLException e) {
-					
+					e.printStackTrace();
 				}
 			}
 			
@@ -405,7 +365,6 @@ public class FacebookItem extends Item {
 			else{
 				title = msg;
 			}
-			
 			description = "Comment";
 		}
 		
