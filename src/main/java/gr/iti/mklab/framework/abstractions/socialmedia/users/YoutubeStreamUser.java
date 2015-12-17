@@ -28,8 +28,9 @@ public class YoutubeStreamUser extends StreamUser {
 
 	public YoutubeStreamUser(String user) {
 
-		if (user == null)
+		if (user == null) {
 			return;
+		}
 		
 		//Id
 		id = Source.Youtube+"#"+user;
@@ -92,6 +93,10 @@ public class YoutubeStreamUser extends StreamUser {
 	}
 	
 	public YoutubeStreamUser(Channel channel) {
+		this(channel, null);
+	}
+	
+	public YoutubeStreamUser(Channel channel, String username) {
 
 		if (channel == null) {
 			return;
@@ -100,25 +105,31 @@ public class YoutubeStreamUser extends StreamUser {
 		ChannelSnippet snippet = channel.getSnippet();
 
 		//Id
-		id = Source.Youtube+"#"+channel.getId();
+		id = Source.Youtube + "#" + channel.getId();
 
 		//The id of the user in the network
 		userid = channel.getId();
 		
 		//The username of the user
-		username = "";
+		if(username == null) {
+			this.username =  channel.getId();
+		}
+		else {
+			this.username = username;	
+		}
+		
 		
 		//The name of the user
 		name = snippet.getTitle();
 		
-		//streamId
+		//source
 		source = Source.Youtube.toString();
 
 		ThumbnailDetails thumbnails = snippet.getThumbnails();
 		Thumbnail thumbnail = thumbnails.getHigh();
 		profileImage = thumbnail.getUrl();
 
-		pageUrl = "https://www.youtube.com/user/" + channel.getId();
+		pageUrl = "https://www.youtube.com/channel/" + channel.getId();
 		
 		//location = user.getLocation();
 

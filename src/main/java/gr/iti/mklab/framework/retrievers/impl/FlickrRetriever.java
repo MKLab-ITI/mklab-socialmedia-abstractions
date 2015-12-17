@@ -235,12 +235,12 @@ public class FlickrRetriever extends SocialMediaRetriever {
 			}
 			
 			if(numberOfRequests >= maxRequests) {
-				logger.info("Stop retriever. Number of requests (" + maxRequests + ") reached.");
+				logger.info("Stop retriever. Number of requests (" + maxRequests + ") reached for ( " + feed.getId() + ")");
 				break;
 			}
 			
 			if(sinceDateReached) {
-				logger.info("Stop retriever. Since Date Reached: " + sinceDate);
+				logger.info("Stop retriever. Since date reached " + sinceDate + " for (" + feed.getId() + ")");
 				break;
 			}
 		}

@@ -19,6 +19,9 @@ import com.google.api.services.plus.model.Activity.PlusObject.Attachments.FullIm
 import com.google.api.services.plus.model.Activity.PlusObject.Attachments.Image;
 import com.google.api.services.plus.model.Activity.PlusObject.Attachments.Thumbnails;
 import com.google.api.services.plus.model.Comment;
+import com.google.api.services.plus.model.Place;
+import com.google.api.services.plus.model.Place.Address;
+import com.google.api.services.plus.model.Place.Position;
 
 import gr.iti.mklab.framework.abstractions.socialmedia.users.GooglePlusStreamUser;
 import gr.iti.mklab.framework.common.domain.Item;
@@ -43,8 +46,9 @@ public class GooglePlusItem extends Item {
 	
 	public GooglePlusItem(Activity activity) {
 		
-		if(activity == null || activity.getId() == null) 
+		if(activity == null || activity.getId() == null) {
 			return;
+		}
 		
 		//Id
 		id = Source.GooglePlus + "#" + activity.getId();
@@ -66,17 +70,38 @@ public class GooglePlusItem extends Item {
         }
         
 		//Location
-		if(activity.getGeocode() != null) {
+        if(activity.getLocation() != null) {
+        	Place place = activity.getLocation();
+        	Address address = place.getAddress();	
+        	Position position = place.getPosition();
+        	if(address != null && position != null) {
+        		Double latitude = position.getLatitude();
+            	Double longitude = position.getLongitude();
+            	
+            	location = new Location(latitude, longitude, address.getFormatted());
+        	}
+        }
+        else if(activity.getGeocode() != null) {
 			
 			String locationInfo = activity.getGeocode();
 			String[] parts = locationInfo.split(" ");
 			double latitude = Double.parseDouble(parts[0]);
 			double longitude = Double.parseDouble(parts[1]);
 			
-			location = new Location(latitude, longitude,activity.getPlaceName());
+			location = new Location(latitude, longitude, activity.getPlaceName());
 		}
 		
 		PlusObject object = activity.getObject();
+		
+		String objectType = object.getObjectType();
+		if(objectType.equals("note")) {
+			original = true;
+		}
+		else if(objectType.equals("activity")) {
+			original = false;
+			reference = Source.GooglePlus + "#" + object.getId();
+			referencedUserId = Source.GooglePlus + "#" + object.getActor().getId();
+		}
 		
 		description = object.getContent();
 		if(description != null) {
@@ -479,17 +504,22 @@ public class GooglePlusItem extends Item {
 	
 	public GooglePlusItem(Comment comment, Activity activity, GooglePlusStreamUser user) {
 		
-		if (comment == null) 
+		if (comment == null) {
 			return;
+		}
 		
 		//Id
 		id = Source.GooglePlus+"#"+comment.getId();
+		
 		//Reference to the original post
 		reference = Source.GooglePlus+"#"+activity.getId();
+		
 		//SocialNetwork Name
 		source = Source.GooglePlus.toString();
+		
 		//Timestamp of the creation of the post
 		publicationTime = comment.getPublished().getValue();
+		
 		description = "Comment";
 		//User that posted the post
 		if(user != null) {

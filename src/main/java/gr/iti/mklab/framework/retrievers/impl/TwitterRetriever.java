@@ -79,26 +79,30 @@ public class TwitterRetriever extends SocialMediaRetriever {
 		Date sinceDate = new Date(feed.getSinceDate());
 		String label = feed.getLabel();
 
+		Long uid = Long.parseLong(feed.getId());
 		String screenName = feed.getUsername();
-		if(screenName == null) {
-			logger.error("Username is null for feed " + feed);
+		if(uid == null && screenName == null) {
+			logger.error("Uid and Username is null for feed [" + feed + "]");
 			Response response = getResponse(items, numberOfRequests);
 			return response;
 		}
 		
 		logger.info("Retrieve timeline for user @" + screenName);
 
-		
 		int page = 1;
 		Paging paging = new Paging(page, count);
 		boolean sinceDateReached = false;
 		while(true) {
 			try {
 				ResponseList<Status> responseList = null;
-				responseList = twitter.getUserTimeline(screenName, paging);
+				if(uid != null) {
+					responseList = twitter.getUserTimeline(uid, paging);
+				}
+				else {
+					responseList = twitter.getUserTimeline(screenName, paging);	
+				}
 				
 				numberOfRequests++;
-				
 				for(Status status : responseList) {
 					if(status != null) {
 						
@@ -205,12 +209,12 @@ public class TwitterRetriever extends SocialMediaRetriever {
 				}
 				
 				if(numberOfRequests >= requests) {
-					logger.info("Stop retriever. Number of requests (" + numberOfRequests + ") has reached for " + query);
+					logger.info("Stop retriever. Number of requests (" + numberOfRequests + ") has reached for " + textQuery);
 					break;
 				}
 				
 				if(sinceDateReached) {
-					logger.info("Stop retriever. Since date reached: " + sinceDate + " for " + query);
+					logger.info("Stop retriever. Since date reached " + sinceDate + " for " + textQuery);
 					break;
 				}
 				

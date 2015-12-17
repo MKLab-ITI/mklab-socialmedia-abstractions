@@ -165,7 +165,6 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 					if(label != null) {
 						googlePlusItem.addLabel(label);
 					}
-						
 					if(streamUser != null) {
 						googlePlusItem.setStreamUser(streamUser);
 					}
@@ -222,25 +221,26 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 			return response;
 		}
 		
-		String tags = "";
+		String tagsQuery = "";
 		for(String key : keywords) {
 			String [] words = key.split(" ");
 			for(String word : words) {
-				if(!tags.contains(word) && word.length() > 1)
-					tags += word.toLowerCase()+" ";
+				if(!tagsQuery.contains(word) && word.length() > 1)
+					tagsQuery += word.toLowerCase() + " ";
 			}
 		}
-			
-		if(tags.equals("")) {
+		tagsQuery = tagsQuery.trim();
+		
+		if(tagsQuery.equals("")) {
 			Response response = getResponse(items, numberOfRequests);
 			return response;
 		}
 		
-		logger.info("Search for (" + tags + ")");
+		logger.info("Search for (" + tagsQuery + ")");
 		boolean isFinished = false, sinceDateReached = false;
 		while(true) {
 			try {
-				Plus.Activities.Search searchActivities = googlePlusService.activities().search(tags);
+				Plus.Activities.Search searchActivities = googlePlusService.activities().search(tagsQuery);
 				searchActivities.setMaxResults(20L);
 				searchActivities.setOrderBy("recent");
 				
@@ -274,22 +274,22 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 				}
 				
 				if(sinceDateReached) {
-					logger.info("Stop retriever. Since date " + sinceDate + " reached for (" + tags + ").");
+					logger.info("Stop retriever. Since date " + sinceDate + " reached for (" + tagsQuery + ").");
 					break;
 				}
 				
 				if(numberOfRequests > maxRequests) {
-					logger.info("Stop retriever. Number of requests (" + numberOfRequests + ") has reached for (" + tags + ").");
+					logger.info("Stop retriever. Number of requests (" + numberOfRequests + ") has reached for (" + tagsQuery + ").");
 					break;
 				}
 				
 				if(activityFeed.getNextPageToken() == null) {
-					logger.info("Stop retriever. There is no more pages to fetch for (" + tags + ").");
+					logger.info("Stop retriever. There is no more pages to fetch for (" + tagsQuery + ").");
 					break;
 				}
 				
 				if(isFinished) {
-					logger.info("Stop retriever. Activity is null for (" + tags + ").");
+					logger.info("Stop retriever. Activity is null for (" + tagsQuery + ").");
 					break;
 				}
 				

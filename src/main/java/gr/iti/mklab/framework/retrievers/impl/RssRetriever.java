@@ -52,7 +52,8 @@ public class RssRetriever implements Retriever {
 		List<Item> items = new ArrayList<Item>();
 		
 		if(RssFeed.class.isInstance(feed.getClass())) {
-			throw new Exception("Feed " + feed.getClass() + "is not instance of RssFeed");
+			logger.error("Feed " + feed.getClass() + "is not instance of Rss Feed");
+			throw new Exception("Feed " + feed.getClass() + "is not instance of Rss Feed");
 		}
 		
 		RssFeed rrsFeed = (RssFeed) feed;
@@ -122,9 +123,9 @@ public class RssRetriever implements Retriever {
 	
 	public static void main(String...args) throws Exception {
 		
-		String id = "ft_elec";
-		String url = "http://labourlist.org/category/news/feed";		
-		String source = "labourlist";
+		String id = "businessgreen";
+		String url = "http://www.treehugger.com/feeds/latest/";		
+		String source = "RSS";
 		
 		long since = System.currentTimeMillis() - 90*24*3600*1000L;
 		
@@ -141,6 +142,7 @@ public class RssRetriever implements Retriever {
 			System.out.println("Description: " + item.getDescription());
 			System.out.println("User: " + item.getUserId());
 			System.out.println("Url: " + item.getPageUrl());
+			System.out.println("MediaIds: " + item.getMediaIds());
 			System.out.println("Tags: " + StringUtils.join(item.getTags()));
 			System.out.println(item.getMediaItems());
 			System.out.println("Comments: " + item.getComments());

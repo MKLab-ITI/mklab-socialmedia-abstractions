@@ -3,6 +3,7 @@ package gr.iti.mklab.framework.abstractions.socialmedia.users;
 import com.restfb.types.CategorizedFacebookType;
 import com.restfb.types.Location;
 import com.restfb.types.Page;
+import com.restfb.types.ProfilePictureSource;
 import com.restfb.types.User;
 
 import gr.iti.mklab.framework.common.domain.Source;
@@ -106,8 +107,12 @@ public class FacebookStreamUser extends StreamUser {
 		}
 		
 		//Avatar of the page
-		if(profileImage == null) {
+		ProfilePictureSource picture = page.getPicture();
+		if(picture == null || picture.getUrl() == null) {
 			profileImage = "https://graph.facebook.com/" + userid + "/picture";
+		}
+		else {
+			profileImage = picture.getUrl();
 		}
 		
 		//Number of people talking about the page
@@ -118,6 +123,14 @@ public class FacebookStreamUser extends StreamUser {
 		if(loc != null) {
 			location = loc.getCity();
 		}
+		
+		if(page.getLikes() != null) {
+			favorities = page.getLikes();
+		}
+		
+		verified = page.getIsVerified();
+		
+		url = page.getWebsite();
 		
 	}
 	

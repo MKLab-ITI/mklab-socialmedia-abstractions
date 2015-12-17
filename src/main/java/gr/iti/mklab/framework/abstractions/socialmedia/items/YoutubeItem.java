@@ -266,10 +266,16 @@ public class YoutubeItem extends Item {
 			mediaItem.setTags(tags);
 			
 			//Popularity
-			if(statistics!=null){
-				mediaItem.setLikes(statistics.getLikeCount().longValue());
-				mediaItem.setComments(statistics.getCommentCount().longValue());
-				mediaItem.setViews(statistics.getViewCount().longValue());
+			if(statistics != null) {
+				if(statistics.getLikeCount() != null) {
+					mediaItem.setLikes(statistics.getLikeCount().longValue());
+				}
+				if(statistics.getCommentCount() != null) {
+					mediaItem.setComments(statistics.getCommentCount().longValue());
+				}
+				if(statistics.getViewCount() != null) {
+					mediaItem.setViews(statistics.getViewCount().longValue());
+				}
 			}
 			
 			//Rating rating = videoEntry.getRating();
@@ -285,9 +291,13 @@ public class YoutubeItem extends Item {
 		}
 		
 		//Popularity
-		if(statistics != null){
-			likes = statistics.getLikeCount().longValue();
-			comments = statistics.getCommentCount().longValue();
+		if(statistics != null) {
+			if(statistics.getLikeCount() != null) {
+				likes = statistics.getLikeCount().longValue();
+			}
+			if(statistics.getCommentCount() != null) {
+				comments = statistics.getCommentCount().longValue();
+			}
 		}
 		
 		// Page Url of this Item

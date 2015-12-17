@@ -81,10 +81,12 @@ public class FacebookItem extends Item {
  				title = post.getName();
  			}
  			else if(description != null) {
- 				if(description.length()>100)
+ 				if(description.length()>100) {
  					title = description.subSequence(0, 100)+"...";
- 				else 
+ 				}
+ 				else { 
  					title = description;
+ 				}
  			}
  			else {
  				title = "";
@@ -272,7 +274,9 @@ public class FacebookItem extends Item {
 			}
 		}
 		else if(type.equals("video")) {
+			
 			pageUrl = "https://www.facebook.com/" + post.getId();
+			
 			String videoUrl = post.getSource();
 			String picture = post.getFullPicture();
 			if(picture != null && videoUrl != null) {
@@ -281,7 +285,7 @@ public class FacebookItem extends Item {
 					MediaItem mediaItem = new MediaItem(url);
 					
 					//id
-					String mediaId = Source.Facebook+"#"+post.getObjectId();
+					String mediaId = Source.Facebook+"#"+post.getId();
 					mediaItem.setId(mediaId);
 					//SocialNetwork Name
 					mediaItem.setSource(source);
@@ -325,8 +329,11 @@ public class FacebookItem extends Item {
 			pageUrl = "https://www.facebook.com/" + post.getId();
 		}
 	
+		CategorizedFacebookType from = post.getFrom();
+		uid = Source.Facebook + "#" + from.getId();
+		
 	}
-    
+
 	
 	public FacebookItem(Post post, StreamUser user) {
 		

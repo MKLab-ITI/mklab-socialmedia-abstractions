@@ -62,9 +62,12 @@ public class YoutubeRetriever extends SocialMediaRetriever{
 		
 		// This object is used to make YouTube Data API requests. The last argument is required, but since we don't need anything
         // initialized when the HttpRequest is initialized, we override the interface and provide a no-op function.
-		youtubeService = new YouTube.Builder(HTTP_TRANSPORT, JSON_FACTORY, new HttpRequestInitializer() {
-            public void initialize(HttpRequest request) throws IOException {
-            }
+		youtubeService = new YouTube.Builder(
+				HTTP_TRANSPORT, 
+				JSON_FACTORY, 
+				new HttpRequestInitializer() {
+					public void initialize(HttpRequest request) throws IOException {
+				}
         }).setApplicationName("youtube-search-module").build();
 		
 	}
@@ -130,7 +133,7 @@ public class YoutubeRetriever extends SocialMediaRetriever{
         			Joiner stringJoiner = Joiner.on(',');
         			String videoId = stringJoiner.join(videoIds);
                 
-        			YouTube.Videos.List listVideosRequest = youtubeService.videos().list("snippet,recordingDetails,player");
+        			YouTube.Videos.List listVideosRequest = youtubeService.videos().list("snippet,statistics,recordingDetails,player");
         			listVideosRequest.setId(videoId);
         			listVideosRequest.setKey(apiKey);
         			listVideosRequest.setMaxResults(NUMBER_OF_RESULTS_RETURNED);
@@ -141,10 +144,8 @@ public class YoutubeRetriever extends SocialMediaRetriever{
                 	if (videoList != null) {
                 		for(Video video : videoList) {
                 			uids.add(video.getSnippet().getChannelId());
-                			
                 			Item item = new YoutubeItem(video);
                 			if(item.getPublicationTime() < sinceDate) {
-                				System.out.println(new Date(item.getPublicationTime()) + " < " + new Date(sinceDate));
                 				sinceDateReached = true;
 								break;
                 			}
@@ -170,8 +171,9 @@ public class YoutubeRetriever extends SocialMediaRetriever{
 			} catch (IOException e) {
 				logger.error("There was an IO error: " + e.getCause() + " : " + e.getMessage(), e);
 				break;
-			} catch (Throwable t) {
-				logger.error(t);
+			} catch (Exception e) {
+				e.printStackTrace();
+				logger.error(e);
 				break;
 			}
         
@@ -181,18 +183,18 @@ public class YoutubeRetriever extends SocialMediaRetriever{
 			}
         	
 			if(sinceDateReached) {
-				logger.info("Stop retriever. Since date " + sinceDate + " reached for query " + textQuery);
+				logger.info("Stop retriever. Since date " + new Date(sinceDate) + " reached for query " + textQuery);
 				break;
 			}
 			
         }
         
-//        Map<String, StreamUser> users = getStreamUsers(uids);
-//        for(Item item : items) {
-//        	String uid = item.getUserId();
-//        	StreamUser streamUser = users.get(uid);
-//        	item.setStreamUser(streamUser);
-//        }
+        Map<String, StreamUser> users = getStreamUsers(uids);
+        for(Item item : items) {
+        	String uid = item.getUserId();
+        	StreamUser streamUser = users.get(uid);
+        	item.setStreamUser(streamUser);
+        }
         
 		Response response = getResponse(items, numberOfRequests);
 		return response;
@@ -207,17 +209,21 @@ public class YoutubeRetriever extends SocialMediaRetriever{
 		long sinceDate = feed.getSinceDate();
 		String label = feed.getLabel();
 		
+		String uid = feed.getId();
 		String uName = feed.getUsername();
 		
-		if(uName == null) {
-			logger.error("#YouTube : No source feed");
-			Response response = getResponse(items, numberOfRequests);
-			return response;
+		StreamUser streamUser = null;
+		if(uid != null) {
+			streamUser = this.getStreamUser(uid);
 		}
-				
-		StreamUser streamUser = getStreamUserForUsername(uName);
+		else if (uName != null){
+			streamUser = getStreamUserForUsername(uName);
+		}
+		
+		
 		numberOfRequests++;
 		if(streamUser == null) {
+			logger.error("#YouTube : No account feed");
 			Response response = getResponse(items, numberOfRequests);
 			return response;
 		}
@@ -227,6 +233,7 @@ public class YoutubeRetriever extends SocialMediaRetriever{
         YouTube.Search.List search = youtubeService.search().list("id");
         search.setKey(apiKey);
         search.setChannelId(streamUser.getUserid());
+        search.setOrder("date");
         search.setMaxResults(NUMBER_OF_RESULTS_RETURNED);
         
 		boolean sinceDateReached = false;
@@ -241,15 +248,17 @@ public class YoutubeRetriever extends SocialMediaRetriever{
 				numberOfRequests++;
 								
 				List<SearchResult> searchResultList = searchResponse.getItems();
-        		if (searchResultList != null) {
-        			List<String> videoIds = new ArrayList<String>();
+        		if (searchResultList != null && !searchResultList.isEmpty()) {
+        			Set<String> videoIds = new HashSet<String>();
         			for (SearchResult searchResult : searchResultList) {
-        				videoIds.add(searchResult.getId().getVideoId());
+        				if(searchResult.getId().getVideoId() != null) {
+        					videoIds.add(searchResult.getId().getVideoId());
+        				}
         			}
         			Joiner stringJoiner = Joiner.on(',');
         			String videoId = stringJoiner.join(videoIds);
         			
-        			YouTube.Videos.List listVideosRequest = youtubeService.videos().list("snippet,recordingDetails,player");
+        			YouTube.Videos.List listVideosRequest = youtubeService.videos().list("snippet,statistics,recordingDetails,player");
         			listVideosRequest.setId(videoId);
         			listVideosRequest.setKey(apiKey);
         			listVideosRequest.setMaxResults(NUMBER_OF_RESULTS_RETURNED);
@@ -260,9 +269,7 @@ public class YoutubeRetriever extends SocialMediaRetriever{
                 	if (videoList != null) {
                 		for(Video video : videoList) {
                 			Item item = new YoutubeItem(video, streamUser);
-                			
                 			if(item.getPublicationTime() < sinceDate) {
-                				System.out.println(new Date(item.getPublicationTime()) +"<"+ new Date(sinceDate));
                 				sinceDateReached = true;
 								break;
                 			}
@@ -290,8 +297,9 @@ public class YoutubeRetriever extends SocialMediaRetriever{
 			} catch (IOException e) {
 				logger.error("There was an IO error: " + e.getCause() + " : " + e.getMessage(), e);
 				break;
-			} catch (Throwable t) {
-				logger.error(t);
+			} catch (Exception e) {
+				e.printStackTrace();
+				logger.error(e);
 				break;
 			}
 		
@@ -301,7 +309,7 @@ public class YoutubeRetriever extends SocialMediaRetriever{
 			}
         	
 			if(sinceDateReached) {
-				logger.info("Stop retriever. Since date " + sinceDate + " reached for " + uName);
+				logger.info("Stop retriever. Since date " + new Date(sinceDate) + " reached for " + uName);
 				break;
 			}
 		}
@@ -337,7 +345,7 @@ public class YoutubeRetriever extends SocialMediaRetriever{
 			if(channels != null) {
 				Channel channel = channels.get(0);
 				
-				YoutubeStreamUser user = new YoutubeStreamUser(channel);
+				YoutubeStreamUser user = new YoutubeStreamUser(channel, uName);
 				user.setUsername(uName);
 				
 				return user;
@@ -363,7 +371,6 @@ public class YoutubeRetriever extends SocialMediaRetriever{
 			List<Channel> channels = response.getItems();
 			if(channels != null) {
 				Channel channel = channels.get(0);
-				
 				YoutubeStreamUser user = new YoutubeStreamUser(channel);
 
 				return user;
@@ -377,28 +384,36 @@ public class YoutubeRetriever extends SocialMediaRetriever{
 	}
 
 	public Map<String, StreamUser> getStreamUsers(Set<String> uids) {
+		List<String> list = new ArrayList<String>(uids);
 		Map<String, StreamUser> users = new HashMap<String, StreamUser>();
 		try {
-			Joiner stringJoiner = Joiner.on(',');
-			String userIds = stringJoiner.join(uids);
-		        
-			YouTube.Channels.List channelListResponse = youtubeService.channels()
-					.list("id,snippet,statistics");
-			channelListResponse.setKey(apiKey);
-			channelListResponse.setId(userIds);
-			channelListResponse.setMaxResults(NUMBER_OF_RESULTS_RETURNED);
+			int fromIndex = 0;
+			while(fromIndex <= uids.size()) {
+				int toIndex = Math.min(fromIndex+50, uids.size());
+				List<String> sublist = list.subList(fromIndex, toIndex);
 			
-			ChannelListResponse response = channelListResponse.execute();
-			List<Channel> channels = response.getItems();
-			if(channels != null) {
-				for(Channel channel : channels) {
-					YoutubeStreamUser user = new YoutubeStreamUser(channel);
-					users.put(user.getId(), user);
+				Joiner stringJoiner = Joiner.on(',');
+				String userIds = stringJoiner.join(sublist);
+			
+				YouTube.Channels.List channelListResponse = youtubeService.channels().list("id,snippet,statistics");
+				channelListResponse.setKey(apiKey);
+				channelListResponse.setId(userIds);
+				channelListResponse.setMaxResults(NUMBER_OF_RESULTS_RETURNED);
+
+				ChannelListResponse response = channelListResponse.execute();
+				List<Channel> channels = response.getItems();
+				if(channels != null) {
+					for(Channel channel : channels) {
+						YoutubeStreamUser user = new YoutubeStreamUser(channel);
+						users.put(user.getId(), user);
+					}
 				}
+				
+				fromIndex += 50;
 			}
 			
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error(e);
 		}
 
 		return users;
@@ -412,23 +427,23 @@ public class YoutubeRetriever extends SocialMediaRetriever{
 	public static void main(String...args) throws Exception {
 		
 		Credentials credentials = new Credentials();
-		credentials.setKey("xxxxxxxxxxxxxxxxxxxxxxxxx");
+		credentials.setKey("AIzaSyBs4RWhrqw9-3kCvvAN3qKJc79RI2DxOis");
 		
 		YoutubeRetriever retriever = new YoutubeRetriever(credentials);
 		
 		long since = System.currentTimeMillis()-(365*24*3600000l);
-		KeywordsFeed feed = new KeywordsFeed("id", "barack obama", since, "Youtube");
+		//KeywordsFeed feed = new KeywordsFeed("id", "barack obama", since, "Youtube");
 		
-		//AccountFeed feed = new AccountFeed(
-		//		"UC16niRr50-MSBwiO3YDb3RA", 
-		//		"bbcnews", 
-		//		since, 
-		//		"Youtube");
+		AccountFeed feed = new AccountFeed(
+				"UC16niRr50-MSBwiO3YDb3RA",
+				"bbcnews", 
+				since, 
+				"Youtube");
 		
-		Response response = retriever.retrieveKeywordsFeed(feed, 6);
-		//Response response = retriever.retrieveAccountFeed(feed, 6);
+		//Response response = retriever.retrieveKeywordsFeed(feed, 6);
+		Response response = retriever.retrieveAccountFeed(feed, 6);
 		for(Item item : response.getItems()) {
-			System.out.println(item.getTitle());
+			System.out.println(item.getComments());
 		}
 		System.out.println(response.getNumberOfItems());
 		//StreamUser user = retriever.getStreamUser("bbcnews");
