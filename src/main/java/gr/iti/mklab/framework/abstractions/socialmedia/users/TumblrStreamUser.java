@@ -9,7 +9,6 @@ import gr.iti.mklab.framework.common.domain.StreamUser;
 /**
  * Class that holds the information of a tumblr user
  * @author ailiakop
- * @email  ailiakop@iti.gr
  */
 public class TumblrStreamUser extends StreamUser {
 	

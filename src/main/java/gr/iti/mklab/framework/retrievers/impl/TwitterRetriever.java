@@ -41,8 +41,7 @@ import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
  * Class responsible for retrieving Twitter content based on keywords, twitter users or locations
  * The retrieval process takes place through Twitter API (twitter4j).
  * 
- * @author Manos Schinas
- * @email  manosetro@iti.gr
+ * @author Manos Schinas - manosetro@iti.gr
  */
 public class TwitterRetriever extends SocialMediaRetriever {
 	

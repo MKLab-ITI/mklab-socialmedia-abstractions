@@ -27,8 +27,7 @@ import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
 /**
  * The retriever that implements the Daily Motion wrapper
  * 
- * @author manosetro
- * @email  manosetro@iti.gr
+ * @author manosetro - manosetro@iti.gr
  */
 public class DailyMotionRetriever extends SocialMediaRetriever {
 

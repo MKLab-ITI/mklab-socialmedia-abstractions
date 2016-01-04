@@ -17,7 +17,6 @@ import gr.iti.mklab.framework.common.domain.StreamUser;
 /**
  * Class that holds the information of a youtube user
  * @author ailiakop
- * @email  ailiakop@iti.gr
  */
 public class YoutubeStreamUser extends StreamUser {
 

@@ -28,9 +28,8 @@ import gr.iti.mklab.framework.common.domain.StreamUser;
 /**
  * Class that holds the information of a youtube video
  * 
- * @author 	Manos Schinas
+ * @author 	Manos Schinas - manosetro@iti.gr
  * 
- * @email  manosetro@iti.gr
  */
 public class YoutubeItem extends Item {
 
@@ -43,10 +42,6 @@ public class YoutubeItem extends Item {
 		
 	}
 			
-	/**
-	 * @Deprecated
-	 * @param videoEntry
-	 */
 	public YoutubeItem(VideoEntry videoEntry) {
 		
 		if (videoEntry == null || videoEntry.getId() == null) 
@@ -305,9 +300,6 @@ public class YoutubeItem extends Item {
 		
 	}
 	
-	/**
-	 * @Deprecated
-	*/
 	public YoutubeItem(VideoEntry videoEntry, YoutubeStreamUser user) {
 		this(videoEntry);
 		//User that posted the post

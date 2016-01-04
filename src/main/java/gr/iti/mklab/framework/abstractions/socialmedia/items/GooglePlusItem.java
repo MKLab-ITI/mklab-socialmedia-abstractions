@@ -33,8 +33,7 @@ import gr.iti.mklab.framework.common.domain.WebPage;
 
 /**
  * Class that holds the information of a google plus activity
- * @author ailiakop
- * @email  ailiakop@iti.gr
+ * @author Manos Schinas
  */
 public class GooglePlusItem extends Item {
 	

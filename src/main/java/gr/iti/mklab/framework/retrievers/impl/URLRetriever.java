@@ -26,9 +26,7 @@ import gr.iti.mklab.framework.retrievers.Retriever;
 /**
  * Class for retrieving RSS feeds using Rome API.
  *  
- * @author Manos Schinas
- * 
- * @email manosetro@iti.gr
+ * @author Manos Schinas - manosetro@iti.gr
  */
 public class URLRetriever implements Retriever {
 	

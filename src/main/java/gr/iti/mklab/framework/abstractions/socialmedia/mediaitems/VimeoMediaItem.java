@@ -10,8 +10,7 @@ import gr.iti.mklab.framework.common.domain.MediaItem;
 
 /**
  * Class that holds the information regarding the vimeo media item
- * @author manosetro
- * @email  manosetro@iti.gr
+ * @author manosetro - manosetro@iti.gr
  */
 public class VimeoMediaItem extends MediaItem {
 	

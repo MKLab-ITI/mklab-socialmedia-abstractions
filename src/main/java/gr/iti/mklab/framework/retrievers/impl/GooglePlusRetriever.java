@@ -42,8 +42,7 @@ import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
  * Class responsible for retrieving Google+ content based on keywords or google+ users
  * The retrieval process takes place through Google API
  * 
- * @author manosetro
- * @email  manosetro@iti.gr
+ * @author manosetro - manosetro@iti.gr
  */
 public class GooglePlusRetriever extends SocialMediaRetriever {
 	

@@ -28,8 +28,7 @@ import gr.iti.mklab.framework.common.domain.WebPage;
 /**
  * Class that holds the information of a facebook post
  * 
- * @author Manos Schinas
- * @author manosetro@iti.gr
+ * @author Manos Schinas - manosetro@iti.gr
  *
  */
 public class FacebookItem extends Item {

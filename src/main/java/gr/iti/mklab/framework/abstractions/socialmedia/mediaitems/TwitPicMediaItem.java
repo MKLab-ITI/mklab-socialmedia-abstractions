@@ -13,8 +13,7 @@ import gr.iti.mklab.framework.common.domain.StreamUser;
 
 /**
  * Class that holds the information regarding the twitpic media item
- * @author manosetro
- * @email  manosetro@iti.gr
+ * @author manosetro - manosetro@iti.gr
  */
 public class TwitPicMediaItem extends MediaItem {
 
@@ -70,8 +69,7 @@ public class TwitPicMediaItem extends MediaItem {
 
 	/**
 	 * Class that holds the information regarding the twitpic image
-	 * @author manosetro
-	 * @email  manosetro@iti.gr
+	 * @author manosetro - manosetro@iti.gr
 	 */
 	public static class TwitPicImage {
 		@Key

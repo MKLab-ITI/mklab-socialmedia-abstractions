@@ -8,7 +8,6 @@ import gr.iti.mklab.framework.common.domain.StreamUser;
 /**
  * Class that holds the information of a flickr user
  * @author ailiakop
- * @email  ailiakop@iti.gr
  */
 public class FlickrStreamUser extends StreamUser {
 

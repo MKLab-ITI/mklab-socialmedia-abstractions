@@ -28,8 +28,7 @@ import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
 /**
  * The retriever that implements the Twitpic simplified retriever
  * 
- * @author manosetro
- * @email  manosetro@iti.gr
+ * @author manosetro - manosetro@iti.gr
  */
 public class TwitpicRetriever extends SocialMediaRetriever {
 

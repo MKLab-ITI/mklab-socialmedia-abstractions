@@ -43,8 +43,7 @@ import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
  * Class responsible for retrieving YouTube content based on keywords and YouTube users 
  * The retrieval process takes place through Google API.
  * 
- * @author manosetro
- * @email  manosetro@iti.gr
+ * @author manosetro - manosetro@iti.gr
  */
 public class YoutubeRetrieverDep extends SocialMediaRetriever {
 

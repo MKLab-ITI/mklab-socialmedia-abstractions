@@ -20,8 +20,7 @@ import gr.iti.mklab.framework.common.domain.StreamUser;
 
 /**
  * Class that holds the information of a flickr photo
- * @author ailiakop
- * @email  ailiakop@iti.gr
+ * @author Manos Schinas
  */
 public class FlickrItem extends Item {
 

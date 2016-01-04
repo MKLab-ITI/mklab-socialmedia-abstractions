@@ -43,8 +43,7 @@ import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
  * Class responsible for retrieving facebook content based on keywords or facebook users/facebook pages
  * The retrieval process takes place through facebook graph API.
  * 
- * @author manosetro
- * @email  manosetro@iti.gr
+ * @author manosetro - manosetro@iti.gr
  * 
  */
 public class FacebookRetriever extends SocialMediaRetriever {

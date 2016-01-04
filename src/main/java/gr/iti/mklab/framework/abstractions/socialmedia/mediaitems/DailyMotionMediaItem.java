@@ -9,8 +9,7 @@ import gr.iti.mklab.framework.common.domain.MediaItem;
 
 /**
  * Class that holds the information regarding the dailymotion video
- * @author manosetro
- * @email  manosetro@iti.gr
+ * @author manosetro - manosetro@iti.gr
  *
  */
 public class DailyMotionMediaItem extends MediaItem {

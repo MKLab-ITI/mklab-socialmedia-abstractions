@@ -29,9 +29,8 @@ import twitter4j.UserMentionEntity;
 /**
  * Class that holds the information of a twitter status
  * 
- * @author 	Manos Schinas
+ * @author 	Manos Schinas - manosetro@iti.gr
  * 
- * @email  manosetro@iti.gr
  */
 public class TwitterItem extends Item {
 	

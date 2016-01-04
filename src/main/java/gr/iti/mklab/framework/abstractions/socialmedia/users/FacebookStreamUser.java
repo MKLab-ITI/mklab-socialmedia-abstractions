@@ -12,7 +12,6 @@ import gr.iti.mklab.framework.common.domain.StreamUser;
 /**
  * Class that holds the information of a facebook user or a facebook page
  * @author ailiakop
- * @email  ailiakop@iti.gr
  */
 public class FacebookStreamUser extends StreamUser {
 
@@ -22,10 +21,6 @@ public class FacebookStreamUser extends StreamUser {
 	 */
 	private static final long serialVersionUID = 3234574808873979755L;
 
-	/**
-	 * Maps the information of a facebook user
-	 * @param user
-	 */
 	public FacebookStreamUser(User user) {
 		
 		if (user == null) return;
@@ -76,10 +71,6 @@ public class FacebookStreamUser extends StreamUser {
 		
 	}
 
-	/**
-	 * Maps the information of a facebook page
-	 * @param page
-	 */
 	public FacebookStreamUser(Page page) {
 		if (page == null) return;
 		
@@ -134,10 +125,6 @@ public class FacebookStreamUser extends StreamUser {
 		
 	}
 	
-	/**
-	 * Maps the information of a categorized facebook user 
-	 * @param user
-	 */
 	public FacebookStreamUser(CategorizedFacebookType user) {
 
 		if (user == null) return;

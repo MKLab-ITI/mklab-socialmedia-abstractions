@@ -40,8 +40,7 @@ import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
  * Class responsible for retrieving Flickr content based on keywords,users or location coordinates
  * The retrieval process takes place through Flickr API.
  * 
- * @author manosetro
- * @email  manosetro@iti.gr
+ * @author manosetro - manosetro@iti.gr
  */
 public class FlickrRetriever extends SocialMediaRetriever {
 

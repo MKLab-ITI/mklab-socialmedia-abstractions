@@ -17,8 +17,8 @@ import gr.iti.mklab.framework.common.domain.Source;
 
 /**
  * Class that holds the information of a instagram image
- * @author ailiakop
- * @email  ailiakop@iti.gr
+ * @author Manos Schinas
+ * 
  */
 public class InstagramItem extends Item {
 

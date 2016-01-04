@@ -24,9 +24,7 @@ import gr.iti.mklab.framework.common.domain.MediaItem;
 /**
  * Class that holds the information of an RSS feed
  * 
- * @author Manos Schinas
- * 
- * @author manosetro@iti.gr
+ * @author Manos Schinas - manosetro@iti.gr
  */
 public class RSSItem extends Item {
 	

@@ -16,8 +16,7 @@ import gr.iti.mklab.framework.common.domain.feeds.LocationFeed;
  * The interface for retrieving from social media - Currently the social networks supprorted by the platform are the following:
  * YouTube, Google+,Twitter, Facebook, Flickr, Instagram, Topsy, Tumblr, Vimeo, DailyMotion, Twitpic
  * 
- * @author Manos Schinas
- * @email  manosetro@iti.gr
+ * @author Manos Schinas - manosetro@iti.gr
  */
 public abstract class SocialMediaRetriever implements Retriever {
 	
@@ -29,9 +28,9 @@ public abstract class SocialMediaRetriever implements Retriever {
 	 * Retrieves a keywords feed that contains certain keywords
 	 * in order to retrieve relevant content
 	 * 
-	 * @param feed
-	 * @return List<Item>
-	 * @throws Exception
+	 * @param feed KeywordsFeed
+	 * @return Response
+	 * @throws Exception exception 
 	 */
 	public Response retrieveKeywordsFeed(KeywordsFeed feed) throws Exception {
 		return retrieveKeywordsFeed(feed, 1);
@@ -43,9 +42,9 @@ public abstract class SocialMediaRetriever implements Retriever {
 	 * Retrieves a user feed that contains the user/users in 
 	 * order to retrieve content posted by them
 	 * 
-	 * @param feed
-	 * @return List<Item>
-	 * @throws Exception
+	 * @param feed AccountFeed
+	 * @return Response
+	 * @throws Exception exception
 	 */
 	public Response retrieveAccountFeed(AccountFeed feed) throws Exception {
 		return retrieveAccountFeed(feed, 1);
@@ -57,9 +56,9 @@ public abstract class SocialMediaRetriever implements Retriever {
 	 * Retrieves a location feed that contains the coordinates of the location
 	 * that the retrieved content must come from.
 	 * 
-	 * @param feed
-	 * @return List<Item>
-	 * @throws Exception
+	 * @param feed LocationFeed
+	 * @return Response
+	 * @throws Exception exception
 	 */
 	public Response retrieveLocationFeed(LocationFeed feed) throws Exception {
 		return retrieveLocationFeed(feed, 1);
@@ -70,9 +69,8 @@ public abstract class SocialMediaRetriever implements Retriever {
 	/**
 	 * Retrieves a list feed that contains the owner of a list an a slug 
 	 * used for the description of the list.
-	 * @param feed
-	 * @return
-	 * @throws Exception
+	 * @param feed GroupFeed
+	 * @return Response
 	 */
 	public Response retrieveGroupFeed(GroupFeed feed) {
 		return retrieveGroupFeed(feed, 1);
@@ -83,16 +81,16 @@ public abstract class SocialMediaRetriever implements Retriever {
 	/**
 	 * Retrieves the info for a specific user on the basis
 	 * of his id in the social network
-	 * @param uid
-	 * @return a StreamUser instance
+	 * @param uid the user id
+	 * @return StreamUser a StreamUser instance
 	 */
 	public abstract StreamUser getStreamUser(String uid);
 	
 	/**
 	 * Retrieves the info for a specific media object on the basis of its id in the social network
 	 * 
-	 * @param id
-	 * @return a MediaItem instance
+	 * @param id the id of a media item 
+	 * @return MediaItem a MediaItem instance
 	 */
 	public abstract MediaItem getMediaItem(String id);
 	

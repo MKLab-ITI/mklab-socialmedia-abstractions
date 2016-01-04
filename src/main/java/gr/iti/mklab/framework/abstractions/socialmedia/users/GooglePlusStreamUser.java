@@ -9,7 +9,6 @@ import gr.iti.mklab.framework.common.domain.StreamUser;
 /**
  * Class that holds the information of a google plus user
  * @author ailiakop
- * @email  ailiakop@iti.gr
  */
 public class GooglePlusStreamUser extends StreamUser {
 	

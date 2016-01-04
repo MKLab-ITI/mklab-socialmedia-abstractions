@@ -46,8 +46,7 @@ import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
  * Class responsible for retrieving Instagram content based on keywords or instagram users or locations
  * The retrieval process takes place through Instagram API.
  * 
- * @author manosetro
- * @email  manosetro@iti.gr
+ * @author manosetro - manosetro@iti.gr
  */
 public class InstagramRetriever extends SocialMediaRetriever {
 	

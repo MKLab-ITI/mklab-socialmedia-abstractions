@@ -25,9 +25,7 @@ import gr.iti.mklab.framework.common.domain.WebPage;
 /**
  * Class that holds the information of a tumblr post
  * 
- * @author 	Manos Schinas
- * 
- * @email  manosetro@iti.gr
+ * @author 	Manos Schinas -  manosetro@iti.gr
  */
 public class TumblrItem extends Item {
 	
