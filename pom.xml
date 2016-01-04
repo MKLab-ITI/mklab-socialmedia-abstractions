@@ -3,7 +3,7 @@
   	<modelVersion>4.0.0</modelVersion>
   	<groupId>gr.iti.mklab</groupId>
   	<artifactId>mklab-socialmedia-abstractions</artifactId>
-  	<version>0.2</version>
+  	<version>0.3-SNAPSHOT</version>
   	<packaging>jar</packaging>
   	
 	<name>mklab-socialmedia-abstractions</name>
@@ -36,7 +36,7 @@
         <connection>scm:git:git@github.com:MKLab-ITI/mklab-socialmedia-abstractions.git</connection>
         <developerConnection>scm:git:git@github.com:MKLab-ITI/mklab-socialmedia-abstractions.git</developerConnection>
         <url>git@github.com:MKLab-ITI/mklab-socialmedia-abstractions.git</url>
-  	  <tag>mklab-socialmedia-abstractions-0.2</tag>
+  	  <tag>HEAD</tag>
   </scm>
     
   	<properties>
