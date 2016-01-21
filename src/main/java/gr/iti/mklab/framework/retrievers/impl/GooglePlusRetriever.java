@@ -237,11 +237,16 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 		
 		logger.info("Search for (" + tagsQuery + ")");
 		boolean isFinished = false, sinceDateReached = false;
+		String nextPageToken = null;
 		while(true) {
 			try {
 				Plus.Activities.Search searchActivities = googlePlusService.activities().search(tagsQuery);
 				searchActivities.setMaxResults(20L);
 				searchActivities.setOrderBy("recent");
+				
+				if(nextPageToken != null) {
+					searchActivities.setPageToken(nextPageToken);
+				}
 				
 				ActivityFeed activityFeed = searchActivities.execute();
 				numberOfRequests++;
@@ -268,9 +273,10 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 						googlePlusItem.addLabel(label);
 					}
 
-					items.add(googlePlusItem);
-					
+					items.add(googlePlusItem);	
 				}
+				
+				nextPageToken = activityFeed.getNextPageToken();
 				
 				if(sinceDateReached) {
 					logger.info("Stop retriever. Since date " + sinceDate + " reached for (" + tagsQuery + ").");
@@ -291,8 +297,6 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 					logger.info("Stop retriever. Activity is null for (" + tagsQuery + ").");
 					break;
 				}
-				
-				searchActivities.setPageToken(activityFeed.getNextPageToken());
 				
 			} catch (IOException e) {
 				logger.error(e);

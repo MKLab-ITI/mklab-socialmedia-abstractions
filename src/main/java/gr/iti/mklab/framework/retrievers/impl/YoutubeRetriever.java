@@ -135,8 +135,9 @@ public class YoutubeRetriever extends SocialMediaRetriever{
                 
         			YouTube.Videos.List listVideosRequest = youtubeService.videos().list("snippet,statistics,recordingDetails,player");
         			listVideosRequest.setId(videoId);
-        			listVideosRequest.setKey(apiKey);
         			listVideosRequest.setMaxResults(NUMBER_OF_RESULTS_RETURNED);
+        			listVideosRequest.setKey(apiKey);
+        			
                 	VideoListResponse listResponse = listVideosRequest.execute();
                 	numberOfRequests++;
                 
@@ -427,21 +428,22 @@ public class YoutubeRetriever extends SocialMediaRetriever{
 	public static void main(String...args) throws Exception {
 		
 		Credentials credentials = new Credentials();
-		credentials.setKey("AIzaSyBs4RWhrqw9-3kCvvAN3qKJc79RI2DxOis");
+		credentials.setKey("");
 		
 		YoutubeRetriever retriever = new YoutubeRetriever(credentials);
 		
 		long since = System.currentTimeMillis()-(365*24*3600000l);
-		//KeywordsFeed feed = new KeywordsFeed("id", "barack obama", since, "Youtube");
-		
+		KeywordsFeed feed = new KeywordsFeed("id", "syria crisis", since, "Youtube");
+		/*
 		AccountFeed feed = new AccountFeed(
 				"UC16niRr50-MSBwiO3YDb3RA",
 				"bbcnews", 
 				since, 
 				"Youtube");
+		*/
 		
-		//Response response = retriever.retrieveKeywordsFeed(feed, 6);
-		Response response = retriever.retrieveAccountFeed(feed, 6);
+		Response response = retriever.retrieveKeywordsFeed(feed, 6);
+		//Response response = retriever.retrieveAccountFeed(feed, 6);
 		for(Item item : response.getItems()) {
 			System.out.println(item.getComments());
 		}
