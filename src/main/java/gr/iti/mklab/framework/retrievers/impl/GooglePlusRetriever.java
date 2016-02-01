@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
@@ -23,7 +24,6 @@ import com.google.api.services.plus.model.Activity;
 import com.google.api.services.plus.model.ActivityFeed;
 import com.google.api.services.plus.model.PeopleFeed;
 import com.google.api.services.plus.model.Person;
-import com.restfb.util.StringUtils;
 
 import gr.iti.mklab.framework.Credentials;
 import gr.iti.mklab.framework.abstractions.socialmedia.items.GooglePlusItem;
@@ -220,16 +220,16 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 			return response;
 		}
 		
-		String tagsQuery = "";
-		for(String key : keywords) {
-			String [] words = key.split(" ");
-			for(String word : words) {
-				if(!tagsQuery.contains(word) && word.length() > 1)
-					tagsQuery += word.toLowerCase() + " ";
-			}
+		List<String> queryParts = new ArrayList<String>();
+		for(String keyword : keywords) {
+			String [] parts = keyword.trim().split("\\s+");
+			String part = "(" + StringUtils.join(parts, " AND ") + ")";
+
+			queryParts.add(part);
 		}
-		tagsQuery = tagsQuery.trim();
-		
+
+		String tagsQuery = StringUtils.join(queryParts, " OR ");
+				
 		if(tagsQuery.equals("")) {
 			Response response = getResponse(items, numberOfRequests);
 			return response;
