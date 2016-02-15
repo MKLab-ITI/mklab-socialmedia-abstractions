@@ -90,7 +90,7 @@ public class RssRetriever implements Retriever {
 					}
 					
 					Item item = new RSSItem(entry);
-					item.setSource(sourceURL.getHost());
+					item.setUserId(sourceURL.getHost());
 					
 					String label = feed.getLabel();
 					if(label != null) {

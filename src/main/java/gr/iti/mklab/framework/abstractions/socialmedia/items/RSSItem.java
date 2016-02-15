@@ -20,6 +20,7 @@ import com.sun.syndication.feed.synd.SyndEntry;
 
 import gr.iti.mklab.framework.common.domain.Item;
 import gr.iti.mklab.framework.common.domain.MediaItem;
+import gr.iti.mklab.framework.common.domain.Source;
 
 /**
  * Class that holds the information of an RSS feed
@@ -96,6 +97,7 @@ public class RSSItem extends Item {
 			mediaIds.addAll(mediaFromContent.keySet());
 		}
 		
+		source = Source.RSS.toString();
 	}
 	
 	private String getContent(SyndEntry syndEntry) {
