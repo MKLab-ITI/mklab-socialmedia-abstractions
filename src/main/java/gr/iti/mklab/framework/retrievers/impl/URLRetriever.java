@@ -17,8 +17,15 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import gr.iti.mklab.framework.Credentials;
 import gr.iti.mklab.framework.common.domain.Item;
+import gr.iti.mklab.framework.common.domain.MediaItem;
+import gr.iti.mklab.framework.common.domain.StreamUser;
+import gr.iti.mklab.framework.common.domain.feeds.AccountFeed;
 import gr.iti.mklab.framework.common.domain.feeds.Feed;
+import gr.iti.mklab.framework.common.domain.feeds.GroupFeed;
+import gr.iti.mklab.framework.common.domain.feeds.KeywordsFeed;
+import gr.iti.mklab.framework.common.domain.feeds.LocationFeed;
 import gr.iti.mklab.framework.common.domain.feeds.URLFeed;
 import gr.iti.mklab.framework.retrievers.Response;
 import gr.iti.mklab.framework.retrievers.Retriever;
@@ -28,8 +35,13 @@ import gr.iti.mklab.framework.retrievers.Retriever;
  *  
  * @author Manos Schinas - manosetro@iti.gr
  */
-public class URLRetriever implements Retriever {
+public class URLRetriever extends Retriever {
 	
+	public URLRetriever(Credentials credentials) {
+		super(credentials);
+		
+	}
+
 	public final Logger logger = LogManager.getLogger(URLRetriever.class);
 	
 	@Override
@@ -101,19 +113,50 @@ public class URLRetriever implements Retriever {
 		
 		return items;
 	}
-	
+
 	@Override
-	public void stop() {
-	
+	public Response retrieveKeywordsFeed(KeywordsFeed feed, Integer requests)
+			throws Exception {
+		// TODO Auto-generated method stub
+		return null;
 	}
-	
-	public static void main(String...args) throws Exception {
-		URLRetriever retriever = new URLRetriever();
-		
-		Date since = new Date(System.currentTimeMillis()-3600000);
-		Feed feed = new URLFeed("vice", "http://www.express.co.uk/general-election-2015", since.getTime(), "URL");
-		
-		retriever.retrieve(feed);
+
+	@Override
+	public Response retrieveAccountFeed(AccountFeed feed, Integer requests)
+			throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Response retrieveLocationFeed(LocationFeed feed, Integer requests)
+			throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Response retrieveGroupFeed(GroupFeed feed, Integer maxRequests) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public StreamUser getStreamUser(String uid) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public MediaItem getMediaItem(String id) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Item getItem(String id) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 }

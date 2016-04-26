@@ -9,14 +9,14 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import com.sun.syndication.feed.module.content.ContentModule;
-import com.sun.syndication.feed.module.slash.Slash;
-import com.sun.syndication.feed.module.mediarss.MediaEntryModule;
-import com.sun.syndication.feed.module.mediarss.types.MediaContent;
-import com.sun.syndication.feed.module.mediarss.types.Metadata;
-import com.sun.syndication.feed.synd.SyndCategory;
-import com.sun.syndication.feed.synd.SyndEnclosure;
-import com.sun.syndication.feed.synd.SyndEntry;
+import com.rometools.modules.content.ContentModule;
+import com.rometools.modules.mediarss.MediaEntryModule;
+import com.rometools.modules.mediarss.types.MediaContent;
+import com.rometools.modules.mediarss.types.Metadata;
+import com.rometools.modules.slash.Slash;
+import com.rometools.rome.feed.synd.SyndCategory;
+import com.rometools.rome.feed.synd.SyndEnclosure;
+import com.rometools.rome.feed.synd.SyndEntry;
 
 import gr.iti.mklab.framework.common.domain.Item;
 import gr.iti.mklab.framework.common.domain.MediaItem;
@@ -68,8 +68,7 @@ public class RSSItem extends Item {
 		pageUrl = syndEntry.getLink();
 		
 		uid = syndEntry.getAuthor();
-		
-		@SuppressWarnings("unchecked")
+
 		List<SyndCategory> syndCategories = syndEntry.getCategories();
 		if(syndCategories != null) {
 			List<String> categories = new ArrayList<String>();
@@ -107,7 +106,6 @@ public class RSSItem extends Item {
 		if(contentModule == null)
 			return null;
 		
-		@SuppressWarnings("unchecked")
 		List<String> contents = contentModule.getContents();
 		for(Object contentPart : contents) {
 			contentBuffer.append(contentPart);
@@ -121,8 +119,7 @@ public class RSSItem extends Item {
 		String referenceId = syndEntry.getLink();
 		
 		Map<String, MediaItem> mediaItems = new HashMap<String, MediaItem>();
-		
-		@SuppressWarnings("unchecked")
+	
 		List<SyndEnclosure> enclosures = syndEntry.getEnclosures();
 		for(SyndEnclosure encl : enclosures) {
 			MediaItem mi = new MediaItem();

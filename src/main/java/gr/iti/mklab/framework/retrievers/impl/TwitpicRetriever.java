@@ -15,6 +15,7 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import gr.iti.mklab.framework.Credentials;
 import gr.iti.mklab.framework.abstractions.socialmedia.mediaitems.TwitPicMediaItem.TwitPicImage;
 import gr.iti.mklab.framework.abstractions.socialmedia.mediaitems.TwitPicMediaItem;
+import gr.iti.mklab.framework.common.domain.Item;
 import gr.iti.mklab.framework.common.domain.MediaItem;
 import gr.iti.mklab.framework.common.domain.StreamUser;
 import gr.iti.mklab.framework.common.domain.feeds.AccountFeed;
@@ -23,14 +24,14 @@ import gr.iti.mklab.framework.common.domain.feeds.GroupFeed;
 import gr.iti.mklab.framework.common.domain.feeds.KeywordsFeed;
 import gr.iti.mklab.framework.common.domain.feeds.LocationFeed;
 import gr.iti.mklab.framework.retrievers.Response;
-import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
+import gr.iti.mklab.framework.retrievers.Retriever;
 
 /**
  * The retriever that implements the Twitpic simplified retriever
  * 
  * @author manosetro - manosetro@iti.gr
  */
-public class TwitpicRetriever extends SocialMediaRetriever {
+public class TwitpicRetriever extends Retriever {
 
 	private static String requestPrefix = "http://api.twitpic.com/2/media/show.json?id=";
 	
@@ -74,11 +75,6 @@ public class TwitpicRetriever extends SocialMediaRetriever {
 	@Override
 	public Response retrieve(Feed feed) {
 		return new Response();
-	}
-
-	@Override
-	public void stop() {
-		
 	}
 
 	@Override
@@ -129,6 +125,12 @@ public class TwitpicRetriever extends SocialMediaRetriever {
 	@Override
 	public Response retrieveGroupFeed(GroupFeed feed, Integer maxRequests) {
 		return new Response();
+	}
+
+	@Override
+	public Item getItem(String id) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

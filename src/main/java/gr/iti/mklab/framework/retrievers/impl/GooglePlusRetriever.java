@@ -36,7 +36,7 @@ import gr.iti.mklab.framework.common.domain.feeds.GroupFeed;
 import gr.iti.mklab.framework.common.domain.feeds.KeywordsFeed;
 import gr.iti.mklab.framework.common.domain.feeds.LocationFeed;
 import gr.iti.mklab.framework.retrievers.Response;
-import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
+import gr.iti.mklab.framework.retrievers.Retriever;
 
 /**
  * Class responsible for retrieving Google+ content based on keywords or google+ users
@@ -44,7 +44,7 @@ import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
  * 
  * @author manosetro - manosetro@iti.gr
  */
-public class GooglePlusRetriever extends SocialMediaRetriever {
+public class GooglePlusRetriever extends Retriever {
 	
 	private Logger logger = LogManager.getLogger(GooglePlusRetriever.class);
 	
@@ -235,7 +235,8 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 			return response;
 		}
 		
-		logger.info("Search for (" + tagsQuery + ")");
+		logger.info("Text Query: (" + tagsQuery + ")" + (label==null ? "" : ("with label=" + label)));
+	
 		boolean isFinished = false, sinceDateReached = false;
 		String nextPageToken = null;
 		while(true) {
@@ -319,14 +320,31 @@ public class GooglePlusRetriever extends SocialMediaRetriever {
 	}
 	
 	@Override
-	public void stop() {
-		if(googlePlusService != null) {
-			googlePlusService = null;
-		}
+	public MediaItem getMediaItem(String id) {
+		return null;
 	}
 	
 	@Override
-	public MediaItem getMediaItem(String id) {
+	public Item getItem(String id) {
+		try {
+			Plus.Activities.Get get = googlePlusService.activities().get(id);
+			
+			Activity activity = get.execute();
+			if(activity != null) {
+				String verb = activity.getVerb();
+				String objectType = activity.getObject().getObjectType();
+				if(!verb.equals("post") && !verb.equals("share") && !objectType.equals("note") && !objectType.equals("activity")) {
+					return null;
+				}
+
+				Item item = new GooglePlusItem(activity);
+			
+				return item;
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
 		return null;
 	}
 	

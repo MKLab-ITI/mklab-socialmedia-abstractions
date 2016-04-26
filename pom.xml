@@ -132,27 +132,7 @@
     	</dependency>
     	
     	<!-- RSS -->
-    	<dependency>
-            <groupId>rome</groupId>
-            <artifactId>rome</artifactId>
-            <version>1.0</version>
-        </dependency>
-        
-       	<dependency>
-			<groupId>rome</groupId>
-			<artifactId>rome-fetcher</artifactId>
-			<version>1.0</version>
-			<exclusions>
-				<exclusion>
-					<artifactId>commons-logging</artifactId>
-					<groupId>commons-logging</groupId>
-				</exclusion>
-				<exclusion>
-					<artifactId>commons-logging-api</artifactId>
-					<groupId>commons-logging</groupId>
-				</exclusion>
-			</exclusions>
-       	</dependency>	
+        	
 
     	<dependency>
 			<groupId>joda-time</groupId>
@@ -178,11 +158,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.rometools</groupId>
-			<artifactId>rome-modules</artifactId>
-			<version>1.0</version>
-		</dependency>
-		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-core</artifactId>
 			<version>2.1</version>
@@ -192,7 +167,32 @@
 			<artifactId>log4j-1.2-api</artifactId>
 			<version>2.4.1</version>
 		</dependency>
-		
+
+		<dependency>
+			<groupId>com.rometools</groupId>
+			<artifactId>rome</artifactId>
+			<version>1.5.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.rometools</groupId>
+			<artifactId>rome-fetcher</artifactId>
+			<version>1.5.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.rometools</groupId>
+			<artifactId>rome-modules</artifactId>
+			<version>1.5.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.rometools</groupId>
+			<artifactId>rome-opml</artifactId>
+			<version>1.5.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.rometools</groupId>
+			<artifactId>rome-propono</artifactId>
+			<version>1.5.0</version>
+		</dependency>
     </dependencies>
    	
   	<repositories>

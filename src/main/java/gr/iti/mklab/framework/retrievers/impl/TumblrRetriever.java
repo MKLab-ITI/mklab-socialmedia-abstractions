@@ -30,7 +30,7 @@ import gr.iti.mklab.framework.common.domain.feeds.GroupFeed;
 import gr.iti.mklab.framework.common.domain.feeds.KeywordsFeed;
 import gr.iti.mklab.framework.common.domain.feeds.LocationFeed;
 import gr.iti.mklab.framework.retrievers.Response;
-import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
+import gr.iti.mklab.framework.retrievers.Retriever;
 
 /**
  * Class responsible for retrieving Tumblr content based on keywords or tumblr users
@@ -38,7 +38,7 @@ import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
  * 
  * @author manosetro - manosetro@iti.gr
  */
-public class TumblrRetriever extends SocialMediaRetriever {
+public class TumblrRetriever extends Retriever {
 	
 	private Logger logger = LogManager.getLogger(TumblrRetriever.class);
 	
@@ -250,16 +250,8 @@ public class TumblrRetriever extends SocialMediaRetriever {
 		return new Response();
 	}
 	
-	@Override
-	public void stop() {
-		if(client != null){
-			client = null;
-		}
-	}
-	public class DateUtil
-	{
-	    public Date addDays(Date date, int days)
-	    {
+	public class DateUtil {
+	    public Date addDays(Date date, int days) {
 	        Calendar cal = Calendar.getInstance();
 	        cal.setTime(date);
 	        cal.add(Calendar.DATE, days); //minus number decrements the days
@@ -274,6 +266,13 @@ public class TumblrRetriever extends SocialMediaRetriever {
 
 	@Override
 	public StreamUser getStreamUser(String uid) {
+		return null;
+	}
+
+
+	@Override
+	public Item getItem(String id) {
+		// TODO Auto-generated method stub
 		return null;
 	}
 

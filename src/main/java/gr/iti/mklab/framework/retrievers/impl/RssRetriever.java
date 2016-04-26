@@ -11,16 +11,23 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 import com.restfb.util.StringUtils;
-import com.sun.syndication.feed.synd.SyndEntry;
-import com.sun.syndication.feed.synd.SyndFeed;
-import com.sun.syndication.fetcher.FeedFetcher;
-import com.sun.syndication.fetcher.impl.FeedFetcherCache;
-import com.sun.syndication.fetcher.impl.HashMapFeedInfoCache;
-import com.sun.syndication.fetcher.impl.HttpURLFeedFetcher;
+import com.rometools.fetcher.FeedFetcher;
+import com.rometools.fetcher.impl.FeedFetcherCache;
+import com.rometools.fetcher.impl.HashMapFeedInfoCache;
+import com.rometools.fetcher.impl.HttpURLFeedFetcher;
+import com.rometools.rome.feed.synd.SyndEntry;
+import com.rometools.rome.feed.synd.SyndFeed;
 
+import gr.iti.mklab.framework.Credentials;
 import gr.iti.mklab.framework.abstractions.socialmedia.items.RSSItem;
 import gr.iti.mklab.framework.common.domain.Item;
+import gr.iti.mklab.framework.common.domain.MediaItem;
+import gr.iti.mklab.framework.common.domain.StreamUser;
+import gr.iti.mklab.framework.common.domain.feeds.AccountFeed;
 import gr.iti.mklab.framework.common.domain.feeds.Feed;
+import gr.iti.mklab.framework.common.domain.feeds.GroupFeed;
+import gr.iti.mklab.framework.common.domain.feeds.KeywordsFeed;
+import gr.iti.mklab.framework.common.domain.feeds.LocationFeed;
 import gr.iti.mklab.framework.common.domain.feeds.RssFeed;
 import gr.iti.mklab.framework.retrievers.Response;
 import gr.iti.mklab.framework.retrievers.Retriever;
@@ -31,8 +38,12 @@ import gr.iti.mklab.framework.retrievers.Retriever;
  * @author Manos Schinas - manosetro@iti.gr
  * 
  */
-public class RssRetriever implements Retriever {
+public class RssRetriever extends Retriever {
 	
+	public RssRetriever(Credentials credentials) {
+		super(credentials);	
+	}
+
 	public final Logger logger = LogManager.getLogger(RssRetriever.class);
 	
 	private FeedFetcherCache cache = HashMapFeedInfoCache.getInstance();
@@ -64,7 +75,6 @@ public class RssRetriever implements Retriever {
 		}
 		
 		Date since = new Date(rrsFeed.getSinceDate());
-		
 		try {
 			URL url = new URL(rrsFeed.getURL());
 			
@@ -77,13 +87,16 @@ public class RssRetriever implements Retriever {
 			String sourceLink = syndFeed.getLink();
 			URL sourceURL = new URL(sourceLink);
 
-			@SuppressWarnings("unchecked")
 			List<SyndEntry> entries = syndFeed.getEntries();
 			
 			for (SyndEntry entry : entries) {		
 				if(entry.getLink() != null) {
 					
 					Date publicationDate = entry.getPublishedDate();
+					if(publicationDate == null) {
+						continue;
+					}
+					
 					if(publicationDate.before(since)) {
 						logger.info(publicationDate + " before " + since);
 						break;
@@ -106,33 +119,28 @@ public class RssRetriever implements Retriever {
 		} catch (IOException e) {
 			logger.error(e);
 		} catch (Exception e) {
+			e.printStackTrace();
 			logger.error(e);
 		}
 	
 		response.setItems(items);
 		return response;
 	}
-
-	
-	@Override
-	public void stop() {
-	
-	}
 	
 	public static void main(String...args) throws Exception {
 		
-		String id = "businessgreen";
-		String url = "http://www.treehugger.com/feeds/latest/";		
+		String id = "unep";
+		String url = "https://www.greenbiz.com/rss.xml";		
 		String source = "RSS";
 		
 		long since = System.currentTimeMillis() - 90*24*3600*1000L;
 		
 		RssFeed feed = new RssFeed(id, url, since, source);
 			
-		RssRetriever retriever = new RssRetriever();
+		RssRetriever retriever = new RssRetriever(null);
 		Response response = retriever.retrieve(feed);
 		
-		System.out.println(response.getNumberOfItems());
+		System.out.println(response.getNumberOfItems() + " items");
 		for(Item item : response.getItems()) {
 			System.out.println("ID: " + item.getId());
 			System.out.println("Title: " + item.getTitle());
@@ -144,8 +152,48 @@ public class RssRetriever implements Retriever {
 			System.out.println("Tags: " + StringUtils.join(item.getTags()));
 			System.out.println(item.getMediaItems());
 			System.out.println("Comments: " + item.getComments());
+			System.out.println("------------------------------------");
+			System.out.println(item);
 			System.out.println("====================================");
 		}
+	}
+
+	@Override
+	public Response retrieveKeywordsFeed(KeywordsFeed feed, Integer requests)
+			throws Exception {
+		return null;
+	}
+
+	@Override
+	public Response retrieveAccountFeed(AccountFeed feed, Integer requests)
+			throws Exception {
+		return null;
+	}
+
+	@Override
+	public Response retrieveLocationFeed(LocationFeed feed, Integer requests)
+			throws Exception {
+		return null;
+	}
+
+	@Override
+	public Response retrieveGroupFeed(GroupFeed feed, Integer maxRequests) {
+		return null;
+	}
+
+	@Override
+	public StreamUser getStreamUser(String uid) {
+		return null;
+	}
+
+	@Override
+	public MediaItem getMediaItem(String id) {
+		return null;
+	}
+
+	@Override
+	public Item getItem(String id) {
+		return null;
 	}
 	
 }

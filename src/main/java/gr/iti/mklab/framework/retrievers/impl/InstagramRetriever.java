@@ -40,7 +40,7 @@ import gr.iti.mklab.framework.common.domain.feeds.GroupFeed;
 import gr.iti.mklab.framework.common.domain.feeds.KeywordsFeed;
 import gr.iti.mklab.framework.common.domain.feeds.LocationFeed;
 import gr.iti.mklab.framework.retrievers.Response;
-import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
+import gr.iti.mklab.framework.retrievers.Retriever;
 
 /**
  * Class responsible for retrieving Instagram content based on keywords or instagram users or locations
@@ -48,7 +48,7 @@ import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
  * 
  * @author manosetro - manosetro@iti.gr
  */
-public class InstagramRetriever extends SocialMediaRetriever {
+public class InstagramRetriever extends Retriever {
 	
 	private Logger logger = LogManager.getLogger(InstagramRetriever.class);
 	
@@ -276,6 +276,7 @@ public class InstagramRetriever extends SocialMediaRetriever {
 				
 				Response response = getResponse(items, numberOfRequests);
 				return response;
+				
 			} catch (MalformedURLException e) {
 				logger.error("Instagram retriever exception for (" + feed.getId() + ")", e);
 				
@@ -380,13 +381,6 @@ public class InstagramRetriever extends SocialMediaRetriever {
 	@Override
 	public Response retrieveGroupFeed(GroupFeed feed, Integer maxRequests) {
 		return new Response();
-	}
-	
-	@Override
-	public void stop() {
-		if(instagram != null){
-			instagram = null;
-		}
 	}
 
 	@Override
@@ -525,6 +519,32 @@ public class InstagramRetriever extends SocialMediaRetriever {
 			System.out.println(item.getPageUrl());
 		}
 		System.out.println(response.getNumberOfItems());
+	}
+
+	@Override
+	public Item getItem(String id) {
+		String itemId = getMediaId("http://instagram.com/p/"+id);
+		if(itemId == null) {
+			return null;
+		}
+		
+		MediaInfoFeed mediaInfo;
+		try {
+			mediaInfo = instagram.getMediaInfo(id);
+			if(mediaInfo != null) {
+				Item item = new InstagramItem(mediaInfo.getData());
+				
+				return item;
+			}
+			
+		} catch (InstagramException e) {
+			e.printStackTrace();
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		}
+		
+		
+		return null;
 	}
 	
 }

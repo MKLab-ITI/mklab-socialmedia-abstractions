@@ -37,7 +37,7 @@ import gr.iti.mklab.framework.common.domain.feeds.GroupFeed;
 import gr.iti.mklab.framework.common.domain.feeds.KeywordsFeed;
 import gr.iti.mklab.framework.common.domain.feeds.LocationFeed;
 import gr.iti.mklab.framework.retrievers.Response;
-import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
+import gr.iti.mklab.framework.retrievers.Retriever;
 
 /**
  * Class responsible for retrieving facebook content based on keywords or facebook users/facebook pages
@@ -46,7 +46,7 @@ import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
  * @author manosetro - manosetro@iti.gr
  * 
  */
-public class FacebookRetriever extends SocialMediaRetriever {
+public class FacebookRetriever extends Retriever {
 			
 	private Logger logger = LogManager.getLogger(FacebookRetriever.class);
 	
@@ -165,13 +165,6 @@ public class FacebookRetriever extends SocialMediaRetriever {
 	public Response retrieveGroupFeed(GroupFeed feed, Integer maxRequests) {
 		return new Response();
 	}
-	
-	
-	@Override
-	public void stop() {
-		if(facebookClient != null)
-			facebookClient = null;
-	}
 
 	@Override
 	public MediaItem getMediaItem(String mediaId) {
@@ -236,6 +229,22 @@ public class FacebookRetriever extends SocialMediaRetriever {
 		return mediaItem;
 	}
 
+	@Override
+	public Item getItem(String id) {
+		try {
+			Post post = facebookClient.fetchObject(id, Post.class);
+			if(post != null) {
+				Item item = new FacebookItem(post);
+				return item;
+			}
+		}
+		catch(Exception e) {
+			
+		}
+		
+		return null;
+	}
+	
 	@Override
 	public StreamUser getStreamUser(String uid) {
 		try {

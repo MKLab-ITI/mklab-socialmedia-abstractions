@@ -14,6 +14,7 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import gr.iti.mklab.framework.Credentials;
 import gr.iti.mklab.framework.abstractions.socialmedia.mediaitems.VimeoMediaItem;
 import gr.iti.mklab.framework.abstractions.socialmedia.mediaitems.VimeoMediaItem.VimeoVideo;
+import gr.iti.mklab.framework.common.domain.Item;
 import gr.iti.mklab.framework.common.domain.MediaItem;
 import gr.iti.mklab.framework.common.domain.StreamUser;
 import gr.iti.mklab.framework.common.domain.feeds.AccountFeed;
@@ -22,14 +23,14 @@ import gr.iti.mklab.framework.common.domain.feeds.GroupFeed;
 import gr.iti.mklab.framework.common.domain.feeds.KeywordsFeed;
 import gr.iti.mklab.framework.common.domain.feeds.LocationFeed;
 import gr.iti.mklab.framework.retrievers.Response;
-import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
+import gr.iti.mklab.framework.retrievers.Retriever;
 
 /**
  * The retriever that implements the Vimeo simplified retriever
  * 
  * @author manosetro - manosetro@iti.gr
  */
-public class VimeoRetriever extends SocialMediaRetriever {
+public class VimeoRetriever extends Retriever {
 
 	static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
 	static final JsonFactory JSON_FACTORY = new JacksonFactory();
@@ -74,11 +75,6 @@ public class VimeoRetriever extends SocialMediaRetriever {
 	@Override
 	public Response retrieve(Feed feed) {
 		return new Response();
-	}
-
-	@Override
-	public void stop() {
-		
 	}
 
 	@Override
@@ -129,6 +125,11 @@ public class VimeoRetriever extends SocialMediaRetriever {
 
 	@Override
 	public Response retrieveGroupFeed(GroupFeed feed, Integer requests) {
+		return null;
+	}
+
+	@Override
+	public Item getItem(String id) {
 		return null;
 	}
 

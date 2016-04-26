@@ -35,7 +35,7 @@ import gr.iti.mklab.framework.common.domain.feeds.GroupFeed;
 import gr.iti.mklab.framework.common.domain.feeds.KeywordsFeed;
 import gr.iti.mklab.framework.common.domain.feeds.LocationFeed;
 import gr.iti.mklab.framework.retrievers.Response;
-import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
+import gr.iti.mklab.framework.retrievers.Retriever;
 
 /**
  * Class responsible for retrieving Twitter content based on keywords, twitter users or locations
@@ -43,7 +43,7 @@ import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
  * 
  * @author Manos Schinas - manosetro@iti.gr
  */
-public class TwitterRetriever extends SocialMediaRetriever {
+public class TwitterRetriever extends Retriever {
 	
 	private Logger  logger = LogManager.getLogger(TwitterRetriever.class);
 	
@@ -86,7 +86,7 @@ public class TwitterRetriever extends SocialMediaRetriever {
 			return response;
 		}
 		
-		logger.info("Retrieve timeline for user @" + screenName);
+		logger.info("Retrieve timeline for user @" + screenName + " (" + uid + ")");
 
 		int page = 1;
 		Paging paging = new Paging(page, count);
@@ -123,11 +123,11 @@ public class TwitterRetriever extends SocialMediaRetriever {
 				}
 				
 				if(numberOfRequests >= requests) {	
-					logger.info("Stop retriever. Number of requests (" + numberOfRequests + ") has reached for @" + screenName);
+					logger.info("Stop retriever. Number of requests (" + numberOfRequests + ") has reached for @" + screenName + " (" + uid + ")");
 					break;
 				}
 				if(sinceDateReached) {
-					logger.info("Stop retriever. Since date " + sinceDate + " reached for user " + screenName);
+					logger.info("Stop retriever. Since date " + sinceDate + " reached for user @" + screenName + " (" + uid + ")");
 					break;
 				}
 				paging.setPage(++page);
@@ -168,7 +168,8 @@ public class TwitterRetriever extends SocialMediaRetriever {
 		}
 		
 		//Set the query
-		logger.info("Query: (" + textQuery + ") with label=" + label);
+		logger.info("Text Query: (" + textQuery + ")" + (label==null ? "" : ("with label=" + label)));
+		
 		Query query = new Query(textQuery);
 	
 		//query.setUntil("2012-02-01");
@@ -361,18 +362,32 @@ public class TwitterRetriever extends SocialMediaRetriever {
 		Response response = getResponse(items, numberOfRequests);
 		return response;
 	}
-	
-	
-	@Override
-	public void stop() {
-		twitter = null;
-	}
 
 	@Override
 	public MediaItem getMediaItem(String id) {
 		return null;
 	}
 
+	@Override
+	public Item getItem(String id) {
+		try {
+			long twId = Long.parseLong(id);
+			Status status = twitter.showStatus(twId);
+			
+			if(status != null) {
+				Item item  = new TwitterItem(status);
+				
+				return item;
+			}
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+
+	
 	@Override
 	public StreamUser getStreamUser(String uid) {
 		try {

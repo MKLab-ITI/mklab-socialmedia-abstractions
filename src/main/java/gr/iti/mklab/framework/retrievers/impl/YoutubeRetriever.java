@@ -40,9 +40,9 @@ import gr.iti.mklab.framework.common.domain.feeds.GroupFeed;
 import gr.iti.mklab.framework.common.domain.feeds.KeywordsFeed;
 import gr.iti.mklab.framework.common.domain.feeds.LocationFeed;
 import gr.iti.mklab.framework.retrievers.Response;
-import gr.iti.mklab.framework.retrievers.SocialMediaRetriever;
+import gr.iti.mklab.framework.retrievers.Retriever;
 
-public class YoutubeRetriever extends SocialMediaRetriever{
+public class YoutubeRetriever extends Retriever {
 
 	private Logger  logger = LogManager.getLogger(YoutubeRetriever.class);
 
@@ -73,11 +73,6 @@ public class YoutubeRetriever extends SocialMediaRetriever{
 	}
 
 	@Override
-	public void stop() {
-		
-	}
-
-	@Override
 	public Response retrieveKeywordsFeed(KeywordsFeed feed, Integer requests) throws Exception {
 				
 		String label = feed.getLabel();
@@ -100,11 +95,14 @@ public class YoutubeRetriever extends SocialMediaRetriever{
 		}
 		
 		String textQuery = StringUtils.join(keywords, " OR ");
-		if(textQuery.equals("")) {
+		if(textQuery == null || textQuery.equals("")) {
 			logger.error("Text Query is empty.");
 			Response response = getResponse(items, numberOfRequests);
 			return response;
 		}
+		
+		logger.info("Text Query: (" + textQuery + ")" + (label==null ? "" : ("with label=" + label)));
+		
         search.setQ(textQuery);
         search.setType("video");
         search.setMaxResults(NUMBER_OF_RESULTS_RETURNED);
@@ -162,7 +160,7 @@ public class YoutubeRetriever extends SocialMediaRetriever{
         	
         		nextPageToken = searchResponse.getNextPageToken();
         		if(nextPageToken == null) {
-        			logger.info("Stop retriever. There is no more pages to fetch for query " + textQuery);
+        			logger.info("Stop retriever. There is no more pages to fetch for query (" + textQuery + ")");
         			break;
         		}
         				
@@ -228,7 +226,7 @@ public class YoutubeRetriever extends SocialMediaRetriever{
 			Response response = getResponse(items, numberOfRequests);
 			return response;
 		}
-		logger.info("#YouTube: Retrieving User Feed: " + streamUser.getUserid());
+		logger.info("#YouTube: Retrieving User Feed " + streamUser.getUserid());
 		
 		// Define the API request for retrieving search results.
         YouTube.Search.List search = youtubeService.search().list("id");
@@ -425,6 +423,34 @@ public class YoutubeRetriever extends SocialMediaRetriever{
 		return null;
 	}
 
+	@Override
+	public Item getItem(String id) {
+		YouTube.Videos.List listVideosRequest;
+		try {
+			listVideosRequest = youtubeService.videos().list("snippet,statistics,recordingDetails,player");
+			
+			listVideosRequest.setId(id);
+			listVideosRequest.setMaxResults(NUMBER_OF_RESULTS_RETURNED);
+			listVideosRequest.setKey(apiKey);
+			
+	    	VideoListResponse listResponse = listVideosRequest.execute();
+	    	
+	    	List<Video> videos = listResponse.getItems();
+	    	for(Video v : videos) {
+	    		if(v.getId().equals(id)) {
+	    			Item item = new YoutubeItem(v);
+	    			
+	    			return item;
+	    		}
+	    		
+	    	}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+	
 	public static void main(String...args) throws Exception {
 		
 		Credentials credentials = new Credentials();
