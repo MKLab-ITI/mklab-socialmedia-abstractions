@@ -131,11 +131,10 @@ public class RssRetriever extends Retriever {
 		
 		String id = "unep";
 		String url = "https://www.greenbiz.com/rss.xml";		
-		String source = "RSS";
 		
 		long since = System.currentTimeMillis() - 90*24*3600*1000L;
 		
-		RssFeed feed = new RssFeed(id, url, since, source);
+		RssFeed feed = new RssFeed(id, url, since);
 			
 		RssRetriever retriever = new RssRetriever(null);
 		Response response = retriever.retrieve(feed);
