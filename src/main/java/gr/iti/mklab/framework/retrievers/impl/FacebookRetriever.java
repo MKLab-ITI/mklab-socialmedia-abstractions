@@ -288,13 +288,13 @@ public class FacebookRetriever extends Retriever {
 	
 	public static void main(String...args) {
 		
-		String uid = "20373776304";
-		Date since = new Date(System.currentTimeMillis() - 48*3600000l);
+		String uid = "7236107677";
+		Date since = new Date(System.currentTimeMillis() - 12*3600000l);
 		
-		AccountFeed aFeed = new AccountFeed(uid, "WWF", since.getTime(), "Facebook");
+		AccountFeed aFeed = new AccountFeed(uid, "skaigr", since.getTime(), "Facebook");
 		
 		Credentials credentials = new Credentials();
-		credentials.setAccessToken("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+		credentials.setAccessToken("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
 		
 		
 		FacebookRetriever retriever = new FacebookRetriever(credentials);
@@ -302,12 +302,7 @@ public class FacebookRetriever extends Retriever {
 		Response response = retriever.retrieveAccountFeed(aFeed, 1);
 		System.out.println(response.getNumberOfItems() + " items found for " + aFeed.getId());
 		for(Item item : response.getItems()) {
-			if(!item.getMediaIds().isEmpty()) {
-				System.out.println(item.getId());
-				System.out.println(item.getMediaIds());
-				System.out.println(item.getStreamUser());
-				System.out.println("=============================================================");
-			}
+			System.out.println(item.toString());
 		}
 		
 	}

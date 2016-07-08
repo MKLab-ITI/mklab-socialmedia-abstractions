@@ -48,7 +48,7 @@ public class FacebookItem extends Item {
 		}
 		
 		//Id
-		id = Source.Facebook+"#"+post.getId();
+		id = Source.Facebook + "#" + post.getId();
 		
 		//SocialNetwork Name
 		source = Source.Facebook.toString();
@@ -56,47 +56,51 @@ public class FacebookItem extends Item {
 		//Timestamp of the creation of the post
 		publicationTime = post.getCreatedTime().getTime();
 		
-		//post's descritpion
-		description = post.getDescription();
-		
 		//is this the original or a shared fb post
 		original = true;
 		
-		//Message that post contains
-  		String msg = post.getMessage();
-  		if(msg != null) {
-  			if(msg.length() > 100) {
-  				title = msg.subSequence(0, 100) + "...";
+		String type = post.getType();
+			
+  		description = post.getDescription();
+  		
+  		if(type.equals("status") || type.equals("photo") || type.equals("video")) {
+  			String title = post.getMessage();
+  			if(title == null) {
+  	 			if(post.getCaption() != null) {
+  	 				title = post.getCaption();
+  	 			}
+  	 			if(post.getName() != null) {
+  	 				title = post.getName();
+  	 			}
+  	 			else if(description != null) {
+  	 				if(description.length() > 100) {
+  	 					title = description.subSequence(0, 100)+"...";
+  	 				}
+  	 				else { 
+  	 					title = description;
+  	 				}
+  	 			}
+  	 			else {
+  	 				title = "";
+  	 			}
+  			}
+  			else if(title.length() > 100) {
+  				this.title = title.subSequence(0, 100) + "...";
   			}
   			else {
-  				title = msg;
+  				this.title = title;
   			}
-  		}
- 		else {
- 			if(post.getCaption() != null) {
- 				title = post.getCaption();
- 			}
- 			else if(post.getName() != null) {
- 				title = post.getName();
- 			}
- 			else if(description != null) {
- 				if(description.length()>100) {
- 					title = description.subSequence(0, 100)+"...";
- 				}
- 				else { 
- 					title = description;
- 				}
- 			}
- 			else {
- 				title = "";
- 			}	
- 		}
-		
+  			
+  			if(description == null) {
+  				description = title;
+  			}
+		}
+  		else if(type.equals("link")) {
+  			title = post.getName();
+  			description = post.getDescription();
+		}
 
-  		if(msg != null) {
-  			text = msg;
-  		}
-  		else if(description != null) {
+  		if(description != null) {
   		 	text = description;
   		}
   		else {
@@ -156,9 +160,7 @@ public class FacebookItem extends Item {
 			}
 		}
 		
-		//Media Items - WebPages in a post
-		String type = post.getType();
-		
+		//Media Items - WebPages in a post		
 		if(type.equals("photo")) {
 			pageUrl = post.getLink();
 			String picture = post.getPicture();
