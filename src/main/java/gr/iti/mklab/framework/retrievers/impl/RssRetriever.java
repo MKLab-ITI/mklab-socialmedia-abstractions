@@ -74,6 +74,13 @@ public class RssRetriever extends Retriever {
 			return response;
 		}
 		
+		StreamUser user = new StreamUser();
+		user.setId(rrsFeed.getId());
+		user.setUsername(rrsFeed.getURL());
+		user.setName(rrsFeed.getName());
+		user.setSource(rrsFeed.getSource());
+		user.setProfileImage("imgs/noprofile.gif");
+		
 		Date since = new Date(rrsFeed.getSinceDate());
 		try {
 			URL url = new URL(rrsFeed.getURL());
@@ -83,12 +90,7 @@ public class RssRetriever extends Retriever {
 				syndFeed = feedFetcher.retrieveFeed(url);
 			}
 			
-			
-			String sourceLink = syndFeed.getLink();
-			URL sourceURL = new URL(sourceLink);
-
 			List<SyndEntry> entries = syndFeed.getEntries();
-			
 			for (SyndEntry entry : entries) {		
 				if(entry.getLink() != null) {
 					
@@ -103,7 +105,11 @@ public class RssRetriever extends Retriever {
 					}
 					
 					Item item = new RSSItem(entry);
-					item.setUserId(sourceURL.getHost());
+					item.setUserId(rrsFeed.getId());
+					
+					URL pageUrl = new URL(entry.getLink());
+					user.setPageUrl(pageUrl.getProtocol() + "://" + pageUrl.getHost());
+					item.setStreamUser(user);
 					
 					String label = feed.getLabel();
 					if(label != null) {
@@ -130,7 +136,7 @@ public class RssRetriever extends Retriever {
 	public static void main(String...args) throws Exception {
 		
 		String id = "unep";
-		String url = "https://www.greenbiz.com/rss.xml";		
+		String url = "http://news.in.gr/feed/news";		
 		
 		long since = System.currentTimeMillis() - 90*24*3600*1000L;
 		
@@ -152,7 +158,7 @@ public class RssRetriever extends Retriever {
 			System.out.println(item.getMediaItems());
 			System.out.println("Comments: " + item.getComments());
 			System.out.println("------------------------------------");
-			System.out.println(item);
+			System.out.println(item.getStreamUser());
 			System.out.println("====================================");
 		}
 	}
