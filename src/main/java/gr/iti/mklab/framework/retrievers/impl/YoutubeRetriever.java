@@ -27,6 +27,7 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.util.DateTime;
 import com.google.api.client.util.Joiner;
 
 import gr.iti.mklab.framework.Credentials;
@@ -106,8 +107,9 @@ public class YoutubeRetriever extends Retriever {
         search.setQ(textQuery);
         search.setType("video");
         search.setMaxResults(NUMBER_OF_RESULTS_RETURNED);
-        search.setOrder("date");
-        
+        search.setPublishedBefore(new DateTime(System.currentTimeMillis()));
+		search.setPublishedAfter(new DateTime(feed.getSinceDate()));
+
         Set<String> uids = new HashSet<String>();
         boolean sinceDateReached = false;
         String nextPageToken = null;
@@ -130,7 +132,7 @@ public class YoutubeRetriever extends Retriever {
         			}
         			Joiner stringJoiner = Joiner.on(',');
         			String videoId = stringJoiner.join(videoIds);
-                
+        			
         			YouTube.Videos.List listVideosRequest = youtubeService.videos().list("snippet,statistics,recordingDetails,player");
         			listVideosRequest.setId(videoId);
         			listVideosRequest.setMaxResults(NUMBER_OF_RESULTS_RETURNED);
@@ -146,7 +148,7 @@ public class YoutubeRetriever extends Retriever {
                 			Item item = new YoutubeItem(video);
                 			if(item.getPublicationTime() < sinceDate) {
                 				sinceDateReached = true;
-								break;
+								continue;
                 			}
                 			
 							if(label != null) {
@@ -232,7 +234,10 @@ public class YoutubeRetriever extends Retriever {
         YouTube.Search.List search = youtubeService.search().list("id");
         search.setKey(apiKey);
         search.setChannelId(streamUser.getUserid());
-        search.setOrder("date");
+        //search.setOrder("date");
+        search.setType("video");
+        search.setPublishedBefore(new DateTime(System.currentTimeMillis()));
+		search.setPublishedAfter(new DateTime(feed.getSinceDate()));
         search.setMaxResults(NUMBER_OF_RESULTS_RETURNED);
         
 		boolean sinceDateReached = false;
@@ -270,7 +275,7 @@ public class YoutubeRetriever extends Retriever {
                 			Item item = new YoutubeItem(video, streamUser);
                 			if(item.getPublicationTime() < sinceDate) {
                 				sinceDateReached = true;
-								break;
+								continue;
                 			}
                 			
 							if(label != null) {
@@ -439,7 +444,6 @@ public class YoutubeRetriever extends Retriever {
 	    	for(Video v : videos) {
 	    		if(v.getId().equals(id)) {
 	    			Item item = new YoutubeItem(v);
-	    			
 	    			return item;
 	    		}
 	    		
@@ -458,24 +462,16 @@ public class YoutubeRetriever extends Retriever {
 		
 		YoutubeRetriever retriever = new YoutubeRetriever(credentials);
 		
-		long since = System.currentTimeMillis()-(365*24*3600000l);
-		KeywordsFeed feed = new KeywordsFeed("id", "syria crisis", since, "Youtube");
-		/*
-		AccountFeed feed = new AccountFeed(
-				"UC16niRr50-MSBwiO3YDb3RA",
-				"bbcnews", 
-				since, 
-				"Youtube");
-		*/
+		long since = System.currentTimeMillis()-(24*3600000l);
+		//KeywordsFeed feed = new KeywordsFeed("id", "food waste", since, "Youtube");
+		AccountFeed feed = new AccountFeed("UCWAsWgFVqxDzwExfOdYjAcg", "wtaetv", since, "Youtube");
 		
-		Response response = retriever.retrieveKeywordsFeed(feed, 6);
-		//Response response = retriever.retrieveAccountFeed(feed, 6);
-		for(Item item : response.getItems()) {
-			System.out.println(item.getComments());
-		}
+		Response response = retriever.retrieve(feed, 6);
 		System.out.println(response.getNumberOfItems());
-		//StreamUser user = retriever.getStreamUser("bbcnews");
-		
+	
+		for(Item item : response.getItems()) {
+			System.out.println(item.getTitle());
+		}
 		
 	}
 	
