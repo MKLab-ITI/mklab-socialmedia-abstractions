@@ -105,7 +105,7 @@ public class RssRetriever extends Retriever {
 					}
 					
 					Item item = new RSSItem(entry);
-					item.setUserId(rrsFeed.getId());
+					item.setUserId(rrsFeed.getSource() + "#" + rrsFeed.getId());
 					
 					URL pageUrl = new URL(entry.getLink());
 					user.setPageUrl(pageUrl.getProtocol() + "://" + pageUrl.getHost());
