@@ -1,7 +1,14 @@
 package gr.iti.mklab.framework;
 
-public class Credentials {
+import java.io.Serializable;
 
+public class Credentials implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -278602176191233881L;
+	
 	private String key;
 	private String secret;
 	
