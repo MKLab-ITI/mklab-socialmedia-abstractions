@@ -75,7 +75,7 @@ public class RssRetriever extends Retriever {
 		}
 		
 		StreamUser user = new StreamUser();
-		user.setId(rrsFeed.getId());
+		user.setId(rrsFeed.getSource() + "#" + rrsFeed.getId());
 		user.setUsername(rrsFeed.getURL());
 		user.setName(rrsFeed.getName());
 		user.setSource(rrsFeed.getSource());
