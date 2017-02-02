@@ -384,5 +384,11 @@ public class GooglePlusRetriever extends Retriever {
 			System.out.println(StringUtils.join(item.getTags()));
 		}
 	}
+
+	@Override
+	public List<Item> getItemComments(Item item, long since) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 	
 }

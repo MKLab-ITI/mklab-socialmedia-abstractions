@@ -7,14 +7,14 @@ import java.util.List;
 
 import com.restfb.types.CategorizedFacebookType;
 import com.restfb.types.Comment;
-import com.restfb.types.Comment.Attachment;
-import com.restfb.types.Comment.Media;
 import com.restfb.types.NamedFacebookType;
 import com.restfb.types.Place;
 import com.restfb.types.Post;
 import com.restfb.types.Post.Comments;
 import com.restfb.types.Post.Likes;
 import com.restfb.types.Post.Shares;
+import com.restfb.types.StoryAttachment;
+import com.restfb.types.StoryAttachment.Media;
 import com.restfb.types.User;
 
 import gr.iti.mklab.framework.abstractions.socialmedia.users.FacebookStreamUser;
@@ -395,10 +395,11 @@ public class FacebookItem extends Item {
 		original = false;
 		
 		//Popularity of the post
-		if(comment.getLikeCount() != null)
+		if(comment.getLikeCount() != null) {
 			likes = comment.getLikeCount();
+		}
 		
-		Attachment attachment = comment.getAttachment();
+		StoryAttachment attachment = comment.getAttachment();
 		if(attachment != null) {
 			Media media = attachment.getMedia();
 

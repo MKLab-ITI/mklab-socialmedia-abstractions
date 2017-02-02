@@ -276,4 +276,11 @@ public class TumblrRetriever extends Retriever {
 		return null;
 	}
 
+
+	@Override
+	public List<Item> getItemComments(Item item, long since) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

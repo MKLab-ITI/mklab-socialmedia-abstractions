@@ -200,5 +200,11 @@ public class RssRetriever extends Retriever {
 	public Item getItem(String id) {
 		return null;
 	}
+
+	@Override
+	public List<Item> getItemComments(Item item, long since) {
+
+		return null;
+	}
 	
 }

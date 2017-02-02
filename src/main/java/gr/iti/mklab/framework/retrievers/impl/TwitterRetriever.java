@@ -450,5 +450,19 @@ public class TwitterRetriever extends Retriever {
 		}
 		
 	}
+
+	@Override
+	public List<Item> getItemComments(Item item, long since) {
+
+		Query query = new Query();
+		
+		try {
+			twitter.search(query);
+		} catch (TwitterException e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
 	
 }

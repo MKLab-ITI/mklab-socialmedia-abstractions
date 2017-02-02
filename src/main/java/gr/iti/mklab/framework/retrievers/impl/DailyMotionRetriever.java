@@ -1,6 +1,8 @@
 package gr.iti.mklab.framework.retrievers.impl;
 
 
+import java.util.List;
+
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
@@ -115,6 +117,12 @@ public class DailyMotionRetriever extends Retriever {
 
 	@Override
 	public Item getItem(String id) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<Item> getItemComments(Item item, long since) {
 		// TODO Auto-generated method stub
 		return null;
 	}

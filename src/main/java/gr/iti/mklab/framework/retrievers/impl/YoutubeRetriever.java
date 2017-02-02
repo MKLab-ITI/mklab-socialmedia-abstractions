@@ -455,6 +455,12 @@ public class YoutubeRetriever extends Retriever {
 		return null;
 	}
 	
+	@Override
+	public List<Item> getItemComments(Item item, long since) {
+
+		return null;
+	}
+	
 	public static void main(String...args) throws Exception {
 		
 		Credentials credentials = new Credentials();

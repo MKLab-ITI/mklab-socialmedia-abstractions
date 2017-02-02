@@ -158,5 +158,11 @@ public class URLRetriever extends Retriever {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	@Override
+	public List<Item> getItemComments(Item item, long since) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 	
 }

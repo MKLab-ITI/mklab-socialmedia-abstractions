@@ -380,5 +380,11 @@ public class FlickrRetriever extends Retriever {
 			System.out.println(item);
 		}
 	}
+
+	@Override
+	public List<Item> getItemComments(Item item, long since) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 	
 }

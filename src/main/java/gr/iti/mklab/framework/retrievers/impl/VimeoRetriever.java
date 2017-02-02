@@ -1,5 +1,7 @@
 package gr.iti.mklab.framework.retrievers.impl;
 
+import java.util.List;
+
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
@@ -133,4 +135,9 @@ public class VimeoRetriever extends Retriever {
 		return null;
 	}
 
+	@Override
+	public List<Item> getItemComments(Item item, long since) {
+
+		return null;
+	}
 }

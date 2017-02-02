@@ -20,6 +20,8 @@ import com.restfb.JsonMapper;
 import com.restfb.Parameter;
 import com.restfb.Version;
 import com.restfb.types.CategorizedFacebookType;
+import com.restfb.types.Comment;
+import com.restfb.types.Comment.Comments;
 import com.restfb.types.Page;
 import com.restfb.types.Photo;
 import com.restfb.types.Photo.Image;
@@ -51,11 +53,12 @@ public class FacebookRetriever extends Retriever {
 	private Logger logger = LogManager.getLogger(FacebookRetriever.class);
 	
 	private FacebookClient facebookClient;
-	private String fields = "id,from,to,message,source,caption,picture,full_picture,link,object_id,name,description,type,created_time,updated_time,likes.summary(true),comments.summary(true),shares";
+	private String fields = "id,from,to,message,source,caption,picture,full_picture,link,object_id,name,description,type,"
+			+ "created_time,updated_time,likes.limit(0).summary(true),comments.limits(0).summary(true),shares";
 	
 	public FacebookRetriever(Credentials credentials) {
 		super(credentials);
-		facebookClient = new DefaultFacebookClient(credentials.getAccessToken(), Version.VERSION_2_5);
+		facebookClient = new DefaultFacebookClient(credentials.getAccessToken(), Version.LATEST);
 	}
 
 	@Override
@@ -107,7 +110,7 @@ public class FacebookRetriever extends Retriever {
 				);
 			
 			for(List<Post> connectionPage : connection) {
-				
+				logger.info(connectionPage.size());
 				numberOfRequests++;			
 				for(Post post : connectionPage) {						
 					Date publicationDate = post.getCreatedTime();
@@ -284,27 +287,71 @@ public class FacebookRetriever extends Retriever {
 		}
 		return users;
 	}
-	
-	
+
+	@Override
+	public List<Item> getItemComments(Item item, long since) {
+		List<Item> itemComments = new ArrayList<Item>();
+		
+		int numberOfRequests = 0;
+		String id = item.getId().split("#")[1];
+		Connection<Comments> connection = facebookClient.fetchConnection(id + "/comments", Comments.class,
+			Parameter.with("order", "reverse_chronological"),
+			Parameter.with("summary", false),
+			Parameter.with("filter", "stream")
+		);
+
+		Date when = new Date(since);
+		
+		boolean shouldBreak = false;
+		for(List<Comments> connectionPage : connection) {
+			numberOfRequests++;			
+			for(Comments comments : connectionPage) {					
+				for(Comment comment : comments.getData()) {
+					if(comment.getCreatedTime().before(when)) {
+						shouldBreak = true;
+						break;
+					}
+					
+					if(numberOfRequests > 3) {
+						shouldBreak = true;
+						break;
+					}
+					
+					FacebookItem fbItem = new FacebookItem(comment, null, null);
+					itemComments.add(fbItem);
+					
+				}
+				
+				if(shouldBreak) {
+					break;
+				}
+			}
+			if(shouldBreak) {
+				break;
+			}
+		}
+		
+		return itemComments;
+	}
+
 	public static void main(String...args) {
 		
-		String uid = "7236107677";
-		Date since = new Date(System.currentTimeMillis() - 12*3600000l);
+		String uid = "260212261199";
+		Date since = new Date(System.currentTimeMillis() - 15*24*3600000l);
 		
 		AccountFeed aFeed = new AccountFeed(uid, "skaigr", since.getTime(), "Facebook");
 		
 		Credentials credentials = new Credentials();
-		credentials.setAccessToken("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+		credentials.setAccessToken("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
 		
 		
 		FacebookRetriever retriever = new FacebookRetriever(credentials);
 		
-		Response response = retriever.retrieveAccountFeed(aFeed, 1);
+		Response response = retriever.retrieveAccountFeed(aFeed, 5);
 		System.out.println(response.getNumberOfItems() + " items found for " + aFeed.getId());
 		for(Item item : response.getItems()) {
-			System.out.println(item.toString());
+			System.out.println(item.getLikes());
 		}
 		
 	}
-
 }

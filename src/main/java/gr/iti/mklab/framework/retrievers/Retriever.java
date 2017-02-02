@@ -96,6 +96,8 @@ public abstract class Retriever {
 	
 	public abstract Item getItem(String id);
 	
+	public abstract List<Item> getItemComments(Item item, long since);
+	
 	public Response retrieve(Feed feed) throws Exception {
 		return retrieve(feed, 1);
 	}
