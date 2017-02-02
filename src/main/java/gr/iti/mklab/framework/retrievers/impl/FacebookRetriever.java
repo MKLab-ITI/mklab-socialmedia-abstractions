@@ -105,12 +105,12 @@ public class FacebookRetriever extends Retriever {
 			
 			Connection<Post> connection = facebookClient.fetchConnection(userFeed, Post.class, 
 					Parameter.with("since", sinceDate),
-					Parameter.with("limit", 100),
+					Parameter.with("limit", 75),
 					Parameter.with("fields", fields)
 				);
 			
 			for(List<Post> connectionPage : connection) {
-				logger.info(connectionPage.size());
+
 				numberOfRequests++;			
 				for(Post post : connectionPage) {						
 					Date publicationDate = post.getCreatedTime();
