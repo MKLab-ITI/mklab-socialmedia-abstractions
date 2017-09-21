@@ -26,6 +26,7 @@ import gr.iti.mklab.framework.Credentials;
 import gr.iti.mklab.framework.abstractions.socialmedia.items.FlickrItem;
 import gr.iti.mklab.framework.abstractions.socialmedia.users.FlickrStreamUser;
 import gr.iti.mklab.framework.common.domain.Item;
+import gr.iti.mklab.framework.common.domain.Location.Coordinates;
 import gr.iti.mklab.framework.common.domain.MediaItem;
 import gr.iti.mklab.framework.common.domain.StreamUser;
 import gr.iti.mklab.framework.common.domain.feeds.AccountFeed;
@@ -259,11 +260,17 @@ public class FlickrRetriever extends Retriever {
 		int page=1, pages=1;
 		int numberOfRequests = 0;
 		
-		Double[][] bbox = feed.getLocation().getbbox();
-		
-		if(bbox == null || bbox.length==0) {
+		List<Coordinates> polygon = feed.getLocation().getPolygon();
+		if(polygon == null || polygon.size() == 0) {
 			Response response = getResponse(items, numberOfRequests);
 			return response;
+		}
+		
+		Double[][] bbox = new Double[polygon.size()][2];
+		for(int i = 0; i<polygon.size(); i++) {
+			Coordinates point = polygon.get(i);
+			bbox[i][0] = point.getLatitude();
+			bbox[i][1] = point.getLongitude();
 		}
 		
 		PhotosInterface photosInteface = flickr.getPhotosInterface();
