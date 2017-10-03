@@ -78,14 +78,14 @@ public class TwitterRetriever extends Retriever {
 		Date sinceDate = new Date(feed.getSinceDate());
 		String label = feed.getLabel();
 
-		Long uid = Long.parseLong(feed.getId());
 		String screenName = feed.getUsername();
-		if(uid == null && screenName == null) {
+		if(feed.getId() == null && screenName == null) {
 			logger.error("Uid and Username is null for feed [" + feed + "]");
 			Response response = getResponse(items, numberOfRequests);
 			return response;
 		}
 		
+		Long uid = Long.parseLong(feed.getId());
 		logger.info("Retrieve timeline for user @" + screenName + " (" + uid + ")");
 
 		int page = 1;
