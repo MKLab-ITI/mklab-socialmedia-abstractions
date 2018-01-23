@@ -253,9 +253,10 @@ public class TwitterRetriever extends Retriever {
 		
 		//Set the query
 		Query query = new Query();
+		
 		Double radius = location.getRadius();
-		if(radius == null) {
-			// default radius 1.5 Km 
+		if(radius == null || radius == 0) {
+			// default radius 1.5Km 
 			radius = 1.5; 
 		}
 		
@@ -404,38 +405,7 @@ public class TwitterRetriever extends Retriever {
 	}
 
 
-	public static void main(String...args) throws Exception {
-		
-		Credentials credentials = new Credentials ();
-		credentials.setKey("");
-		credentials.setSecret("");
-		credentials.setAccessToken("");
-		credentials.setAccessTokenSecret("");
-		
-		TwitterRetriever retriever = new TwitterRetriever(credentials);
-	
-		Date since = new Date(System.currentTimeMillis() - 30l*24l*3600000l);
-		
-		List<String> keywords = new ArrayList<String>();
-		keywords.add("(bbc AND bias)");
-		keywords.add("(bbc AND impartial)");
-		keywords.add("(bbc AND partisan)");
-		keywords.add("(bbc AND left AND wing)");
-		keywords.add("(bbc AND right AND wing)");
-		
-		KeywordsFeed feed = new KeywordsFeed("1", keywords, since.getTime(), "Twitter");
-		
-		Response response = retriever.retrieve(feed, 10);
-		for(Item item : response.getItems()) {
-			System.out.println(item.getTitle().replaceAll("\n", " "));
-			System.out.println(new Date(item.getPublicationTime()));
-			System.out.println("From: " + item.getStreamUser().getUsername());
-			System.out.println("==============================================");
-		}
-		
-		retriever.printAvailableReq();
-		
-	}
+
 	
 	private void printAvailableReq() {
 		try {
@@ -465,4 +435,46 @@ public class TwitterRetriever extends Retriever {
 		return null;
 	}
 	
+	public static void main(String...args) throws Exception {
+		
+		Credentials credentials = new Credentials ();
+		credentials.setKey("");
+		credentials.setSecret("");
+		credentials.setAccessToken("");
+		credentials.setAccessTokenSecret("");
+		
+		TwitterRetriever retriever = new TwitterRetriever(credentials);
+	
+		Date since = new Date(System.currentTimeMillis() - 30l*24l*3600000l);
+		
+		Location location = new Location(35.300117, 24.74926909999994, 50.);
+		LocationFeed feed = new LocationFeed("1", location, since.getTime(), "Twitter");
+
+		Response response = retriever.retrieve(feed);
+		
+		for(Item item : response.getItems()) {
+			System.out.println(item.toString());
+		}
+		
+		/*
+		List<String> keywords = new ArrayList<String>();
+		keywords.add("(bbc AND bias)");
+		keywords.add("(bbc AND impartial)");
+		keywords.add("(bbc AND partisan)");
+		keywords.add("(bbc AND left AND wing)");
+		keywords.add("(bbc AND right AND wing)");
+		
+		KeywordsFeed feed = new KeywordsFeed("1", keywords, since.getTime(), "Twitter");
+		
+		Response response = retriever.retrieve(feed, 10);
+		for(Item item : response.getItems()) {
+			System.out.println(item.getTitle().replaceAll("\n", " "));
+			System.out.println(new Date(item.getPublicationTime()));
+			System.out.println("From: " + item.getStreamUser().getUsername());
+			System.out.println("==============================================");
+		}
+		
+		retriever.printAvailableReq();
+		*/
+	}
 }
