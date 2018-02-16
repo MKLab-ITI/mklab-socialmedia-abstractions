@@ -3,8 +3,7 @@ package gr.iti.mklab.framework.retrievers.impl;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
+
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
@@ -14,7 +13,6 @@ import twitter4j.GeoLocation;
 import twitter4j.Paging;
 import twitter4j.Query;
 import twitter4j.QueryResult;
-import twitter4j.RateLimitStatus;
 import twitter4j.ResponseList;
 import twitter4j.Status;
 import twitter4j.Twitter;
@@ -404,22 +402,6 @@ public class TwitterRetriever extends Retriever {
 		}
 	}
 
-
-
-	
-	private void printAvailableReq() {
-		try {
-			Map<String, RateLimitStatus> rateLimits = twitter.getRateLimitStatus();
-			for(Entry<String, RateLimitStatus> e : rateLimits.entrySet()) {
-				System.out.println(e.getKey());
-				System.out.println(e.getValue());
-				System.out.println("===================================");
-			}
-		} catch (TwitterException e) {
-			e.printStackTrace();
-		}
-		
-	}
 
 	@Override
 	public List<Item> getItemComments(Item item, long since) {

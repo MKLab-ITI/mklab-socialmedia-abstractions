@@ -21,6 +21,7 @@ public class FacebookStreamUser extends StreamUser {
 	 */
 	private static final long serialVersionUID = 3234574808873979755L;
 
+	@SuppressWarnings("deprecation")
 	public FacebookStreamUser(User user) {
 		
 		if (user == null) return;
